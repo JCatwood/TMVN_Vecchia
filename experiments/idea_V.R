@@ -1,9 +1,9 @@
 library(GpGp)
-library(optiSolve)
+library(TruncatedNormal)
 debugSource("../funcs/inv_chol.R")
 ## example MVN probabilities --------------------------------
-n1 <- 20
-n2 <- 20
+n1 <- 10
+n2 <- 10
 n <- n1*n2
 locs <- as.matrix(expand.grid((1 : n1) / n1, (1 : n2) / n2))
 covparms <- c(2, 0.3, 0)
@@ -27,6 +27,31 @@ NNarray <- find_ordered_nn(locs_ord, m = m)
 L <- get_sp_inv_chol(cov_mat_ord, NNarray)
 cov_mat_Vecc <- solve(L %*% t(L))
 sqrt(mean((cov_mat_ord - cov_mat_Vecc)^2))
+
+## Compare MVN prob errors caused by Vecchia approx ---------------
+cat("Comparing ", length(a_list_ord),
+    " MVN probabilities computed with/out Vecchia\n")
+for(i in 1 : length(a_list_ord)){
+  a_ord <- a_list_ord[[i]]
+  b_ord <- b_list_ord[[i]]
+  tmp_rslt <- 
+    pmvnorm(mu = rep(0, n), sigma = cov_mat_ord, lb = a_ord, ub = b_ord)
+  cat("Without Vecchia: Est ", tmp_rslt[1], "Relerr ", 
+      attributes(tmp_rslt)$relerr, "\n")
+  tmp_rslt <- 
+    pmvnorm(mu = rep(0, n), sigma = cov_mat_Vecc, lb = a_ord, ub = b_ord)
+  cat("With Vecchia: Est ", tmp_rslt[1], "Relerr ", 
+      attributes(tmp_rslt)$relerr, "\n")
+}
+cat("Done")
+
+
+
+
+
+
+
+
 
 
 
