@@ -1,3 +1,5 @@
+source("utils.R")
+
 #' Log-density function of the proposal density in Idea V. Zero mean is assumed.
 #' Notice that currently, it seems that there isn't any R package that can 
 #'   compute the log-pdf of truncated normal when the truncation is at the very 
@@ -26,12 +28,7 @@ log_pdf_5 <- function(veccCondMeanVarObj, x, a, b, alpha = rep(1, length(x)),
     mu <- apply(veccCondMeanVarObj$cond_mean_coeff[i, ] * x[ind, , drop = F], 
                 2, sum, na.rm = T) + beta[i] * sd
     logpdf_i_nom <- dnorm(x = x[i, ], mean = mu, sd = sd, log = T)
-    logcdf_a <- pnorm(a[i], mean = mu, sd = sd, log.p = T)
-    logcdf_b <- pnorm(b[i], mean = mu, sd = sd, log.p = T)
-    if(logcdf_b - logcdf_a < 1e-10)
-      logpdf_i_denom <- logcdf_a + log(b - a)
-    else
-      logpdf_i_denom <- logcdf_a + log(exp(b - a) - 1)
+    logpdf_i_denom <- lnNpr(a, b, mu, sd)
     logpdf <- logpdf + logpdf_i_nom - logpdf_i_denom
   }
   return(logpdf)
