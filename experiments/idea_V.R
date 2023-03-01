@@ -1,6 +1,6 @@
 library(GpGp)
 library(TruncatedNormal)
-debugSource("../funcs/inv_chol.R")
+source("../funcs/inv_chol.R")
 ## example MVN probabilities --------------------------------
 n1 <- 10
 n2 <- 10
@@ -24,8 +24,8 @@ b_list_ord <- lapply(b_list, function(x){x[ord]})
 NNarray <- find_ordered_nn(locs_ord, m = m)
 
 ## Vecchia approx --------------------------------
-L <- get_sp_inv_chol(cov_mat_ord, NNarray)
-cov_mat_Vecc <- solve(L %*% t(L))
+U <- get_sp_inv_chol(cov_mat_ord, NNarray)
+cov_mat_Vecc <- solve(U %*% t(U))
 sqrt(mean((cov_mat_ord - cov_mat_Vecc)^2))
 
 ## Compare MVN prob errors caused by Vecchia approx ---------------
