@@ -16,19 +16,25 @@ source("utils.R")
 #'
 grad_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   n <- length(a)
-  x <- xAndBeta[1 : (n - 1)]
-  beta <- xAndBeta[n : (2 * n - 2)]
-  D <- sqrt(veccCondMeanVarObj$cond_var[-n])  # vector of length n - 1
-  mu_c <- as.vector(veccCondMeanVarObj$A[-n, -n] %*% x)
-  a_tilde_shift <- (a[-n] - mu_c) / D - beta
-  b_tilde_shift <- (b[-n] - mu_c) / D - beta
+  x <- rep(0, n)
+  beta <- rep(0, n)
+  x[1 : (n - 1)] <- xAndBeta[1 : (n - 1)]
+  beta[1 : (n - 1)] <- xAndBeta[n : (2 * n - 2)]
+  D <- sqrt(veccCondMeanVarObj$cond_var)  
+  mu_c <- as.vector(veccCondMeanVarObj$A %*% x) 
+  a_tilde_shift <- (a - mu_c) / D - beta
+  b_tilde_shift <- (b - mu_c) / D - beta
   log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
   pl <- exp(-0.5 * a_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
   pu <- exp(-0.5 * b_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
   Psi <- pl - pu
-  dpsi_dx = - beta / D + 
-    as.vector(t(veccCondMeanVarObj$A[-n, -n]) %*% (Psi / D))
-  dpsi_dbeta = beta - (x - mu_c) / D + Psi
+  
+  dpsi_dx = - as.vector(
+    - t(diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) %*% 
+      ((beta / D)[1 : (n - 1)]) + 
+    t(veccCondMeanVarObj$A[, -n]) %*% (Psi / D)
+    )
+  dpsi_dbeta = (beta - (x - mu_c) / D + Psi)[-n]
   c(dpsi_dx, dpsi_dbeta)
 }
 
@@ -48,12 +54,14 @@ grad_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #'
 jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   n <- length(a)
-  x <- xAndBeta[1:(n - 1)]
-  beta <- xAndBeta[n:(2 * n - 2)]
-  D <- sqrt(veccCondMeanVarObj$cond_var[-n])  # vector of length n - 1
-  mu_c <- as.vector(veccCondMeanVarObj$A[-n, -n] %*% x)
-  a_tilde_shift <- (a[-n] - mu_c) / D - beta
-  b_tilde_shift <- (b[-n] - mu_c) / D - beta
+  x <- rep(0, n)
+  beta <- rep(0, n)
+  x[1 : (n - 1)] <- xAndBeta[1 : (n - 1)]
+  beta[1 : (n - 1)] <- xAndBeta[n : (2 * n - 2)]
+  D <- sqrt(veccCondMeanVarObj$cond_var)  
+  mu_c <- as.vector(veccCondMeanVarObj$A %*% x) 
+  a_tilde_shift <- (a - mu_c) / D - beta
+  b_tilde_shift <- (b - mu_c) / D - beta
   log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
   pl <- exp(-0.5 * a_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
   pu <- exp(-0.5 * b_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
@@ -62,10 +70,11 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   a_tilde_shift[is.infinite(a_tilde_shift)] <- 0
   b_tilde_shift[is.infinite(b_tilde_shift)] <- 0
   dPsi <- (-Psi ^ 2) + a_tilde_shift * pl - b_tilde_shift * pu
-  dpsi_dx_dx <- t(veccCondMeanVarObj$A[-n, -n]) %*%
-    (dPsi / D / D * veccCondMeanVarObj$A[-n, -n])
-  dpsi_dx_dbeta <- t(dPsi / D * veccCondMeanVarObj$A[-n, -n]) - diag(1 / D)
-  dpsi_dbeta_dbeta <- diag(1 + dPsi)
+  dpsi_dx_dx <- - t(veccCondMeanVarObj$A[, -n]) %*%
+    (dPsi / D / D * veccCondMeanVarObj$A[, -n])
+  dpsi_dx_dbeta <- t(dPsi / D * veccCondMeanVarObj$A)[-n, -n] - 
+    t((diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) / D[-n])
+  dpsi_dbeta_dbeta <- diag(1 + dPsi[-n])
   rbind(cbind(dpsi_dx_dx, dpsi_dx_dbeta), 
         cbind(t(dpsi_dx_dbeta), dpsi_dbeta_dbeta))
 }
@@ -142,6 +151,7 @@ library(TruncatedNormal)
 library(nleqslv)
 source("inv_chol.R")
 source("vecc_cond_mean_var.R")
+set.seed(123)
 n1 <- 10
 n2 <- 10
 n <- n1*n2
@@ -206,7 +216,7 @@ for(i in 1 : length(a_list_ord)){
 }
 
 ## Compare system solution --------------------------------
-for(i in 1 : length(a_list_ord)){
+for(i in 3 : length(a_list_ord)){
   a_ord <- a_list_ord[[i]]
   b_ord <- b_list_ord[[i]]
   x0 <- rep(0, 2 * length(a_ord) - 2)
@@ -230,6 +240,32 @@ for(i in 1 : length(a_list_ord)){
                          global = "pwldog", 
                          method = "Newton",
                          control = list(maxit = 500L))
+  ### Check gradient consistency -------------------------------
+  y0 <- solv_TN$x
+  x0 <- y0
+  x0[1 : (n - 1)] <- L_Vecc[-n, -n] %*% y0[1 : (n - 1)]
+  grad_idea_5 <- grad_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
+  # grad_TN <- gradpsi_TN(y0, L_Vecc_scaled, a_ord_scaled, b_ord_scaled)
+  cat("Rnage of the gradient error of idea 5 at the solution ",
+      "(after transformation) of TN is", range(grad_idea_5), "\n")
+  
+  ### Check jacobian numerically -----------------------------------
+  y0 <- solv_TN$x
+  x0 <- y0
+  x0[1 : (n - 1)] <- L_Vecc[-n, -n] %*% y0[1 : (n - 1)]
+  epsl <- 1e-4
+  x0_epsl <- x0
+  ind_epsl <- 100
+  x0_epsl[ind_epsl] <- x0[ind_epsl] + epsl
+  grad_idea_5 <- grad_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
+  grad_idea_5_epsl <- grad_idea5(x0_epsl, vecc_cond_mean_var_obj, a_ord, b_ord)
+  jac_row_numerical <- (grad_idea_5_epsl - grad_idea_5) / epsl
+  jac_idea_5 <- jac_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
+  # jac_TN <- jacpsi_TN(y0, L_Vecc_scaled, a_ord_scaled, b_ord_scaled)
+  cat("Range of error of the ", ind_epsl, "column in Jacobian is",
+      range(jac_row_numerical - jac_idea_5[, ind_epsl]), "\n")
+  
+  ### Check solution consistency -------------------------------
   err_beta_hat <- max(abs(solv_TN$x[n : (2 * n - 2)] - 
                         solv_idea_5$x[n : (2 * n - 2)]))
   cat("Terminal codes of TN is", solv_TN$termcd, "\n")
