@@ -1,5 +1,3 @@
-source("utils.R")
-
 #' Gradient of the psi function in Idea V
 #' Input:
 #'   xAndBeta - a vector whose first (n - 1) coeffs are x and second (n - 1)
@@ -83,12 +81,12 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 # TEST-------------------------------
 
 # ## copy from TruncatedNormal V2.2.2-------------------------------
-# gradpsi_TN <- function(y, L, l, u){ 
+# gradpsi_TN <- function(y, L, l, u){
 #   # implements grad_psi(x) to find optimal exponential twisting;
 #   # assumes scaled 'L' with zero diagonal;
 #   d <- length(u);
 #   cv <- rep(0,d);
-#   x <- cv; 
+#   x <- cv;
 #   mu <- cv
 #   x[1:(d-1)] <- y[1:(d-1)];
 #   mu[1:(d-1)] <- y[d:(2*d-2)]
@@ -109,12 +107,12 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   grad
 # }
 # 
-# jacpsi_TN <-  function(y, L, l, u){ 
+# jacpsi_TN <-  function(y, L, l, u){
 #   # implements grad_psi(x) to find optimal exponential twisting;
 #   # assume scaled 'L' with zero diagonal;
 #   d <- length(u);
 #   cv <- rep(0,d);
-#   x <- cv; 
+#   x <- cv;
 #   mu <- cv
 #   x[1:(d-1)] <- y[1:(d-1)];
 #   mu[1:(d-1)] <- y[d:(2*d-2)]
@@ -127,7 +125,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   pl <- exp(-0.5*lt^2-w)/sqrt(2*pi);
 #   pu <- exp(-0.5*ut^2-w)/sqrt(2*pi)
 #   P <- pl-pu;
-#   
+# 
 #   # here compute Jacobian matrix
 #   lt[is.infinite(lt)] <- 0
 #   ut[is.infinite(ut)] <- 0
@@ -177,7 +175,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 # vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
 # D_Vecc <- diag(L_Vecc)
 # L_Vecc_scaled <- L_Vecc / D_Vecc
-# diag(L_Vecc_scaled) <- 0 
+# diag(L_Vecc_scaled) <- 0
 # 
 # ## Compare dpsi ------------------------------
 # for(i in 1 : length(a_list_ord)){
@@ -185,8 +183,8 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   b_ord <- b_list_ord[[i]]
 #   x0 <- runif(2 * n - 2)
 #   y0 <- x0
-#   # y0[1 : (n - 1)] <- (x0[1 : (n - 1)] - 
-#   #                       vecc_cond_mean_var_obj$A[-n, -n] %*% x0[1 : (n - 1)]) / 
+#   # y0[1 : (n - 1)] <- (x0[1 : (n - 1)] -
+#   #                       vecc_cond_mean_var_obj$A[-n, -n] %*% x0[1 : (n - 1)]) /
 #   #   D_Vecc[-n]
 #   x0[1 : (n - 1)] <- L_Vecc[-n, -n] %*% y0[1 : (n - 1)]
 #   a_ord_scaled <- a_ord / D_Vecc
@@ -195,8 +193,8 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   grad_idea_5 <- grad_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
 #   err_beta_grad <- max(abs(
 #     grad_TN[n : (2 * n - 2)] - grad_idea_5[n : (2 * n - 2)]))
-#   err_x_grad <- max(abs(grad_idea_5[1 : (n - 1)] - 
-#     t((diag(rep(1, n - 1)) - vecc_cond_mean_var_obj$A[-n, -n]) / D_Vecc[-n]) %*% 
+#   err_x_grad <- max(abs(grad_idea_5[1 : (n - 1)] -
+#     t((diag(rep(1, n - 1)) - vecc_cond_mean_var_obj$A[-n, -n]) / D_Vecc[-n]) %*%
 #     grad_TN[1 : (n - 1)]))
 #   cat("err_beta_grad is ", err_beta_grad, "\n")
 #   cat("err_beta_grad is ", err_x_grad, "\n")
@@ -208,14 +206,14 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   b_ord <- b_list_ord[[i]]
 #   x0 <- runif(2 * n - 2)
 #   y0 <- x0
-#   y0[1 : (n - 1)] <- (x0[1 : (n - 1)] - 
+#   y0[1 : (n - 1)] <- (x0[1 : (n - 1)] -
 #                         vecc_cond_mean_var_obj$A[-n, -n] %*% x0[1 : (n - 1)]) /
 #     D_Vecc[-n]
 #   a_ord_scaled <- a_ord / D_Vecc
 #   b_ord_scaled <- b_ord / D_Vecc
 #   jac_TN <- jacpsi_TN(y0, L_Vecc_scaled, a_ord_scaled, b_ord_scaled)
 #   jac_idea_5 <- jac_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
-#   err_beta_jac <- max(jac_TN[n : (2 * n - 2), n : (2 * n - 2)] - 
+#   err_beta_jac <- max(jac_TN[n : (2 * n - 2), n : (2 * n - 2)] -
 #                         jac_idea_5[n : (2 * n - 2), n : (2 * n - 2)])
 #   cat("err_beta_jac is ", err_beta_jac, "\n")
 # }
@@ -229,20 +227,20 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   L_Vecc_scaled <- L_Vecc / D_Vecc
 #   a_ord_scaled <- a_ord / D_Vecc
 #   b_ord_scaled <- b_ord / D_Vecc
-#   diag(L_Vecc_scaled) <- 0 
-#   solv_TN <- nleqslv(x0, 
-#                      fn = gradpsi_TN, 
+#   diag(L_Vecc_scaled) <- 0
+#   solv_TN <- nleqslv(x0,
+#                      fn = gradpsi_TN,
 #                      jac = jacpsi_TN,
-#                      L = L_Vecc_scaled, l = a_ord_scaled, u = b_ord_scaled, 
-#                      global = "pwldog", 
+#                      L = L_Vecc_scaled, l = a_ord_scaled, u = b_ord_scaled,
+#                      global = "pwldog",
 #                      method = "Newton",
 #                      control = list(maxit = 500L))
-#   solv_idea_5 <- nleqslv(x0, 
-#                          fn = grad_idea5, 
+#   solv_idea_5 <- nleqslv(x0,
+#                          fn = grad_idea5,
 #                          jac = jac_idea5,
-#                          veccCondMeanVarObj = vecc_cond_mean_var_obj, 
-#                          a = a_ord, b = b_ord, 
-#                          global = "pwldog", 
+#                          veccCondMeanVarObj = vecc_cond_mean_var_obj,
+#                          a = a_ord, b = b_ord,
+#                          global = "pwldog",
 #                          method = "Newton",
 #                          control = list(maxit = 500L))
 #   ### Check gradient consistency -------------------------------
@@ -253,7 +251,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   # grad_TN <- gradpsi_TN(y0, L_Vecc_scaled, a_ord_scaled, b_ord_scaled)
 #   cat("Rnage of the gradient error of idea 5 at the solution ",
 #       "(after transformation) of TN is", range(grad_idea_5), "\n")
-#   
+# 
 #   ### Check jacobian numerically -----------------------------------
 #   y0 <- solv_TN$x
 #   x0 <- y0
@@ -269,9 +267,9 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   # jac_TN <- jacpsi_TN(y0, L_Vecc_scaled, a_ord_scaled, b_ord_scaled)
 #   cat("Range of error of the ", ind_epsl, "column in Jacobian is",
 #       range(jac_row_numerical - jac_idea_5[, ind_epsl]), "\n")
-#   
+# 
 #   ### Check solution consistency -------------------------------
-#   err_beta_hat <- max(abs(solv_TN$x[n : (2 * n - 2)] - 
+#   err_beta_hat <- max(abs(solv_TN$x[n : (2 * n - 2)] -
 #                         solv_idea_5$x[n : (2 * n - 2)]))
 #   cat("Terminal codes of TN is", solv_TN$termcd, "\n")
 #   cat("Terminal codes of idea_5 is", solv_idea_5$termcd, "\n")
