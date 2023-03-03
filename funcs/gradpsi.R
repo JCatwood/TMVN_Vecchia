@@ -29,7 +29,7 @@ grad_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   pu <- exp(-0.5 * b_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
   Psi <- pl - pu
   
-  dpsi_dx = - as.vector(
+  dpsi_dx = as.vector(
     - t(diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) %*% 
       ((beta / D)[1 : (n - 1)]) + 
     t(veccCondMeanVarObj$A[, -n]) %*% (Psi / D)
@@ -70,7 +70,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   a_tilde_shift[is.infinite(a_tilde_shift)] <- 0
   b_tilde_shift[is.infinite(b_tilde_shift)] <- 0
   dPsi <- (-Psi ^ 2) + a_tilde_shift * pl - b_tilde_shift * pu
-  dpsi_dx_dx <- - t(veccCondMeanVarObj$A[, -n]) %*%
+  dpsi_dx_dx <- t(veccCondMeanVarObj$A[, -n]) %*%
     (dPsi / D / D * veccCondMeanVarObj$A[, -n])
   dpsi_dx_dbeta <- t(dPsi / D * veccCondMeanVarObj$A)[-n, -n] - 
     t((diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) / D[-n])
@@ -179,7 +179,7 @@ D_Vecc <- diag(L_Vecc)
 L_Vecc_scaled <- L_Vecc / D_Vecc
 diag(L_Vecc_scaled) <- 0 
 
-## Compare dpsi/dbeta ------------------------------
+## Compare dpsi ------------------------------
 for(i in 1 : length(a_list_ord)){
   a_ord <- a_list_ord[[i]]
   b_ord <- b_list_ord[[i]]
@@ -193,8 +193,13 @@ for(i in 1 : length(a_list_ord)){
   b_ord_scaled <- b_ord / D_Vecc
   grad_TN <- gradpsi_TN(y0, L_Vecc_scaled, a_ord_scaled, b_ord_scaled)
   grad_idea_5 <- grad_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
-  err_beta_grad <- max(grad_TN[n : (2 * n - 2)] - grad_idea_5[n : (2 * n - 2)])
+  err_beta_grad <- max(abs(
+    grad_TN[n : (2 * n - 2)] - grad_idea_5[n : (2 * n - 2)]))
+  err_x_grad <- max(abs(grad_idea_5[1 : (n - 1)] - 
+    t((diag(rep(1, n - 1)) - vecc_cond_mean_var_obj$A[-n, -n]) / D_Vecc[-n]) %*% 
+    grad_TN[1 : (n - 1)]))
   cat("err_beta_grad is ", err_beta_grad, "\n")
+  cat("err_beta_grad is ", err_x_grad, "\n")
 }
 
 ## Compare ddpsi/ddbeta ------------------------------
@@ -253,9 +258,9 @@ for(i in 3 : length(a_list_ord)){
   y0 <- solv_TN$x
   x0 <- y0
   x0[1 : (n - 1)] <- L_Vecc[-n, -n] %*% y0[1 : (n - 1)]
-  epsl <- 1e-4
+  epsl <- 1e-5
   x0_epsl <- x0
-  ind_epsl <- 100
+  ind_epsl <- 120
   x0_epsl[ind_epsl] <- x0[ind_epsl] + epsl
   grad_idea_5 <- grad_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
   grad_idea_5_epsl <- grad_idea5(x0_epsl, vecc_cond_mean_var_obj, a_ord, b_ord)
