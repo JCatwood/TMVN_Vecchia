@@ -26,7 +26,7 @@ sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
   inner_prod <- rep(0, N)
   if(usePseudo)
     x <- t(as.matrix(randtoolbox::sobol(
-      N, dim = n, init =TRUE, scrambling = 0, seed=ceiling(1e6*runif(1)))))
+      N, dim = n, init =TRUE, scrambling = 1, seed=ceiling(1e6*runif(1)))))
   for(i in 1 : n){
     ind <- veccCondMeanVarObj$nn[i, -1]
     sd <- sqrt(veccCondMeanVarObj$cond_var[i]) # scalar
@@ -71,25 +71,24 @@ cov_mat <- matern15_isotropic(covparms, locs)
 a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
 b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
 
-## ordering and NN --------------------------------
-m <- 30
-ord <- order_maxmin(locs)
-locs_ord <- locs[ord, , drop = FALSE]
-cov_mat_ord <- matern15_isotropic(covparms, locs_ord)
-a_list_ord <- lapply(a_list, function(x){x[ord]})
-b_list_ord <- lapply(b_list, function(x){x[ord]})
-NNarray <- find_ordered_nn(locs_ord, m = m)
-
-## Vecchia approx --------------------------------
-U <- get_sp_inv_chol(cov_mat_ord, NNarray)
-cov_mat_Vecc <- solve(U %*% t(U))
-vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
-
 ## Compute MVN probs --------------------------------
-N <- 10000
-for(i in 1 : length(a_list_ord)){
-  a_ord <- a_list_ord[[i]]
-  b_ord <- b_list_ord[[i]]
+N <- 1e4  # MC sample size
+m <- 30  # num of nearest neighbors
+for(i in 1 : length(a_list)){
+  ### ordering based on integration limits --------------------------------
+  pnorm_at_a <- pnorm(a_list[[i]], sd = sqrt(covparms[1]))
+  pnorm_at_b <- pnorm(b_list[[i]], sd = sqrt(covparms[1]))
+  ord <- order(pnorm_at_b - pnorm_at_a, decreasing = F)
+  locs_ord <- locs[ord, , drop = F]
+  cov_mat_ord <- matern15_isotropic(covparms, locs_ord)
+  a_ord <- a_list[[i]][ord]
+  b_ord <- b_list[[i]][ord]
+  ### NN and Vecchia approx --------------------------------
+  NNarray <- find_ordered_nn(locs_ord, m = m)
+  U <- get_sp_inv_chol(cov_mat_ord, NNarray)
+  cov_mat_Vecc <- solve(U %*% t(U))
+  vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
+  ### Find proposal parameters -------------------------
   solv_idea_5 <- nleqslv(rep(0, 2 * n - 2), 
                          fn = grad_idea5,
                          jac = jac_idea5,
@@ -101,6 +100,7 @@ for(i in 1 : length(a_list_ord)){
   cat("nleqslv finish code is", solv_idea_5$termcd, "\n")
   beta <- rep(0, n)
   beta[1 : n - 1] <- solv_idea_5$x[n : (2 * n - 2)]
+  ### Compute MVN prob with idea V -----------------------
   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
                           beta = beta, usePseudo = T)
   est_tilt_quasi <- mean(exp(psi))
@@ -118,6 +118,7 @@ for(i in 1 : length(a_list_ord)){
   est <- mean(exp(psi))
   err <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
   
+  ### Compute MVN prob with other methods -----------------------
   est_TN <- TruncatedNormal::pmvnorm(
     rep(0, n), cov_mat_Vecc, lb = a_ord, ub = b_ord)
   est_TLR <- tlrmvnmvt::pmvn(a_ord, b_ord, sigma = cov_mat_Vecc)
