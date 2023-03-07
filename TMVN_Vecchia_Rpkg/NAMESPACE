@@ -1,0 +1,4 @@
+useDynLib(VeccTMVN, .registration=TRUE)
+import(RcppEigen)
+importFrom(Rcpp, evalCpp)
+exportPattern("^[[:alpha:]]+")
