@@ -1,11 +1,11 @@
-#include <RcppEigen.h>
+#include <Rcpp.h>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
 #include "mvphi.h"
 
 
-using namespace Eigen;
+using namespace Rcpp;
 using namespace std;
 
 
@@ -57,7 +57,7 @@ NumericVector mvndns(
     const NumericVector &condSd, const NumericVector &beta, 
     int NLevel1, int NLevel2)
 {
-    int n = a.rows();  // MVN dim
+    int n = a.size();  // MVN dim
     int N = NLevel2 / 2;  
     int m = NN.cols() - 1;
     NLevel2 = N * 2;
@@ -82,7 +82,10 @@ NumericVector mvndns(
     // copy nearest neighbors into cond_ind
     for(int i = 0; i < n; i++)
         for(int j = 0; j < m; j++)
-            cond_ind[i * m + j] = NN(i, j + 1) - 1;
+            if(j < i)
+                cond_ind[i * m + j] = NN(i, j + 1) - 1;
+            else
+                cond_ind[i * m + j] = - 1;
 
     // generate n prime numbers
     primes(5*(n+1)*log((double)(n+1)+1)/4, n, prime);
@@ -117,15 +120,16 @@ NumericVector mvndns(
             fill(a_bat, a_bat + NLevel2, a[i]);
             fill(b_bat, b_bat + NLevel2, b[i]);
             // Compute mu
+            fill(mu, mu + NLevel2, 0.0);
             if(i > 0){
-                fill(mu, mu + NLevel2, 0.0);
                 for(int j = 0; j < m; j++){
                     int cond_ind_j = cond_ind[i * m + j];
-                    double mu_coeff_j = muCoeff(i, j);
-                    double * X_row_i = X + i * NLevel2;
-                    if(mu_coeff_j != 0)
+                    if(cond_ind_j >= 0){
+                        double mu_coeff_j = muCoeff(i, j);
+                        double * X_row_cond_ind_j = X + cond_ind_j * NLevel2;
                         for(int j2 = 0; j2 < NLevel2; j2++)
-                            mu[j2] += mu_coeff_j * X_row_i[j2];
+                            mu[j2] += mu_coeff_j * X_row_cond_ind_j[j2];
+                    }
                 }
                 for(int j = 0; j < NLevel2; j++){
                     a_bat[j] -= mu[j];

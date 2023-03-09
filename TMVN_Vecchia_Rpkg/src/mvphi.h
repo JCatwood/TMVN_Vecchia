@@ -1,6 +1,6 @@
 #ifndef MVPHI_H
 #define MVPHI_H
-#include <RcppEigen.h>
+#include <Rcpp.h>
 #include <R.h>
 #include <Rinternals.h>
 #include <algorithm>

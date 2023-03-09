@@ -1,12 +1,7 @@
 library(VeccTMVN)
 
-#' Sample from the proposal density in Idea V and compute psi for each sample.
-#'   Notice that `E[exp(psi)]` is the MVN probability. Zero mean is assumed.
-#' The `truncnorm` package uses accept-reject sampling and seems to be able to 
-#'   sample from tail truncation although I haven't verified its accuracy in 
-#'   tail sampling. 
+
 #' Input:
-#'   N - number of samples to draw
 #'   veccCondMeanVarObj - contains information of the conditional mean 
 #'     coefficient, the conditional variance, and the NN array of the Vecchia 
 #'     approximation
@@ -15,14 +10,15 @@ library(VeccTMVN)
 #'   beta - parameter of the proposal density
 #' Return the a vector of length N, representing the psi values
 #' 
-sample_psi_idea5_cpp <- function(N, veccCondMeanVarObj, a, b,
-                                 beta = rep(0, length(x)), N_level1 = 12, 
+sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
+                                 beta = rep(0, length(x)), N_level1 = 10, 
                                  N_level2 = 1000){
-  psi <- VeccTMVN::mvndns(a, b, veccCondMeanVarObj$nn, 
+  cond_sd <- sqrt(vecc_cond_mean_var_obj$cond_var)
+  exp_psi <- VeccTMVN::mvndns(a, b, veccCondMeanVarObj$nn, 
                           veccCondMeanVarObj$cond_mean_coeff, 
-                          vecc_cond_mean_var_obj$cond_var, beta, 
+                          cond_sd, beta, 
                           NLevel1 = N_level1, NLevel2 = N_level2)
-  return(psi)
+  return(exp_psi)
 }
 
 
@@ -46,7 +42,8 @@ a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
 b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
 
 ## Compute MVN probs --------------------------------
-N <- 1e4  # MC sample size
+N_level1 <- 12  # Level 1 MC size
+N_level2 <- 1e4 # Level 2 MC size
 m <- 30  # num of nearest neighbors
 for(i in 1 : length(a_list)){
   ### ordering based on integration limits --------------------------------
@@ -75,22 +72,11 @@ for(i in 1 : length(a_list)){
   beta <- rep(0, n)
   beta[1 : n - 1] <- solv_idea_5$x[n : (2 * n - 2)]
   ### Compute MVN prob with idea V -----------------------
-  psi <- sample_psi_idea5_cpp(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
-                          beta = beta)
-  est_tilt_quasi <- mean(exp(psi))
-  err_tilt_quasi <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
-  psi <- sample_psi_idea5_cpp(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
-                          beta = beta)
-  est_tilt <- mean(exp(psi))
-  err_tilt <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
-  psi <- sample_psi_idea5_cpp(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
-                          beta = rep(0, n))
-  est_quasi <- mean(exp(psi))
-  err_quasi <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
-  psi <- sample_psi_idea5_cpp(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
-                          beta = rep(0, n))
-  est <- mean(exp(psi))
-  err <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
+  exp_psi <- sample_psi_idea5_cpp(vecc_cond_mean_var_obj, a_ord, b_ord, 
+                          beta = beta, N_level1 = N_level1, 
+                          N_level2 = N_level2)
+  est_tilt_quasi <- mean(exp_psi)
+  err_tilt_quasi <- sd(exp_psi) / sqrt(N_level1)
   
   ### Compute MVN prob with other methods -----------------------
   est_TN <- TruncatedNormal::pmvnorm(
@@ -98,9 +84,6 @@ for(i in 1 : length(a_list)){
   est_TLR <- tlrmvnmvt::pmvn(a_ord, b_ord, sigma = cov_mat_Vecc)
   est_Genz <- mvtnorm::pmvnorm(a_ord, b_ord, sigma = cov_mat_Vecc)
   cat("est_tilt_quasi", est_tilt_quasi, "err_tilt_quasi", err_tilt_quasi, "\n", 
-      "est_tilt", est_tilt, "err_tilt", err_tilt, "\n", 
-      "est_quasi", est_quasi, "err_quasi", err_quasi, "\n", 
-      "est", est, "err", err, "\n", 
       "est_TN", est_TN, "err_TN", attributes(est_TN)$relerr * est_TN, "\n",
       "est_TLR", est_TLR, "err_TLR", attributes(est_TLR)$error, "\n",
       "est_Genz", est_Genz, "err_Genz", attributes(est_Genz)$error, "\n"
