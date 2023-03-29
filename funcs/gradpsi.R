@@ -18,18 +18,18 @@ grad_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   beta <- rep(0, n)
   x[1 : (n - 1)] <- xAndBeta[1 : (n - 1)]
   beta[1 : (n - 1)] <- xAndBeta[n : (2 * n - 2)]
-  D <- sqrt(veccCondMeanVarObj$cond_var)  
-  mu_c <- as.vector(veccCondMeanVarObj$A %*% x) 
+  D <- sqrt(veccCondMeanVarObj$cond_var)
+  mu_c <- as.vector(veccCondMeanVarObj$A %*% x)
   a_tilde_shift <- (a - mu_c) / D - beta
   b_tilde_shift <- (b - mu_c) / D - beta
   log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
   pl <- exp(-0.5 * a_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
   pu <- exp(-0.5 * b_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
   Psi <- pl - pu
-  
+
   dpsi_dx = as.vector(
-    - t(diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) %*% 
-      ((beta / D)[1 : (n - 1)]) + 
+    - t(diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) %*%
+      ((beta / D)[1 : (n - 1)]) +
     t(veccCondMeanVarObj$A[, -n]) %*% (Psi / D)
     )
   dpsi_dbeta = (beta - (x - mu_c) / D + Psi)[-n]
@@ -56,24 +56,24 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   beta <- rep(0, n)
   x[1 : (n - 1)] <- xAndBeta[1 : (n - 1)]
   beta[1 : (n - 1)] <- xAndBeta[n : (2 * n - 2)]
-  D <- sqrt(veccCondMeanVarObj$cond_var)  
-  mu_c <- as.vector(veccCondMeanVarObj$A %*% x) 
+  D <- sqrt(veccCondMeanVarObj$cond_var)
+  mu_c <- as.vector(veccCondMeanVarObj$A %*% x)
   a_tilde_shift <- (a - mu_c) / D - beta
   b_tilde_shift <- (b - mu_c) / D - beta
   log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
   pl <- exp(-0.5 * a_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
   pu <- exp(-0.5 * b_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
   Psi <- pl - pu
-  
+
   a_tilde_shift[is.infinite(a_tilde_shift)] <- 0
   b_tilde_shift[is.infinite(b_tilde_shift)] <- 0
   dPsi <- (-Psi ^ 2) + a_tilde_shift * pl - b_tilde_shift * pu
   dpsi_dx_dx <- t(veccCondMeanVarObj$A[, -n]) %*%
     (dPsi / D / D * veccCondMeanVarObj$A[, -n])
-  dpsi_dx_dbeta <- t(dPsi / D * veccCondMeanVarObj$A)[-n, -n] - 
+  dpsi_dx_dbeta <- t(dPsi / D * veccCondMeanVarObj$A)[-n, -n] -
     t((diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) / D[-n])
   dpsi_dbeta_dbeta <- diag(1 + dPsi[-n])
-  rbind(cbind(dpsi_dx_dx, dpsi_dx_dbeta), 
+  rbind(cbind(dpsi_dx_dx, dpsi_dx_dbeta),
         cbind(t(dpsi_dx_dbeta), dpsi_dbeta_dbeta))
 }
 
@@ -106,7 +106,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   # here compute Jacobian matrix
 #   grad
 # }
-# 
+#
 # jacpsi_TN <-  function(y, L, l, u){
 #   # implements grad_psi(x) to find optimal exponential twisting;
 #   # assume scaled 'L' with zero diagonal;
@@ -125,7 +125,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   pl <- exp(-0.5*lt^2-w)/sqrt(2*pi);
 #   pu <- exp(-0.5*ut^2-w)/sqrt(2*pi)
 #   P <- pl-pu;
-# 
+#
 #   # here compute Jacobian matrix
 #   lt[is.infinite(lt)] <- 0
 #   ut[is.infinite(ut)] <- 0
@@ -142,7 +142,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   }
 #   Jac
 # }
-# 
+#
 # ## example MVN probabilities --------------------------------
 # library(GpGp)
 # library(TruncatedNormal)
@@ -158,7 +158,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 # cov_mat <- matern15_isotropic(covparms, locs)
 # a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
 # b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
-# 
+#
 # ## ordering and NN --------------------------------
 # m <- 30
 # ord <- order_maxmin(locs)
@@ -167,7 +167,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 # a_list_ord <- lapply(a_list, function(x){x[ord]})
 # b_list_ord <- lapply(b_list, function(x){x[ord]})
 # NNarray <- find_ordered_nn(locs_ord, m = m)
-# 
+#
 # ## Vecchia approx --------------------------------
 # U <- get_sp_inv_chol(cov_mat_ord, NNarray)
 # cov_mat_Vecc <- solve(U %*% t(U))
@@ -176,7 +176,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 # D_Vecc <- diag(L_Vecc)
 # L_Vecc_scaled <- L_Vecc / D_Vecc
 # diag(L_Vecc_scaled) <- 0
-# 
+#
 # ## Compare dpsi ------------------------------
 # for(i in 1 : length(a_list_ord)){
 #   a_ord <- a_list_ord[[i]]
@@ -199,7 +199,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   cat("err_beta_grad is ", err_beta_grad, "\n")
 #   cat("err_beta_grad is ", err_x_grad, "\n")
 # }
-# 
+#
 # ## Compare ddpsi/ddbeta ------------------------------
 # for(i in 1 : length(a_list_ord)){
 #   a_ord <- a_list_ord[[i]]
@@ -217,7 +217,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #                         jac_idea_5[n : (2 * n - 2), n : (2 * n - 2)])
 #   cat("err_beta_jac is ", err_beta_jac, "\n")
 # }
-# 
+#
 # ## Compare system solution --------------------------------
 # for(i in 3 : length(a_list_ord)){
 #   a_ord <- a_list_ord[[i]]
@@ -251,7 +251,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   # grad_TN <- gradpsi_TN(y0, L_Vecc_scaled, a_ord_scaled, b_ord_scaled)
 #   cat("Rnage of the gradient error of idea 5 at the solution ",
 #       "(after transformation) of TN is", range(grad_idea_5), "\n")
-# 
+#
 #   ### Check jacobian numerically -----------------------------------
 #   y0 <- solv_TN$x
 #   x0 <- y0
@@ -267,7 +267,7 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   # jac_TN <- jacpsi_TN(y0, L_Vecc_scaled, a_ord_scaled, b_ord_scaled)
 #   cat("Range of error of the ", ind_epsl, "column in Jacobian is",
 #       range(jac_row_numerical - jac_idea_5[, ind_epsl]), "\n")
-# 
+#
 #   ### Check solution consistency -------------------------------
 #   err_beta_hat <- max(abs(solv_TN$x[n : (2 * n - 2)] -
 #                         solv_idea_5$x[n : (2 * n - 2)]))
@@ -275,6 +275,3 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #   cat("Terminal codes of idea_5 is", solv_idea_5$termcd, "\n")
 #   cat("err_beta_hat is", err_beta_hat, "\n")
 # }
-
-
-

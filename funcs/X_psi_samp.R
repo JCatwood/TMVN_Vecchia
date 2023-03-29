@@ -5,19 +5,19 @@ library(randtoolbox)
 
 #' Sample from the proposal density in Idea V and compute psi for each sample.
 #'   Notice that `E[exp(psi)]` is the MVN probability. Zero mean is assumed.
-#' The `truncnorm` package uses accept-reject sampling and seems to be able to 
-#'   sample from tail truncation although I haven't verified its accuracy in 
-#'   tail sampling. 
+#' The `truncnorm` package uses accept-reject sampling and seems to be able to
+#'   sample from tail truncation although I haven't verified its accuracy in
+#'   tail sampling.
 #' Input:
 #'   N - number of samples to draw
-#'   veccCondMeanVarObj - contains information of the conditional mean 
-#'     coefficient, the conditional variance, and the NN array of the Vecchia 
+#'   veccCondMeanVarObj - contains information of the conditional mean
+#'     coefficient, the conditional variance, and the NN array of the Vecchia
 #'     approximation
 #'   a - lower bound vector for TMVN
 #'   b - upper bound vector for TMVN
 #'   beta - parameter of the proposal density
 #' Return the a vector of length N, representing the psi values
-#' 
+#'
 sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
                              beta = rep(0, length(x)), usePseudo = F){
   n <- length(a)
@@ -30,7 +30,7 @@ sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
   for(i in 1 : n){
     ind <- veccCondMeanVarObj$nn[i, -1]
     sd <- sqrt(veccCondMeanVarObj$cond_var[i]) # scalar
-    mu <- apply(veccCondMeanVarObj$cond_mean_coeff[i, ] * X[ind, ], 2, sum, 
+    mu <- apply(veccCondMeanVarObj$cond_mean_coeff[i, ] * X[ind, ], 2, sum,
                 na.rm = T) # vector of length N
     a_tilde_i_mbeta <- (a[i] - mu) / sd - beta[i]
     b_tilde_i_mbeta <- (b[i] - mu) / sd - beta[i]
@@ -38,14 +38,14 @@ sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
       X[i, ] <- norminvp(x[i, ], a_tilde_i_mbeta, b_tilde_i_mbeta) * sd + mu +
         beta[i] * sd
     }else{
-      X[i, ] <- rtruncnorm(n = 1, a = a[i], b = b[i], mean = mu + beta[i] * sd, 
+      X[i, ] <- rtruncnorm(n = 1, a = a[i], b = b[i], mean = mu + beta[i] * sd,
                            sd = sd)
     }
-    
-    lnNpr_sum <- lnNpr_sum + 
+
+    lnNpr_sum <- lnNpr_sum +
       TruncatedNormal::lnNpr(a_tilde_i_mbeta, b_tilde_i_mbeta)
     inner_prod <- inner_prod + (X[i, ] - mu) * beta[i] / sd
-    
+
   }
   psi <- 0.5 * sum(beta^2) - inner_prod + lnNpr_sum
   return(psi)
@@ -60,7 +60,7 @@ sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
 # source("inv_chol.R")
 # source("vecc_cond_mean_var.R")
 # source("gradpsi.R")
-# 
+#
 # ## example MVN probabilities --------------------------------
 # n1 <- 10
 # n2 <- 10
@@ -70,7 +70,7 @@ sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
 # cov_mat <- matern15_isotropic(covparms, locs)
 # a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
 # b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
-# 
+#
 # ## Compute MVN probs --------------------------------
 # N <- 1e4  # MC sample size
 # m <- 30  # num of nearest neighbors
@@ -89,7 +89,7 @@ sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
 #   cov_mat_Vecc <- solve(U %*% t(U))
 #   vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
 #   ### Find proposal parameters -------------------------
-#   solv_idea_5 <- nleqslv(rep(0, 2 * n - 2), 
+#   solv_idea_5 <- nleqslv(rep(0, 2 * n - 2),
 #                          fn = grad_idea5,
 #                          jac = jac_idea5,
 #                          veccCondMeanVarObj = vecc_cond_mean_var_obj,
@@ -101,38 +101,34 @@ sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
 #   beta <- rep(0, n)
 #   beta[1 : n - 1] <- solv_idea_5$x[n : (2 * n - 2)]
 #   ### Compute MVN prob with idea V -----------------------
-#   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
+#   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord,
 #                           beta = beta, usePseudo = T)
 #   est_tilt_quasi <- mean(exp(psi))
 #   err_tilt_quasi <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
-#   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
+#   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord,
 #                           beta = beta, usePseudo = F)
 #   est_tilt <- mean(exp(psi))
 #   err_tilt <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
-#   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
+#   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord,
 #                           beta = rep(0, n), usePseudo = T)
 #   est_quasi <- mean(exp(psi))
 #   err_quasi <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
-#   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord, 
+#   psi <- sample_psi_idea5(N, vecc_cond_mean_var_obj, a_ord, b_ord,
 #                           beta = rep(0, n), usePseudo = F)
 #   est <- mean(exp(psi))
 #   err <- sd(apply(matrix(exp(psi), nrow = 10), 1, mean)) / sqrt(10)
-#   
+#
 #   ### Compute MVN prob with other methods -----------------------
 #   est_TN <- TruncatedNormal::pmvnorm(
 #     rep(0, n), cov_mat_Vecc, lb = a_ord, ub = b_ord)
 #   est_TLR <- tlrmvnmvt::pmvn(a_ord, b_ord, sigma = cov_mat_Vecc)
 #   est_Genz <- mvtnorm::pmvnorm(a_ord, b_ord, sigma = cov_mat_Vecc)
-#   cat("est_tilt_quasi", est_tilt_quasi, "err_tilt_quasi", err_tilt_quasi, "\n", 
-#       "est_tilt", est_tilt, "err_tilt", err_tilt, "\n", 
-#       "est_quasi", est_quasi, "err_quasi", err_quasi, "\n", 
-#       "est", est, "err", err, "\n", 
+#   cat("est_tilt_quasi", est_tilt_quasi, "err_tilt_quasi", err_tilt_quasi, "\n",
+#       "est_tilt", est_tilt, "err_tilt", err_tilt, "\n",
+#       "est_quasi", est_quasi, "err_quasi", err_quasi, "\n",
+#       "est", est, "err", err, "\n",
 #       "est_TN", est_TN, "err_TN", attributes(est_TN)$relerr * est_TN, "\n",
 #       "est_TLR", est_TLR, "err_TLR", attributes(est_TLR)$error, "\n",
 #       "est_Genz", est_Genz, "err_Genz", attributes(est_Genz)$error, "\n"
 #       )
 # }
-
-
-
-

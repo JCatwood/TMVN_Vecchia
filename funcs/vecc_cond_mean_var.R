@@ -3,7 +3,7 @@ library(Matrix)
 
 #' Compute the conditional mean multiplier and the conditional variance
 #'   under the Vecchia approximation.
-#' 
+#'
 vecc_cond_mean_var <- function(covMat, NNarray){
   n <- nrow(covMat)
   m <- ncol(NNarray) - 1
@@ -20,7 +20,7 @@ vecc_cond_mean_var <- function(covMat, NNarray){
     cond_mean_coeff[i, 1 : min(i - 1, m)] <- t(cov_vec_sub) %*% cov_mat_sub_inv
     A[i, ind_cond] <- cond_mean_coeff[i, 1 : min(i - 1, m)]
   }
-  return(list(cond_mean_coeff = cond_mean_coeff, cond_var = cond_var, 
+  return(list(cond_mean_coeff = cond_mean_coeff, cond_var = cond_var,
               nn = NNarray, A = A))
 }
 
@@ -55,20 +55,20 @@ vecc_cond_mean_var_sp <- function(covMat, NNarray){
     # first A[i, i] should be zero
     A_vals[ind] <- 0
     if(i > 1){
-      A_vals[(ind + 1) : (ind + nnz_A_i - 1)] <- 
+      A_vals[(ind + 1) : (ind + nnz_A_i - 1)] <-
         cond_mean_coeff[i, 1 : min(i - 1, m)]
     }
     ind <- ind + nnz_A_i
   }
   # create sparse A
-  A <- sparseMatrix(i = A_row_inds, j = A_col_inds, x = A_vals)
-  return(list(cond_mean_coeff = cond_mean_coeff, cond_var = cond_var, 
+  A <- sparseMatrix(i = A_row_inds, j = A_col_inds, x = A_vals, dims = c(n, n))
+  return(list(cond_mean_coeff = cond_mean_coeff, cond_var = cond_var,
               nn = NNarray, A = A))
 }
 
 
-# # TEST-------------------------------
-# 
+# TEST-------------------------------
+#
 # ## example spatial covariance matrices --------------------------------
 # library(GpGp)
 # source("inv_chol.R")
@@ -79,30 +79,17 @@ vecc_cond_mean_var_sp <- function(covMat, NNarray){
 # locs <- as.matrix(expand.grid((1 : n1) / n1, (1 : n2) / n2))
 # covparms <- c(2, 0.3, 0)
 # cov_mat <- matern15_isotropic(covparms, locs)
-# 
+#
 # ## ordering and NN --------------------------------
 # m <- 30
 # ord <- order_maxmin(locs)
 # locs_ord <- locs[ord, , drop = FALSE]
 # cov_mat_ord <- matern15_isotropic(covparms, locs_ord)
 # NNarray <- find_ordered_nn(locs_ord, m = m)
-# 
+#
 # ## Vecchia approx --------------------------------
 # vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
 # vecc_cond_mean_var_obj_sp <- vecc_cond_mean_var_sp(cov_mat_ord, NNarray)
-# cat("F-norm of difference between dense and sparse A matrices is", 
+# cat("F-norm of difference between dense and sparse A matrices is",
 #     sqrt(sum((as.matrix(vecc_cond_mean_var_obj_sp$A) -
 #                 vecc_cond_mean_var_obj$A)^2)))
-
-
-
-
-
-
-
-
-
-
-
-
-

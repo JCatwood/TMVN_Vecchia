@@ -19,8 +19,8 @@ cov_mat_ord <- matern15_isotropic(covparms, locs_ord)
 ## KL function
 KL_GP_zero_mean <- function(cov_1, inv_chol_2){
   n <- nrow(cov_1)
-  0.5 * (- 2 * sum(log(diag(inv_chol_2))) - 
-           determinant(cov_1, logarithm = T)$modulus[1] - 
+  0.5 * (- 2 * sum(log(diag(inv_chol_2))) -
+           determinant(cov_1, logarithm = T)$modulus[1] -
            n + sum(diag(U %*% t(U) %*% cov_1)))
 }
 
@@ -41,4 +41,3 @@ for(k in 1 : n_rnd_D){
     KL[k, j] <- KL_GP_zero_mean(D_cov_mat_ord_D, U)
   }
 }
-

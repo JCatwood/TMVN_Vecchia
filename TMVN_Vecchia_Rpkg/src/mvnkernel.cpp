@@ -39,26 +39,26 @@ void primes(int n, int sz, int *primeVec)
                 if(idx == sz)
                     return;
             }
-        }   
+        }
     }
 }
 
 
 
 /*
-    For 2d arrays, row number correspond to MVN dim and col number 
-        correspond to MC sample. 
+    For 2d arrays, row number correspond to MVN dim and col number
+        correspond to MC sample.
     Indexing is row-major for 2d arrays.
 */
 // [[Rcpp::export]]
 NumericVector mvndns(
-    const NumericVector &a, const NumericVector &b, 
-    const IntegerMatrix &NN, const NumericMatrix &muCoeff, 
-    const NumericVector &condSd, const NumericVector &beta, 
+    const NumericVector &a, const NumericVector &b,
+    const IntegerMatrix &NN, const NumericMatrix &muCoeff,
+    const NumericVector &condSd, const NumericVector &beta,
     int NLevel1, int NLevel2)
 {
     int n = a.size();  // MVN dim
-    int N = NLevel2 / 2;  
+    int N = NLevel2 / 2;
     int m = NN.cols() - 1;
     NLevel2 = N * 2;
     NumericVector p_L1(NLevel1);
@@ -77,7 +77,7 @@ NumericVector mvndns(
     double * mu = new double[NLevel2];
     double * lnNpr_sum = new double[NLevel2];
     double * inner_prod = new double[NLevel2];
-    int * cond_ind = new int[n * m]; 
+    int * cond_ind = new int[n * m];
 
     // copy nearest neighbors into cond_ind
     for(int i = 0; i < n; i++)
@@ -109,7 +109,7 @@ NumericVector mvndns(
         for(int i = 0; i < n; i++)
             for(int j = 0; j < N; j++){
                 double tmp_val = MC_grid[i * N + j] + MC_rnd[i];
-                MC_samp[i * NLevel2 + j] = 
+                MC_samp[i * NLevel2 + j] =
                     abs(2.0 * (tmp_val - int(tmp_val)) - 1.0);
                 MC_samp[i * NLevel2 + N + j] = 1.0 - MC_samp[i * NLevel2 + j];
             }
@@ -153,22 +153,22 @@ NumericVector mvndns(
             // sample X and compute i-th summand of psi
             double * MC_samp_row_i = MC_samp + i * NLevel2;
             for(int j = 0; j < NLevel2; j++){
-                cdf_MC_samp[j] = pnorm_at_a[j] + MC_samp_row_i[j] * 
+                cdf_MC_samp[j] = pnorm_at_a[j] + MC_samp_row_i[j] *
                     pnorm_diff[j];
             }
             double * X_row_i =  X + i * NLevel2;
             lc_vdCdfNormInv(NLevel2, cdf_MC_samp, X_row_i);
             for(int j = 0; j < NLevel2; j++){
-                X_row_i[j] = X_row_i[j] * cond_sd_i + mu[j] + 
+                X_row_i[j] = X_row_i[j] * cond_sd_i + mu[j] +
                     beta_i * cond_sd_i;
                 lnNpr_sum[j] += log(pnorm_diff[j]);
                 inner_prod[j] += (X_row_i[j] - mu[j]) * beta_i / cond_sd_i;
             }
         }
-        double beta_sq_norm = inner_product(beta.begin(), beta.end(), 
+        double beta_sq_norm = inner_product(beta.begin(), beta.end(),
             beta.begin(), 0.0);
         for(int j = 0; j < NLevel2; j++){
-            psi_L2[j] = exp(- inner_prod[j] + lnNpr_sum[j] + 
+            psi_L2[j] = exp(- inner_prod[j] + lnNpr_sum[j] +
                 0.5 * beta_sq_norm);
         }
         p_L1[k] = accumulate(psi_L2, psi_L2 + NLevel2, 0.0) / NLevel2;

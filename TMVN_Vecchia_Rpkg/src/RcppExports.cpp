@@ -28,9 +28,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sp_mat_mul_query
+NumericVector sp_mat_mul_query(const IntegerVector& queryRow, const IntegerVector& queryCol, const IntegerVector& idx, const IntegerVector& cidx, const NumericVector& val);
+RcppExport SEXP _VeccTMVN_sp_mat_mul_query(SEXP queryRowSEXP, SEXP queryColSEXP, SEXP idxSEXP, SEXP cidxSEXP, SEXP valSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type queryRow(queryRowSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type queryCol(queryColSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type cidx(cidxSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type val(valSEXP);
+    rcpp_result_gen = Rcpp::wrap(sp_mat_mul_query(queryRow, queryCol, idx, cidx, val));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_VeccTMVN_mvndns", (DL_FUNC) &_VeccTMVN_mvndns, 8},
+    {"_VeccTMVN_sp_mat_mul_query", (DL_FUNC) &_VeccTMVN_sp_mat_mul_query, 5},
     {NULL, NULL, 0}
 };
 

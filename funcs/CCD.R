@@ -1,10 +1,10 @@
-#' Constrained coordinate descent for a quadratic function under rectangular 
+#' Constrained coordinate descent for a quadratic function under rectangular
 #' bounds
 #' $$ \frac{1}{2} x^\top A x + b^\top x $$ s.t. lb <= x <= ub
 #' A should be positive definite
-#' 
+#'
 cons_coord_desc <- function(A, b = rep(0, nrow(A)), lb = rep(-Inf, nrow(A)),
-                            ub = rep(Inf, nrow(A)), silent = T, convtol = 1e-3, 
+                            ub = rep(Inf, nrow(A)), silent = T, convtol = 1e-3,
                             maxEpoch = 20)
 {
   parms_old <- ub
@@ -13,7 +13,7 @@ cons_coord_desc <- function(A, b = rep(0, nrow(A)), lb = rep(-Inf, nrow(A)),
   n <- nrow(A)
   if(any(diag(A) <= 0))
     stop("Input matrix A should be positive definite\n")
-  obj_old <- as.numeric(0.5 * t(parms_old) %*% A %*% parms_old + 
+  obj_old <- as.numeric(0.5 * t(parms_old) %*% A %*% parms_old +
                           t(b) %*% parms_old)
   if(!silent)
     cat("Epoch 0, objective is", obj_old, "\n")
@@ -30,7 +30,7 @@ cons_coord_desc <- function(A, b = rep(0, nrow(A)), lb = rep(-Inf, nrow(A)),
       else
         parms_new[j] <- opt_j
     }
-    obj_new <- as.numeric(0.5 * t(parms_new) %*% A %*% parms_new + 
+    obj_new <- as.numeric(0.5 * t(parms_new) %*% A %*% parms_new +
                             t(b) %*% parms_new)
     if(!silent)
       cat("Epoch", k, "objective is", obj_new, "\n")

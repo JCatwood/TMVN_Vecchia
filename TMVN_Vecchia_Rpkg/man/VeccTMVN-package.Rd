@@ -28,6 +28,6 @@ Jian Cao <jcao2416@gmail.com>
 \examples{
   \dontrun{
      ## Optional simple examples of the most important functions
-     ## These can be in \dontrun{} and \donttest{} blocks.   
+     ## These can be in \dontrun{} and \donttest{} blocks.
   }
 }

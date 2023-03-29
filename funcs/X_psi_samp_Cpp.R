@@ -2,8 +2,8 @@ library(VeccTMVN)
 
 
 #' Input:
-#'   veccCondMeanVarObj - contains information of the conditional mean 
-#'     coefficient, the conditional variance, and the NN array of the Vecchia 
+#'   veccCondMeanVarObj - contains information of the conditional mean
+#'     coefficient, the conditional variance, and the NN array of the Vecchia
 #'     approximation
 #'   a - lower bound vector for TMVN
 #'   b - upper bound vector for TMVN
@@ -11,14 +11,14 @@ library(VeccTMVN)
 #'   N_level1 - First level Monte Carlo sample size
 #'   N_level2 - Second level Monte Carlo sample size
 #' Return the a vector of length N, representing the exp(psi) values
-#' 
+#'
 sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
-                                 beta = rep(0, length(x)), N_level1 = 10, 
+                                 beta = rep(0, length(x)), N_level1 = 10,
                                  N_level2 = 1000){
   cond_sd <- sqrt(vecc_cond_mean_var_obj$cond_var)
-  exp_psi <- VeccTMVN::mvndns(a, b, veccCondMeanVarObj$nn, 
-                          veccCondMeanVarObj$cond_mean_coeff, 
-                          cond_sd, beta, 
+  exp_psi <- VeccTMVN::mvndns(a, b, veccCondMeanVarObj$nn,
+                          veccCondMeanVarObj$cond_mean_coeff,
+                          cond_sd, beta,
                           NLevel1 = N_level1, NLevel2 = N_level2)
   return(exp_psi)
 }
@@ -32,7 +32,7 @@ sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
 # source("inv_chol.R")
 # source("vecc_cond_mean_var.R")
 # source("gradpsi.R")
-# 
+#
 # ## example MVN probabilities --------------------------------
 # n1 <- 10
 # n2 <- 10
@@ -42,7 +42,7 @@ sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
 # cov_mat <- matern15_isotropic(covparms, locs)
 # a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
 # b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
-# 
+#
 # ## Compute MVN probs --------------------------------
 # N_level1 <- 12  # Level 1 MC size
 # N_level2 <- 1e4 # Level 2 MC size
@@ -62,7 +62,7 @@ sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
 #   cov_mat_Vecc <- solve(U %*% t(U))
 #   vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
 #   ### Find proposal parameters -------------------------
-#   solv_idea_5 <- nleqslv(rep(0, 2 * n - 2), 
+#   solv_idea_5 <- nleqslv(rep(0, 2 * n - 2),
 #                          fn = grad_idea5,
 #                          jac = jac_idea5,
 #                          veccCondMeanVarObj = vecc_cond_mean_var_obj,
@@ -74,24 +74,20 @@ sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
 #   beta <- rep(0, n)
 #   beta[1 : n - 1] <- solv_idea_5$x[n : (2 * n - 2)]
 #   ### Compute MVN prob with idea V -----------------------
-#   exp_psi <- sample_psi_idea5_cpp(vecc_cond_mean_var_obj, a_ord, b_ord, 
-#                           beta = beta, N_level1 = N_level1, 
+#   exp_psi <- sample_psi_idea5_cpp(vecc_cond_mean_var_obj, a_ord, b_ord,
+#                           beta = beta, N_level1 = N_level1,
 #                           N_level2 = N_level2)
 #   est_tilt_quasi <- mean(exp_psi)
 #   err_tilt_quasi <- sd(exp_psi) / sqrt(N_level1)
-#   
+#
 #   ### Compute MVN prob with other methods -----------------------
 #   est_TN <- TruncatedNormal::pmvnorm(
 #     rep(0, n), cov_mat_Vecc, lb = a_ord, ub = b_ord)
 #   est_TLR <- tlrmvnmvt::pmvn(a_ord, b_ord, sigma = cov_mat_Vecc)
 #   est_Genz <- mvtnorm::pmvnorm(a_ord, b_ord, sigma = cov_mat_Vecc)
-#   cat("est_tilt_quasi", est_tilt_quasi, "err_tilt_quasi", err_tilt_quasi, "\n", 
+#   cat("est_tilt_quasi", est_tilt_quasi, "err_tilt_quasi", err_tilt_quasi, "\n",
 #       "est_TN", est_TN, "err_TN", attributes(est_TN)$relerr * est_TN, "\n",
 #       "est_TLR", est_TLR, "err_TLR", attributes(est_TLR)$error, "\n",
 #       "est_Genz", est_Genz, "err_Genz", attributes(est_Genz)$error, "\n"
 #   )
 # }
-
-
-
-

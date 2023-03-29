@@ -34,31 +34,13 @@ cat("Comparing ", length(a_list_ord),
 for(i in 1 : length(a_list_ord)){
   a_ord <- a_list_ord[[i]]
   b_ord <- b_list_ord[[i]]
-  tmp_rslt <- 
+  tmp_rslt <-
     pmvnorm(mu = rep(0, n), sigma = cov_mat_ord, lb = a_ord, ub = b_ord)
-  cat("Without Vecchia: Est ", tmp_rslt[1], "Relerr ", 
+  cat("Without Vecchia: Est ", tmp_rslt[1], "Relerr ",
       attributes(tmp_rslt)$relerr, "\n")
-  tmp_rslt <- 
+  tmp_rslt <-
     pmvnorm(mu = rep(0, n), sigma = cov_mat_Vecc, lb = a_ord, ub = b_ord)
-  cat("With Vecchia: Est ", tmp_rslt[1], "Relerr ", 
+  cat("With Vecchia: Est ", tmp_rslt[1], "Relerr ",
       attributes(tmp_rslt)$relerr, "\n")
 }
 cat("Done")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
