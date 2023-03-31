@@ -1,7 +1,7 @@
-get_sp_inv_chol <- function(covMat, NNarray){
+get_sp_inv_chol <- function(covMat, NNarray) {
   n <- nrow(covMat)
   inv_chol <- matrix(0, n, n)
-  for(i in 1 : n){
+  for (i in 1:n) {
     idx <- sort(NNarray[i, ])
     idx <- idx[!is.na(idx)]
     nnz <- length(idx)

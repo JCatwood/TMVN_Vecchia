@@ -4,66 +4,73 @@ library(Matrix)
 #' Compute the conditional mean multiplier and the conditional variance
 #'   under the Vecchia approximation.
 #'
-vecc_cond_mean_var <- function(covMat, NNarray){
+vecc_cond_mean_var <- function(covMat, NNarray) {
   n <- nrow(covMat)
   m <- ncol(NNarray) - 1
   cond_mean_coeff <- matrix(0, n, m)
   cond_var <- rep(NA, n)
   cond_var[1] <- covMat[1, 1]
   A <- matrix(0, n, n)
-  for(i in 2 : n){
-    ind_cond <- NNarray[i, 2 : min(i, (m + 1))]
+  for (i in 2:n) {
+    ind_cond <- NNarray[i, 2:min(i, (m + 1))]
     cov_mat_sub_inv <- solve(covMat[ind_cond, ind_cond])
     cov_vec_sub <- covMat[i, ind_cond]
     cond_var[i] <- covMat[i, i] - as.numeric(
-      t(cov_vec_sub) %*% cov_mat_sub_inv %*% cov_vec_sub)
-    cond_mean_coeff[i, 1 : min(i - 1, m)] <- t(cov_vec_sub) %*% cov_mat_sub_inv
-    A[i, ind_cond] <- cond_mean_coeff[i, 1 : min(i - 1, m)]
+      t(cov_vec_sub) %*% cov_mat_sub_inv %*% cov_vec_sub
+    )
+    cond_mean_coeff[i, 1:min(i - 1, m)] <- t(cov_vec_sub) %*% cov_mat_sub_inv
+    A[i, ind_cond] <- cond_mean_coeff[i, 1:min(i - 1, m)]
   }
-  return(list(cond_mean_coeff = cond_mean_coeff, cond_var = cond_var,
-              nn = NNarray, A = A))
+  return(list(
+    cond_mean_coeff = cond_mean_coeff, cond_var = cond_var,
+    nn = NNarray, A = A
+  ))
 }
 
 
-vecc_cond_mean_var_sp <- function(covMat, NNarray){
+vecc_cond_mean_var_sp <- function(covMat, NNarray) {
   n <- nrow(covMat)
   m <- ncol(NNarray) - 1
   cond_mean_coeff <- matrix(0, n, m)
   cond_var <- rep(NA, n)
   cond_var[1] <- covMat[1, 1]
-  for(i in 2 : n){
-    ind_cond <- NNarray[i, 2 : min(i, (m + 1))]
+  for (i in 2:n) {
+    ind_cond <- NNarray[i, 2:min(i, (m + 1))]
     cov_mat_sub_inv <- solve(covMat[ind_cond, ind_cond])
     cov_vec_sub <- covMat[i, ind_cond]
     cond_var[i] <- covMat[i, i] - as.numeric(
-      t(cov_vec_sub) %*% cov_mat_sub_inv %*% cov_vec_sub)
-    cond_mean_coeff[i, 1 : min(i - 1, m)] <- t(cov_vec_sub) %*% cov_mat_sub_inv
+      t(cov_vec_sub) %*% cov_mat_sub_inv %*% cov_vec_sub
+    )
+    cond_mean_coeff[i, 1:min(i - 1, m)] <- t(cov_vec_sub) %*% cov_mat_sub_inv
   }
-  if(any(NNarray[, 1] != 1 : n))
+  if (any(NNarray[, 1] != 1:n)) {
     stop("Unexpected NNarray: first col is not 1 : n\n")
-  nnz_A <- (m + 1) * m / 2 + (n - m) * (m + 1)  # num of non-zero
+  }
+  nnz_A <- (m + 1) * m / 2 + (n - m) * (m + 1) # num of non-zero
   A_row_inds <- rep(0, nnz_A)
   A_col_inds <- rep(0, nnz_A)
   A_vals <- rep(0, nnz_A)
   ind <- 1
   # iteration through rows
-  for(i in 1 : n){
+  for (i in 1:n) {
     nnz_A_i <- min(m + 1, i)
-    A_row_inds[ind : (ind + nnz_A_i - 1)] <- i
+    A_row_inds[ind:(ind + nnz_A_i - 1)] <- i
     # first col ind is i
-    A_col_inds[ind : (ind + nnz_A_i - 1)] <- NNarray[i, 1 : nnz_A_i]
+    A_col_inds[ind:(ind + nnz_A_i - 1)] <- NNarray[i, 1:nnz_A_i]
     # first A[i, i] should be zero
     A_vals[ind] <- 0
-    if(i > 1){
-      A_vals[(ind + 1) : (ind + nnz_A_i - 1)] <-
-        cond_mean_coeff[i, 1 : min(i - 1, m)]
+    if (i > 1) {
+      A_vals[(ind + 1):(ind + nnz_A_i - 1)] <-
+        cond_mean_coeff[i, 1:min(i - 1, m)]
     }
     ind <- ind + nnz_A_i
   }
   # create sparse A
   A <- sparseMatrix(i = A_row_inds, j = A_col_inds, x = A_vals, dims = c(n, n))
-  return(list(cond_mean_coeff = cond_mean_coeff, cond_var = cond_var,
-              nn = NNarray, A = A))
+  return(list(
+    cond_mean_coeff = cond_mean_coeff, cond_var = cond_var,
+    nn = NNarray, A = A
+  ))
 }
 
 

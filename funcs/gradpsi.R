@@ -16,23 +16,23 @@ grad_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   n <- length(a)
   x <- rep(0, n)
   beta <- rep(0, n)
-  x[1 : (n - 1)] <- xAndBeta[1 : (n - 1)]
-  beta[1 : (n - 1)] <- xAndBeta[n : (2 * n - 2)]
+  x[1:(n - 1)] <- xAndBeta[1:(n - 1)]
+  beta[1:(n - 1)] <- xAndBeta[n:(2 * n - 2)]
   D <- sqrt(veccCondMeanVarObj$cond_var)
   mu_c <- as.vector(veccCondMeanVarObj$A %*% x)
   a_tilde_shift <- (a - mu_c) / D - beta
   b_tilde_shift <- (b - mu_c) / D - beta
   log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
-  pl <- exp(-0.5 * a_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
-  pu <- exp(-0.5 * b_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
+  pl <- exp(-0.5 * a_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
+  pu <- exp(-0.5 * b_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
   Psi <- pl - pu
 
-  dpsi_dx = as.vector(
-    - t(diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) %*%
-      ((beta / D)[1 : (n - 1)]) +
-    t(veccCondMeanVarObj$A[, -n]) %*% (Psi / D)
-    )
-  dpsi_dbeta = (beta - (x - mu_c) / D + Psi)[-n]
+  dpsi_dx <- as.vector(
+    -t(diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) %*%
+      ((beta / D)[1:(n - 1)]) +
+      t(veccCondMeanVarObj$A[, -n]) %*% (Psi / D)
+  )
+  dpsi_dbeta <- (beta - (x - mu_c) / D + Psi)[-n]
   c(dpsi_dx, dpsi_dbeta)
 }
 
@@ -54,27 +54,29 @@ jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   n <- length(a)
   x <- rep(0, n)
   beta <- rep(0, n)
-  x[1 : (n - 1)] <- xAndBeta[1 : (n - 1)]
-  beta[1 : (n - 1)] <- xAndBeta[n : (2 * n - 2)]
+  x[1:(n - 1)] <- xAndBeta[1:(n - 1)]
+  beta[1:(n - 1)] <- xAndBeta[n:(2 * n - 2)]
   D <- sqrt(veccCondMeanVarObj$cond_var)
   mu_c <- as.vector(veccCondMeanVarObj$A %*% x)
   a_tilde_shift <- (a - mu_c) / D - beta
   b_tilde_shift <- (b - mu_c) / D - beta
   log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
-  pl <- exp(-0.5 * a_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
-  pu <- exp(-0.5 * b_tilde_shift ^ 2 - log_diff_cdf) / sqrt(2 * pi)
+  pl <- exp(-0.5 * a_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
+  pu <- exp(-0.5 * b_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
   Psi <- pl - pu
 
   a_tilde_shift[is.infinite(a_tilde_shift)] <- 0
   b_tilde_shift[is.infinite(b_tilde_shift)] <- 0
-  dPsi <- (-Psi ^ 2) + a_tilde_shift * pl - b_tilde_shift * pu
+  dPsi <- (-Psi^2) + a_tilde_shift * pl - b_tilde_shift * pu
   dpsi_dx_dx <- t(veccCondMeanVarObj$A[, -n]) %*%
     (dPsi / D / D * veccCondMeanVarObj$A[, -n])
   dpsi_dx_dbeta <- t(dPsi / D * veccCondMeanVarObj$A)[-n, -n] -
     t((diag(rep(1, n - 1)) - veccCondMeanVarObj$A[-n, -n]) / D[-n])
   dpsi_dbeta_dbeta <- diag(1 + dPsi[-n])
-  rbind(cbind(dpsi_dx_dx, dpsi_dx_dbeta),
-        cbind(t(dpsi_dx_dbeta), dpsi_dbeta_dbeta))
+  rbind(
+    cbind(dpsi_dx_dx, dpsi_dx_dbeta),
+    cbind(t(dpsi_dx_dbeta), dpsi_dbeta_dbeta)
+  )
 }
 
 

@@ -19,33 +19,38 @@ library(randtoolbox)
 #' Return the a vector of length N, representing the psi values
 #'
 sample_psi_idea5 <- function(N, veccCondMeanVarObj, a, b,
-                             beta = rep(0, length(x)), usePseudo = F){
+                             beta = rep(0, length(x)), usePseudo = F) {
   n <- length(a)
   X <- matrix(NA, n, N)
   lnNpr_sum <- rep(0, N)
   inner_prod <- rep(0, N)
-  if(usePseudo)
+  if (usePseudo) {
     x <- t(as.matrix(randtoolbox::sobol(
-      N, dim = n, init =TRUE, scrambling = 1, seed=ceiling(1e6*runif(1)))))
-  for(i in 1 : n){
+      N,
+      dim = n, init = TRUE, scrambling = 1, seed = ceiling(1e6 * runif(1))
+    )))
+  }
+  for (i in 1:n) {
     ind <- veccCondMeanVarObj$nn[i, -1]
     sd <- sqrt(veccCondMeanVarObj$cond_var[i]) # scalar
     mu <- apply(veccCondMeanVarObj$cond_mean_coeff[i, ] * X[ind, ], 2, sum,
-                na.rm = T) # vector of length N
+      na.rm = T
+    ) # vector of length N
     a_tilde_i_mbeta <- (a[i] - mu) / sd - beta[i]
     b_tilde_i_mbeta <- (b[i] - mu) / sd - beta[i]
-    if(usePseudo){
+    if (usePseudo) {
       X[i, ] <- norminvp(x[i, ], a_tilde_i_mbeta, b_tilde_i_mbeta) * sd + mu +
         beta[i] * sd
-    }else{
-      X[i, ] <- rtruncnorm(n = 1, a = a[i], b = b[i], mean = mu + beta[i] * sd,
-                           sd = sd)
+    } else {
+      X[i, ] <- rtruncnorm(
+        n = 1, a = a[i], b = b[i], mean = mu + beta[i] * sd,
+        sd = sd
+      )
     }
 
     lnNpr_sum <- lnNpr_sum +
       TruncatedNormal::lnNpr(a_tilde_i_mbeta, b_tilde_i_mbeta)
     inner_prod <- inner_prod + (X[i, ] - mu) * beta[i] / sd
-
   }
   psi <- 0.5 * sum(beta^2) - inner_prod + lnNpr_sum
   return(psi)

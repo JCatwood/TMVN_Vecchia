@@ -14,12 +14,13 @@ library(VeccTMVN)
 #'
 sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
                                  beta = rep(0, length(x)), N_level1 = 10,
-                                 N_level2 = 1000){
+                                 N_level2 = 1000) {
   cond_sd <- sqrt(vecc_cond_mean_var_obj$cond_var)
   exp_psi <- VeccTMVN::mvndns(a, b, veccCondMeanVarObj$nn,
-                          veccCondMeanVarObj$cond_mean_coeff,
-                          cond_sd, beta,
-                          NLevel1 = N_level1, NLevel2 = N_level2)
+    veccCondMeanVarObj$cond_mean_coeff,
+    cond_sd, beta,
+    NLevel1 = N_level1, NLevel2 = N_level2
+  )
   return(exp_psi)
 }
 
