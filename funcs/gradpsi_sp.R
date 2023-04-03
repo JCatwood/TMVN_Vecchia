@@ -54,9 +54,35 @@ HInv22_mul <- function(veccCondMeanVarObj, dPsi, D, V, x) {
 
 
 # Gradient, Newton step, and Hessian multiply gradient of the psi function in
-#   Idea V, computed using sparse A. For this function, `xAndBeta` should be a 
-#     vector of length 2 * n and all the returned vectors (matrices) are of 
-#     dimension 2 * n. In other words, beta_n and x_n are taken into 
+#   Idea V, computed using sparse A. For this function, `xAndBeta` should be a
+#     vector of length 2 * n and all the returned vectors (matrices) are of
+#     dimension 2 * n. In other words, beta_n and x_n are taken into
+#     consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
+#     and we don't need to know the value of x_n anyways
+grad_idea5_sp <- function(xAndBeta, veccCondMeanVarObj, a, b) {
+  n <- length(a)
+  x <- xAndBeta[1:n]
+  beta <- xAndBeta[(n + 1):(2 * n)]
+  D <- sqrt(veccCondMeanVarObj$cond_var)
+  mu_c <- as.vector(veccCondMeanVarObj$A %*% x)
+  a_tilde_shift <- (a - mu_c) / D - beta
+  b_tilde_shift <- (b - mu_c) / D - beta
+  log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
+  pl <- exp(-0.5 * a_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
+  pu <- exp(-0.5 * b_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
+  Psi <- pl - pu
+  # compute grad ------------------------------------------------
+  dpsi_dx <- as.vector(t(veccCondMeanVarObj$A) %*%
+    (beta / D + Psi / D)) - beta / D
+  dpsi_dbeta <- beta - (x - mu_c) / D + Psi
+  return(c(dpsi_dx, dpsi_dbeta))
+}
+
+
+# Gradient, Newton step, and Hessian multiply gradient of the psi function in
+#   Idea V, computed using sparse A. For this function, `xAndBeta` should be a
+#     vector of length 2 * n and all the returned vectors (matrices) are of
+#     dimension 2 * n. In other words, beta_n and x_n are taken into
 #     consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
 #     and we don't need to know the value of x_n anyways
 grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
@@ -161,63 +187,63 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
 }
 
 
-# TEST-------------------------------
-
-
-## example MVN probabilities --------------------------------
-library(GpGp)
-source("inv_chol.R")
-source("vecc_cond_mean_var.R")
-source("gradpsi.R")
-set.seed(123)
-n1 <- 5
-n2 <- 5
-n <- n1 * n2
-locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
-covparms <- c(2, 0.3, 0)
-cov_mat <- matern15_isotropic(covparms, locs)
-a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
-b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
-
-## ordering and NN --------------------------------
-m <- 30
-ord <- order_maxmin(locs)
-locs_ord <- locs[ord, , drop = FALSE]
-cov_mat_ord <- matern15_isotropic(covparms, locs_ord)
-a_list_ord <- lapply(a_list, function(x) {
-  x[ord]
-})
-b_list_ord <- lapply(b_list, function(x) {
-  x[ord]
-})
-NNarray <- find_ordered_nn(locs_ord, m = m)
-
-## Vecchia approx --------------------------------
-U <- get_sp_inv_chol(cov_mat_ord, NNarray)
-cov_mat_Vecc <- solve(U %*% t(U))
-vecc_cond_mean_var_obj <- vecc_cond_mean_var_sp(cov_mat_ord, NNarray)
-
-## Compare dpsi ------------------------------
-for (i in 1:length(a_list_ord)) {
-  a_ord <- a_list_ord[[i]]
-  b_ord <- b_list_ord[[i]]
-  x0_padded <- runif(2 * n)
-  x0_padded[2 * n] <- 0
-  x0 <- x0_padded[-c(n, 2 * n)]
-  grad_ds <- grad_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
-  jac_ds <- jac_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
-  solve_obj <- grad_jacprod_jacsolv_idea5(x0_padded, vecc_cond_mean_var_obj,
-    a_ord, b_ord,
-    retJac = T
-  )
-  cat("grad error: ", sum(abs(grad_ds - solve_obj$grad[-c(n, 2 * n)])), "\n")
-  cat(
-    "jac error: ", sum(abs(jac_ds - solve_obj$jac[-c(n, 2 * n), -c(n, 2 * n)])),
-    "\n"
-  )
-  H_inv <- solve(solve_obj$jac)
-  jac_grad_test <- as.vector(solve_obj$jac %*% solve_obj$grad)
-  jac_inv_grad_test <- as.vector(H_inv %*% solve_obj$grad)
-  cat("jac_grad error: ", sum(abs(jac_grad_test - solve_obj$jac_grad)), "\n")
-  cat("jac_inv_grad error: ", sum(abs(jac_inv_grad_test - solve_obj$jac_inv_grad)), "\n")
-}
+# # TEST-------------------------------
+#
+#
+# ## example MVN probabilities --------------------------------
+# library(GpGp)
+# source("inv_chol.R")
+# source("vecc_cond_mean_var.R")
+# source("gradpsi.R")
+# set.seed(123)
+# n1 <- 10
+# n2 <- 10
+# n <- n1 * n2
+# locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
+# covparms <- c(2, 0.3, 0)
+# cov_mat <- matern15_isotropic(covparms, locs)
+# a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
+# b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
+#
+# ## ordering and NN --------------------------------
+# m <- 30
+# ord <- order_maxmin(locs)
+# locs_ord <- locs[ord, , drop = FALSE]
+# cov_mat_ord <- matern15_isotropic(covparms, locs_ord)
+# a_list_ord <- lapply(a_list, function(x) {
+#   x[ord]
+# })
+# b_list_ord <- lapply(b_list, function(x) {
+#   x[ord]
+# })
+# NNarray <- find_ordered_nn(locs_ord, m = m)
+#
+# ## Vecchia approx --------------------------------
+# U <- get_sp_inv_chol(cov_mat_ord, NNarray)
+# cov_mat_Vecc <- solve(U %*% t(U))
+# vecc_cond_mean_var_obj <- vecc_cond_mean_var_sp(cov_mat_ord, NNarray)
+#
+# ## Compare dpsi ------------------------------
+# for (i in 1:length(a_list_ord)) {
+#   a_ord <- a_list_ord[[i]]
+#   b_ord <- b_list_ord[[i]]
+#   x0_padded <- runif(2 * n)
+#   x0_padded[2 * n] <- 0
+#   x0 <- x0_padded[-c(n, 2 * n)]
+#   grad_ds <- grad_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
+#   jac_ds <- jac_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
+#   solve_obj <- grad_jacprod_jacsolv_idea5(x0_padded, vecc_cond_mean_var_obj,
+#     a_ord, b_ord,
+#     retJac = T
+#   )
+#   cat("grad error: ", sum(abs(grad_ds - solve_obj$grad[-c(n, 2 * n)])), "\n")
+#   cat(
+#     "jac error: ", sum(abs(jac_ds - solve_obj$jac[-c(n, 2 * n), -c(n, 2 * n)])),
+#     "\n"
+#   )
+#   H_inv <- solve(solve_obj$jac)
+#   jac_grad_test <- as.vector(solve_obj$jac %*% solve_obj$grad)
+#   jac_inv_grad_test <- as.vector(H_inv %*% solve_obj$grad)
+#   cat("jac_grad error: ", sum(abs(jac_grad_test - solve_obj$jac_grad)), "\n")
+#   cat("jac_inv_grad error: ", sum(abs(jac_inv_grad_test - solve_obj$jac_inv_grad)), "\n")
+# }
