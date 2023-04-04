@@ -59,7 +59,7 @@ HInv22_mul <- function(veccCondMeanVarObj, dPsi, D, V, x) {
 #     dimension 2 * n. In other words, beta_n and x_n are taken into
 #     consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
 #     and we don't need to know the value of x_n anyways
-grad_idea5_sp <- function(xAndBeta, veccCondMeanVarObj, a, b) {
+grad_idea5_sp <- function(xAndBeta, veccCondMeanVarObj, a, b, ...) {
   n <- length(a)
   x <- xAndBeta[1:n]
   beta <- xAndBeta[(n + 1):(2 * n)]
@@ -86,7 +86,9 @@ grad_idea5_sp <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 #     consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
 #     and we don't need to know the value of x_n anyways
 grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
-                                       retJac = F) {
+                                       retJac = F, VApprox = c("ichol", "diag"),
+                                       VAdj = T) {
+  VApprox <- VApprox[1]
   n <- length(a)
   x <- xAndBeta[1:n]
   beta <- xAndBeta[(n + 1):(2 * n)]
@@ -132,25 +134,47 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
   }
   # L = D^{-1} A - D^{-1}
   L@x[(L@p[-(n + 1)] + 1)] <- -1 / D
-  # "precision" matrix P \approx L^{\top} L. The triangular part of P is
-  #   assumed to have the same sparsity as L, only upper-tri of P is stored
-  P_col_ind <- L@i + 1
-  P_row_ind <- rep(1:n, diff(L@p))
-  P_vals <- sp_mat_mul_query(P_row_ind, P_col_ind, L@i, L@p, L@x)
-  # P = L^{\top} L + D^{-1} (I + dPsi)^{-1} D^{-1} - D^{-2}
-  P_diag_ind <- P_col_ind == P_row_ind
-  P_vals[P_diag_ind] <- P_vals[P_diag_ind] + (1 / (1 + dPsi) - 1) / (D^2)
-  P <- sparseMatrix(
-    i = P_row_ind, j = P_col_ind, x = P_vals, dims = c(n, n),
-    symmetric = T
-  )
-  # call ic0 from GPVecchia, this changes P matrix!
-  V <- GPvecchia::ichol(P)
-  # V should be upper-tri
-  if (!(Matrix::isTriangular(V) &&
-    attr(Matrix::isTriangular(V), "kind") == "U")) {
-    stop("Returned V is not an upper-tri matrix\n")
+  if (VApprox == "ichol") {
+    # "precision" matrix P \approx L^{\top} L. The triangular part of P is
+    #   assumed to have the same sparsity as L, only upper-tri of P is stored
+    P_col_ind <- L@i + 1
+    P_row_ind <- rep(1:n, diff(L@p))
+    P_vals <- sp_mat_mul_query(P_row_ind, P_col_ind, L@i, L@p, L@x)
+    # P = L^{\top} L + D^{-1} (I + dPsi)^{-1} D^{-1} - D^{-2}
+    P_diag_ind <- P_col_ind == P_row_ind
+    P_vals[P_diag_ind] <- P_vals[P_diag_ind] + (1 / (1 + dPsi) - 1) / (D^2)
+    P <- sparseMatrix(
+      i = P_row_ind, j = P_col_ind, x = P_vals, dims = c(n, n),
+      symmetric = T
+    )
+    # call ic0 from GPVecchia, this changes P matrix!
+    V <- GPvecchia::ichol(P)
+    # V should be upper-tri
+    if (!(Matrix::isTriangular(V) &&
+      attr(Matrix::isTriangular(V), "kind") == "U")) {
+      stop("Returned V is not an upper-tri matrix\n")
+    }
+  } else if (VApprox == "diag") {
+    # increase the absolute values of the diag coeffs of L and use it as V s.t.
+    #   diag(V^{\top} V) = L^{\top} L + D^{-1} (I + dPsi)^{-1} D^{-1} - D^{-2}
+    L_row_ind <- L@i + 1
+    L_col_ind <- rep(1:n, diff(L@p))
+    L_diag_ind <- L_row_ind == L_col_ind
+    V_vals <- L@x
+    V_vals[L_diag_ind] <- sign(V_vals[L_diag_ind]) *
+      sqrt(V_vals[L_diag_ind]^2 + (1 / (1 + dPsi) - 1) / (D^2))
+    V <- sparseMatrix(
+      i = L_row_ind, j = L_col_ind, x = V_vals, dims = c(n, n),
+      triangular = T
+    )
+    if (!(Matrix::isTriangular(V) &&
+      attr(Matrix::isTriangular(V), "kind") == "L")) {
+      stop("Returned V is not an lower-tri matrix\n")
+    }
+  } else {
+    stop("Undefined VApprox\n")
   }
+
   # compute Jac^{-1} \cdot grad -------------------------------------------
   HInv11_dpsi_dx <- HInv11_mul(
     veccCondMeanVarObj, dPsi, D, V,

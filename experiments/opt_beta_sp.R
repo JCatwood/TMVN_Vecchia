@@ -59,7 +59,7 @@ for (i in 3:length(a_list_ord)) {
       )
     },
     veccCondMeanVarObj = vecc_cond_mean_var_obj_sp,
-    a = a_ord, b = b_ord,
+    a = a_ord, b = b_ord, VApprox = "diag",
     control = list(maxit = 500L)
   )
   ### Check solution consistency -------------------------------
