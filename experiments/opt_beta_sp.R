@@ -18,7 +18,7 @@ a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
 b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
 
 ## ordering and NN --------------------------------
-m <- 30
+m <- 10
 ord <- order_maxmin(locs)
 locs_ord <- locs[ord, , drop = FALSE]
 cov_mat_ord <- matern15_isotropic(covparms, locs_ord)
@@ -35,7 +35,7 @@ vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
 vecc_cond_mean_var_obj_sp <- vecc_cond_mean_var_sp(cov_mat_ord, NNarray)
 
 ## Compare system solution --------------------------------
-for (i in 3:length(a_list_ord)) {
+for (i in 1:length(a_list_ord)) {
   a_ord <- a_list_ord[[i]]
   b_ord <- b_list_ord[[i]]
   x0 <- rep(0, 2 * length(a_ord) - 2)
@@ -59,7 +59,7 @@ for (i in 3:length(a_list_ord)) {
       )
     },
     veccCondMeanVarObj = vecc_cond_mean_var_obj_sp,
-    a = a_ord, b = b_ord, VApprox = "diag",
+    a = a_ord, b = b_ord, verbose = F,
     control = list(maxit = 500L)
   )
   ### Check solution consistency -------------------------------

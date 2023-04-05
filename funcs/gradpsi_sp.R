@@ -86,9 +86,7 @@ grad_idea5_sp <- function(xAndBeta, veccCondMeanVarObj, a, b, ...) {
 #     consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
 #     and we don't need to know the value of x_n anyways
 grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
-                                       retJac = F, VApprox = c("ichol", "diag"),
-                                       VAdj = T) {
-  VApprox <- VApprox[1]
+                                       retJac = F, VAdj = T, verbose = T) {
   n <- length(a)
   x <- xAndBeta[1:n]
   beta <- xAndBeta[(n + 1):(2 * n)]
@@ -126,6 +124,7 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
   H21_dpsi_dx <- H21_mul(veccCondMeanVarObj, dPsi, D, dpsi_dx)
   H22_dpsi_dbeta <- H22_mul(veccCondMeanVarObj, dPsi, D, dpsi_dbeta)
   # compute V -------------------------------------------
+  ichol_succ <- T
   # L = D^{-1} A, lower tri
   L <- veccCondMeanVarObj$A / D
   # First entry of each col in L should be diag entry
@@ -134,27 +133,33 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
   }
   # L = D^{-1} A - D^{-1}
   L@x[(L@p[-(n + 1)] + 1)] <- -1 / D
-  if (VApprox == "ichol") {
-    # "precision" matrix P \approx L^{\top} L. The triangular part of P is
-    #   assumed to have the same sparsity as L, only upper-tri of P is stored
-    P_col_ind <- L@i + 1
-    P_row_ind <- rep(1:n, diff(L@p))
-    P_vals <- sp_mat_mul_query(P_row_ind, P_col_ind, L@i, L@p, L@x)
-    # P = L^{\top} L + D^{-1} (I + dPsi)^{-1} D^{-1} - D^{-2}
-    P_diag_ind <- P_col_ind == P_row_ind
-    P_vals[P_diag_ind] <- P_vals[P_diag_ind] + (1 / (1 + dPsi) - 1) / (D^2)
-    P <- sparseMatrix(
-      i = P_row_ind, j = P_col_ind, x = P_vals, dims = c(n, n),
-      symmetric = T
-    )
-    # call ic0 from GPVecchia, this changes P matrix!
-    V <- GPvecchia::ichol(P)
-    # V should be upper-tri
-    if (!(Matrix::isTriangular(V) &&
-      attr(Matrix::isTriangular(V), "kind") == "U")) {
-      stop("Returned V is not an upper-tri matrix\n")
+  # "precision" matrix P \approx L^{\top} L. The triangular part of P is
+  #   assumed to have the same sparsity as L, only upper-tri of P is stored
+  P_col_ind <- L@i + 1
+  P_row_ind <- rep(1:n, diff(L@p))
+  P_vals <- sp_mat_mul_query(P_row_ind, P_col_ind, L@i, L@p, L@x)
+  # P = L^{\top} L + D^{-1} (I + dPsi)^{-1} D^{-1} - D^{-2}
+  P_diag_ind <- P_col_ind == P_row_ind
+  P_vals[P_diag_ind] <- P_vals[P_diag_ind] + (1 / (1 + dPsi) - 1) / (D^2)
+  P <- sparseMatrix(
+    i = P_row_ind, j = P_col_ind, x = P_vals, dims = c(n, n),
+    symmetric = T
+  )
+  # call ic0 from GPVecchia, this changes P matrix!
+  V <- GPvecchia::ichol(P)
+  # V should be upper-tri
+  if (!(Matrix::isTriangular(V) &&
+    attr(Matrix::isTriangular(V), "kind") == "U")) {
+    stop("Returned V is not an upper-tri matrix\n")
+  }
+  if (any(is.na(V)) |
+    min(diag(V)) / max(diag(V)) < sqrt(.Machine$double.eps)) {
+    if (verbose) {
+      cat("ichol failed, using diagonal adjustment on L instead\n")
     }
-  } else if (VApprox == "diag") {
+    ichol_succ <- F
+  }
+  if (!ichol_succ) {
     # increase the absolute values of the diag coeffs of L and use it as V s.t.
     #   diag(V^{\top} V) = L^{\top} L + D^{-1} (I + dPsi)^{-1} D^{-1} - D^{-2}
     L_row_ind <- L@i + 1
@@ -171,8 +176,6 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
       attr(Matrix::isTriangular(V), "kind") == "L")) {
       stop("Returned V is not an lower-tri matrix\n")
     }
-  } else {
-    stop("Undefined VApprox\n")
   }
   # compute S matrix for adjusting V^{\top} V ----------------------------------
   if (VAdj) {
@@ -182,7 +185,9 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
     S <- v2 / v1
     S_mask <- abs(S) < 1e-8 | abs(S) > 1e8 | is.na(S)
     if (any(S_mask)) {
-      warning("Abnormal values in S found\n")
+      if (verbose) {
+        cat("Abnormal values in S found, setting them to 1\n")
+      }
       S[S_mask] <- 1
     }
     if (retJac) {
