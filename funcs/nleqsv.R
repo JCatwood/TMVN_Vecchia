@@ -9,6 +9,9 @@
 #' @param maxStep maximum step length
 #' @param stepTol absolute convergence parameter
 #' @return a list of `code` and `x_new`
+#' code 1: qualifying `x_new` found
+#' code 2: qualifying `x_new` not found, return the original input `x`
+#' code 3: `NewtonStep` is not a descending direction
 #' @example
 #' Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
 #' J <- function(x){matrix(c(2*x[1], 2*x[2],
@@ -90,8 +93,37 @@ line_search <- function(x, grad, objFn, NewtonStep, alpha = 1e-4,
 }
 
 
-my_nleqslv <- function(x0, fn, gradNewtonFn, ..., method = NULL, global = NULL,
-                       control = list()) {
+#' Locally defined function for solving non-linear systems
+#'
+#' @param x0 initial guess
+#' @param fn non-linear system, fn: $R^{n} \rightarrow R^{n}$
+#' @param gradNewtonFn function that computes the gradient and Newton step of
+#' $0.5 \| fn \|^{2}$
+#' @param ... arguments to `fn` and `gradNewtonFn`
+#' @param control a list of tuning parameters for optimization
+#' @return a list of `code` and `x`
+#' code 1: qualifying `x` found
+#' code 2: qualifying `x` not found after reaching `maxit`
+#' code 3: qualifying `x` not found before reaching `maxit`
+#' @example
+#' Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
+#' J <- function(x){matrix(c(2*x[1], 2*x[2],
+#'                           exp(x[1] - 1), 3*x[2]^2), 2, 2, byrow=T)}
+#' gradNewtonFn = function(x) {
+#'   Fn_val <- Fn(x)
+#'   J_val <- J(x)
+#'   grad <- t(J_val) %*% Fn_val
+#'   Newton_step <- - solve(J_val) %*% Fn_val
+#'   list(
+#'     grad = grad,
+#'     Newton_step = Newton_step
+#'   )
+#' }
+#' x <- c(2, 0.5)
+#' ret <- my_nleqslv(x, Fn, gradNewtonFn)
+#' cat("Solution is", ret$x, "where f(x) is", ret$obj, "and code is", ret$code,
+#'     "\n")
+my_nleqslv <- function(x0, fn, gradNewtonFn, ..., control = list()) {
   x <- x0
   maxit <- control[["maxit"]]
   if (is.null(maxit)) {
@@ -100,6 +132,10 @@ my_nleqslv <- function(x0, fn, gradNewtonFn, ..., method = NULL, global = NULL,
   step_tol <- control[["step_tol"]]
   if (is.null(step_tol)) {
     step_tol <- 1e-4
+  }
+  obj_tol <- control[["obj_tol"]]
+  if (is.null(obj_tol)) {
+    obj_tol <- 1e-4
   }
   obj_fn <- function(x) {
     0.5 * sum(fn(x, ...)^2)
@@ -111,9 +147,22 @@ my_nleqslv <- function(x0, fn, gradNewtonFn, ..., method = NULL, global = NULL,
     ret <- line_search(x, grad, obj_fn, Newton_step, stepTol = step_tol)
     if (ret$code == 1) {
       x <- ret$x_new
-    } else {
-      break
+    } else if (obj_fn(x) > obj_tol) {
+      ret <- line_search(x, grad, obj_fn, -grad, stepTol = step_tol)
+      if (ret$code == 1) {
+        x <- ret$x_new
+      } else {
+        break
+      }
     }
   }
-  return(list(x = x, code = ret$code))
+  obj_ret <- obj_fn(x)
+  if (obj_ret <= obj_tol) {
+    code_ret <- 1
+  } else if (i == maxit) {
+    code_ret <- 2
+  } else {
+    code_ret <- 3
+  }
+  return(list(x = x, obj = obj_ret, code = code_ret))
 }
