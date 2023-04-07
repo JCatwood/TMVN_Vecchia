@@ -1,16 +1,16 @@
 #' Gradient of the psi function in Idea V
-#' Input:
-#'   xAndBeta - a vector whose first (n - 1) coeffs are x and second (n - 1)
-#'     coeffs are beta. (n - 1) instead of n because beta_n = 0 and x_n does
-#'     not matter. n is the dim of the MVN prob
-#'   veccCondMeanVarObj - contains information of the conditional mean
-#'     coefficient, the conditional variance, and the NN array of the Vecchia
-#'     approximation
-#'   a - lower bound vector for TMVN
-#'   b - upper bound vector for TMVN
-#' Return:
-#'   a vector of length 2n - 2, representing the gradient of psi w.r.t. beta[-n]
-#'     and x[-n]
+#'
+#' @param xAndBeta a vector whose first (n - 1) coeffs are x and second (n - 1)
+#' coeffs are beta. (n - 1) instead of n because beta_n = 0 and x_n does
+#' not matter. n is the dim of the MVN prob
+#' @param veccCondMeanVarObj contains information of the conditional mean
+#' coefficient, the conditional variance, and the NN array of the Vecchia
+#' approximation
+#' @param a lower bound vector for TMVN
+#' @param b upper bound vector for TMVN
+#' @return
+#'   a vector of length 2n - 2, representing the gradient of psi w.r.t. x[-n]
+#'   and beta[-n]
 #'
 grad_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
   n <- length(a)
@@ -38,16 +38,16 @@ grad_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {
 
 
 #' Jacobian of the psi function in Idea V
-#' Input:
-#'   xAndBeta - a vector whose first (n - 1) coeffs are x and second (n - 1)
-#'     coeffs are beta. (n - 1) instead of n because beta_n = 0 and x_n does
-#'     not matter. n is the dim of the MVN prob
-#'   veccCondMeanVarObj - contains information of the conditional mean
-#'     coefficient, the conditional variance, and the NN array of the Vecchia
-#'     approximation
-#'   a - lower bound vector for TMVN
-#'   b - upper bound vector for TMVN
-#' Return:
+#'
+#' @param xAndBeta a vector whose first (n - 1) coeffs are x and second (n - 1)
+#' coeffs are beta. (n - 1) instead of n because beta_n = 0 and x_n does
+#' not matter. n is the dim of the MVN prob
+#' @param veccCondMeanVarObj contains information of the conditional mean
+#' coefficient, the conditional variance, and the NN array of the Vecchia
+#' approximation
+#' @param a lower bound vector for TMVN
+#' @param b upper bound vector for TMVN
+#' @return
 #'   a square matrix of dim 2n - 2
 #'
 jac_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b) {

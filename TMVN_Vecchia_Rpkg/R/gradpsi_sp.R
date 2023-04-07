@@ -1,5 +1,4 @@
 library(Matrix)
-library(VeccTMVN)
 
 
 H11_mul <- function(veccCondMeanVarObj, dPsi, D, x) {
@@ -53,12 +52,10 @@ HInv22_mul <- function(veccCondMeanVarObj, dPsi, D, V, S, x) {
 }
 
 
-# Gradient, Newton step, and Hessian multiply gradient of the psi function in
-#   Idea V, computed using sparse A. For this function, `xAndBeta` should be a
-#     vector of length 2 * n and all the returned vectors (matrices) are of
-#     dimension 2 * n. In other words, beta_n and x_n are taken into
-#     consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
-#     and we don't need to know the value of x_n anyways
+#' Gradient of the psi function in Idea V, computed using sparse A.
+#' For this function, `xAndBeta` should be a vector of length 2 * n and all
+#' the returned gradient is of dimension 2 * n. In other words,
+#' beta_n and x_n are taken into consideration.
 grad_idea5_sp <- function(xAndBeta, veccCondMeanVarObj, a, b, ...) {
   n <- length(a)
   x <- xAndBeta[1:n]
@@ -79,12 +76,12 @@ grad_idea5_sp <- function(xAndBeta, veccCondMeanVarObj, a, b, ...) {
 }
 
 
-# Gradient, Newton step, and Hessian multiply gradient of the psi function in
-#   Idea V, computed using sparse A. For this function, `xAndBeta` should be a
-#     vector of length 2 * n and all the returned vectors (matrices) are of
-#     dimension 2 * n. In other words, beta_n and x_n are taken into
-#     consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
-#     and we don't need to know the value of x_n anyways
+#' Gradient, Newton step, and Hessian multiply gradient of the psi function in
+#' Idea V, computed using sparse A. For this function, `xAndBeta` should be a
+#' vector of length 2 * n and all the returned vectors (matrices) are of
+#' dimension 2 * n. In other words, beta_n and x_n are taken into
+#' consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
+#' and we don't need to know the value of x_n anyways
 grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
                                        retJac = F, VAdj = T, verbose = T) {
   n <- length(a)

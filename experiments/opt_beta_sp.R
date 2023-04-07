@@ -2,10 +2,7 @@ rm(list = ls())
 library(GpGp)
 library(nleqslv)
 library(truncnorm)
-source("../funcs/nleqsv.R")
-source("../funcs/gradpsi_sp.R")
-source("../funcs/gradpsi.R")
-source("../funcs/vecc_cond_mean_var.R")
+library(VeccTMVN)
 
 ## example MVN probabilities --------------------------------
 set.seed(123)

@@ -1,6 +1,8 @@
-library(VeccTMVN)
-
-
+#' Sample from the proposal density in Idea V and compute psi for each sample.
+#'   Notice that `E[exp(psi)]` is the MVN probability. Zero mean is assumed.
+#' The `truncnorm` package uses accept-reject sampling and seems to be able to
+#'   sample from tail truncation although I haven't verified its accuracy in
+#'   tail sampling.
 #' Input:
 #'   veccCondMeanVarObj - contains information of the conditional mean
 #'     coefficient, the conditional variance, and the NN array of the Vecchia
