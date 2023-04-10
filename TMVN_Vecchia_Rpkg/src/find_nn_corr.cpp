@@ -20,9 +20,9 @@ IntegerMatrix find_nn_corr_internal(const NumericMatrix &corrMat, int m){
 	for(int i = 1; i < n; i++){
 		int *order = new int[i + 1];
 		std::iota(order, order + i + 1, 0);
-		std::(order, order + i + 1, [&corrMat, &i](int &j, int &k){
+		std::sort(order, order + i + 1, [&corrMat, &i](int &j, int &k){
 			return corrMat(j, i) > corrMat(k, i); });
-		for(int j = 0; j < min(m + 1, i + 1); j++)
+		for(int j = 0; j < std::min(m + 1, i + 1); j++)
 			NN(i, j) = order[j];
 		delete[] order;
 	}
