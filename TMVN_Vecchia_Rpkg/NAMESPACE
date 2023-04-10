@@ -1,4 +1,5 @@
 useDynLib(VeccTMVN, .registration=TRUE)
 importFrom(Rcpp, evalCpp)
 import(Matrix)
+import(GpGp)
 exportPattern("^[[:alpha:]]+")
