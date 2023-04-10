@@ -1,4 +1,5 @@
 library(Matrix)
+library(GpGp)
 
 #' Compute the conditional mean multiplier and the conditional variance
 #'   under the Vecchia approximation.
@@ -31,7 +32,8 @@ vecc_cond_mean_var <- function(covMat, NNarray) {
 #'   under the Vecchia approximation. Different from `vecc_cond_mean_var`, the
 #'   returned A is a sparse matrix.
 #'
-vecc_cond_mean_var_sp <- function(covMat, NNarray) {
+vecc_cond_mean_var_sp <- function(NNarray, covMat = NULL, locs = NULL,
+                                  covName = NULL, covParms = NULL) {
   n <- nrow(covMat)
   m <- ncol(NNarray) - 1
   cond_mean_coeff <- matrix(0, n, m)
@@ -81,7 +83,7 @@ vecc_cond_mean_var_sp <- function(covMat, NNarray) {
 #
 # ## example spatial covariance matrices --------------------------------
 # library(GpGp)
-# source("inv_chol.R")
+# library(VeccTMVN)
 # set.seed(123)
 # n1 <- 10
 # n2 <- 10
@@ -99,7 +101,7 @@ vecc_cond_mean_var_sp <- function(covMat, NNarray) {
 #
 # ## Vecchia approx --------------------------------
 # vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
-# vecc_cond_mean_var_obj_sp <- vecc_cond_mean_var_sp(cov_mat_ord, NNarray)
+# vecc_cond_mean_var_obj_sp <- vecc_cond_mean_var_sp(NNarray, cov_mat_ord)
 # cat("F-norm of difference between dense and sparse A matrices is",
 #     sqrt(sum((as.matrix(vecc_cond_mean_var_obj_sp$A) -
 #                 vecc_cond_mean_var_obj$A)^2)))

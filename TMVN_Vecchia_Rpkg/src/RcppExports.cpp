@@ -10,6 +10,18 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// find_nn_corr_internal
+IntegerVector find_nn_corr_internal(const NumericMatrix& corrMat, int m);
+RcppExport SEXP _VeccTMVN_find_nn_corr_internal(SEXP corrMatSEXP, SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type corrMat(corrMatSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_nn_corr_internal(corrMat, m));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mvndns
 NumericVector mvndns(const NumericVector& a, const NumericVector& b, const IntegerMatrix& NN, const NumericMatrix& muCoeff, const NumericVector& condSd, const NumericVector& beta, int NLevel1, int NLevel2);
 RcppExport SEXP _VeccTMVN_mvndns(SEXP aSEXP, SEXP bSEXP, SEXP NNSEXP, SEXP muCoeffSEXP, SEXP condSdSEXP, SEXP betaSEXP, SEXP NLevel1SEXP, SEXP NLevel2SEXP) {
@@ -45,6 +57,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_VeccTMVN_find_nn_corr_internal", (DL_FUNC) &_VeccTMVN_find_nn_corr_internal, 2},
     {"_VeccTMVN_mvndns", (DL_FUNC) &_VeccTMVN_mvndns, 8},
     {"_VeccTMVN_sp_mat_mul_query", (DL_FUNC) &_VeccTMVN_sp_mat_mul_query, 5},
     {NULL, NULL, 0}

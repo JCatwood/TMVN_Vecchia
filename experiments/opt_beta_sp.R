@@ -30,7 +30,7 @@ NNarray <- find_ordered_nn(locs_ord, m = m)
 
 ## Vecchia approx --------------------------------
 vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
-vecc_cond_mean_var_obj_sp <- vecc_cond_mean_var_sp(cov_mat_ord, NNarray)
+vecc_cond_mean_var_obj_sp <- vecc_cond_mean_var_sp(NNarray, cov_mat_ord)
 
 ## Compare system solution --------------------------------
 for (i in 1:length(a_list_ord)) {

@@ -273,7 +273,7 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
 # ## Vecchia approx --------------------------------
 # U <- get_sp_inv_chol(cov_mat_ord, NNarray)
 # cov_mat_Vecc <- solve(U %*% t(U))
-# vecc_cond_mean_var_obj <- vecc_cond_mean_var_sp(cov_mat_ord, NNarray)
+# vecc_cond_mean_var_obj <- vecc_cond_mean_var_sp(NNarray, cov_mat_ord)
 #
 # ## Compare dpsi ------------------------------
 # for (i in 1:length(a_list_ord)) {
