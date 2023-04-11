@@ -17,7 +17,7 @@
 sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
                                  beta = rep(0, length(x)), N_level1 = 10,
                                  N_level2 = 1000) {
-  cond_sd <- sqrt(vecc_cond_mean_var_obj$cond_var)
+  cond_sd <- sqrt(veccCondMeanVarObj$cond_var)
   exp_psi <- VeccTMVN::mvndns(a, b, veccCondMeanVarObj$nn,
     veccCondMeanVarObj$cond_mean_coeff,
     cond_sd, beta,
@@ -32,9 +32,6 @@ sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
 # library(TruncatedNormal)
 # library(mvtnorm)
 # library(nleqslv)
-# source("inv_chol.R")
-# source("vecc_cond_mean_var.R")
-# source("gradpsi.R")
 #
 # ## example MVN probabilities --------------------------------
 # n1 <- 10
