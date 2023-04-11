@@ -34,22 +34,35 @@ vecc_cond_mean_var <- function(covMat, NNarray) {
 #'
 vecc_cond_mean_var_sp <- function(NNarray, covMat = NULL, locs = NULL,
                                   covName = NULL, covParms = NULL) {
-  n <- nrow(covMat)
+  if (any(NNarray[, 1] != 1:n)) {
+    stop("Unexpected NNarray: first col is not 1 : n\n")
+  }
+  n <- nrow(NNarray)
   m <- ncol(NNarray) - 1
   cond_mean_coeff <- matrix(0, n, m)
   cond_var <- rep(NA, n)
-  cond_var[1] <- covMat[1, 1]
+  if (is.null(locs)) {
+    use_locs <- F
+    cov_func <- function(ind) {
+      covMat[ind, ind, drop = F]
+    }
+  } else {
+    use_locs <- T
+    cov_func_GpGp <- getFromNamespace(covName, "GpGp")
+    cov_func <- function(ind) {
+      cov_func_GpGp(covParms, locs[ind, , drop = F])
+    }
+  }
+  cond_var[1] <- cov_func(1)[1, 1]
   for (i in 2:n) {
-    ind_cond <- NNarray[i, 2:min(i, (m + 1))]
-    cov_mat_sub_inv <- solve(covMat[ind_cond, ind_cond])
-    cov_vec_sub <- covMat[i, ind_cond]
-    cond_var[i] <- covMat[i, i] - as.numeric(
+    ind_cond <- NNarray[i, 1:min(i, (m + 1))]
+    cov_mat_sub <- cov_func(ind_cond)
+    cov_mat_sub_inv <- solve(cov_mat_sub[-1, -1])
+    cov_vec_sub <- cov_mat_sub[1, -1]
+    cond_var[i] <- cov_mat_sub[1, 1] - as.numeric(
       t(cov_vec_sub) %*% cov_mat_sub_inv %*% cov_vec_sub
     )
     cond_mean_coeff[i, 1:min(i - 1, m)] <- t(cov_vec_sub) %*% cov_mat_sub_inv
-  }
-  if (any(NNarray[, 1] != 1:n)) {
-    stop("Unexpected NNarray: first col is not 1 : n\n")
   }
   nnz_A <- (m + 1) * m / 2 + (n - m) * (m + 1) # num of non-zero
   A_row_inds <- rep(0, nnz_A)
@@ -102,6 +115,13 @@ vecc_cond_mean_var_sp <- function(NNarray, covMat = NULL, locs = NULL,
 # ## Vecchia approx --------------------------------
 # vecc_cond_mean_var_obj <- vecc_cond_mean_var(cov_mat_ord, NNarray)
 # vecc_cond_mean_var_obj_sp <- vecc_cond_mean_var_sp(NNarray, cov_mat_ord)
-# cat("F-norm of difference between dense and sparse A matrices is",
+# vecc_cond_mean_var_obj_sp_locs <- vecc_cond_mean_var_sp(
+#   NNarray, locs = locs_ord, covName = "matern15_isotropic", covParms = covparms)
+# cat("Using covmat, F-norm of difference between dense and sparse A matrices is",
 #     sqrt(sum((as.matrix(vecc_cond_mean_var_obj_sp$A) -
-#                 vecc_cond_mean_var_obj$A)^2)))
+#                 vecc_cond_mean_var_obj$A)^2)), "\n")
+# cat("Using locs, F-norm of difference between dense and sparse A matrices is",
+#     sqrt(sum((as.matrix(vecc_cond_mean_var_obj_sp$A) -
+#                 vecc_cond_mean_var_obj_sp_locs$A)^2)), "\n")
+# cat("Cond var error", sqrt(sum((vecc_cond_mean_var_obj_sp_locs$cond_var -
+#                                   vecc_cond_mean_var_obj$cond_var)^2)), "\n")
