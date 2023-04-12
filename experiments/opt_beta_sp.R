@@ -48,8 +48,15 @@ for (i in 1:length(a_list_ord)) {
     control = list(maxit = 500L)
   )
   x0 <- c(trunc_expect, rep(0, n))
-  solv_idea_5_sp <- my_nleqslv(x0,
-    fn = grad_idea5_sp,
+  solv_idea_5_sp <- my_nleqslv(
+    x0,
+    fn = function(x, ...) {
+      ret <- grad_jacprod_jacsolv_idea5(x, ...,
+        retJac = F,
+        retProd = F, retSolv = F
+      )
+      ret$grad
+    },
     gradNewtonFn = function(x, ...) {
       ret <- grad_jacprod_jacsolv_idea5(x, ...)
       list(

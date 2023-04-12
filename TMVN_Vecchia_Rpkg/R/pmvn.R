@@ -75,7 +75,13 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
   x0 <- c(trunc_expect, rep(0, n))
   solv_idea_5_sp <- my_nleqslv(
     x0,
-    fn = grad_idea5_sp,
+    fn = function(x, ...) {
+      ret <- grad_jacprod_jacsolv_idea5(x, ...,
+        retJac = F,
+        retProd = F, retSolv = F
+      )
+      ret$grad
+    },
     gradNewtonFn = function(x, ...) {
       ret <- grad_jacprod_jacsolv_idea5(x, ...)
       list(
@@ -112,6 +118,7 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
 # library(GpGp)
 # library(TruncatedNormal)
 # library(mvtnorm)
+# library(VeccTMVN)
 # ## example MVN probabilities --------------------------------
 # set.seed(123)
 # n1 <- 10
@@ -122,7 +129,7 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
 # cov_mat <- matern15_isotropic(covparms, locs)
 # a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2 - 4)
 # b_list <- list(rep(-2, n), rep(1, n), -runif(n) * 2)
-# 
+#
 # ## Compute MVN probs --------------------------------
 # N_level1 <- 12 # Level 1 MC size
 # N_level2 <- 1e4 # Level 2 MC size
@@ -131,7 +138,7 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
 #   a <- a_list[[i]]
 #   b <- b_list[[i]]
 #   ### Compute MVN prob with idea V -----------------------
-#   est_Vecc <- pmvn(a, b, 0, locs,
+#   est_Vecc <- VeccTMVN::pmvn(a, b, 0, locs,
 #     covName = "matern15_isotropic",
 #     covParms = covparms, m = m
 #   )
