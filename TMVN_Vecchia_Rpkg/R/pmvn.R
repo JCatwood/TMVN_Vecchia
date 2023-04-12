@@ -82,12 +82,19 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
       )
       ret$grad
     },
-    gradNewtonFn = function(x, ...) {
-      ret <- grad_jacprod_jacsolv_idea5(x, ...)
-      list(
-        grad = ret$jac_grad,
-        Newton_step = -ret$jac_inv_grad
+    jacTransFn = function(x, ...) {
+      ret <- grad_jacprod_jacsolv_idea5(x, ...,
+        retJac = F,
+        retProd = T, retSolv = F
       )
+      ret$jac_grad
+    },
+    jacInvFn = function(x, ...) {
+      ret <- grad_jacprod_jacsolv_idea5(x, ...,
+        retJac = F,
+        retProd = F, retSolv = T
+      )
+      ret$jac_inv_grad
     },
     veccCondMeanVarObj = vecc_obj,
     a = lower_ord, b = upper_ord, verbose = verbose,

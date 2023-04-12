@@ -57,12 +57,19 @@ for (i in 1:length(a_list_ord)) {
       )
       ret$grad
     },
-    gradNewtonFn = function(x, ...) {
-      ret <- grad_jacprod_jacsolv_idea5(x, ...)
-      list(
-        grad = ret$jac_grad,
-        Newton_step = -ret$jac_inv_grad
+    jacTransFn = function(x, ...) {
+      ret <- grad_jacprod_jacsolv_idea5(x, ...,
+        retJac = F,
+        retProd = T, retSolv = F
       )
+      ret$jac_grad
+    },
+    jacInvFn = function(x, ...) {
+      ret <- grad_jacprod_jacsolv_idea5(x, ...,
+        retJac = F,
+        retProd = F, retSolv = T
+      )
+      ret$jac_inv_grad
     },
     veccCondMeanVarObj = vecc_cond_mean_var_obj_sp,
     a = a_ord, b = b_ord, verbose = F,

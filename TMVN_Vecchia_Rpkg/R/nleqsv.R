@@ -97,9 +97,9 @@ line_search <- function(x, grad, objFn, NewtonStep, alpha = 1e-4,
 #'
 #' @param x0 initial guess
 #' @param fn non-linear system, fn: $R^{n} \rightarrow R^{n}$
-#' @param gradNewtonFn function that computes the gradient and Newton step of
-#' $0.5 \| fn \|^{2}$
-#' @param ... arguments to `fn` and `gradNewtonFn`
+#' @param jacTransFn function that computes Jacobian^{\top} \cdot fn
+#' @param jacInvFn function that computes Jacobian^{-1} \cdot fn
+#' @param ... arguments to `fn`, `jacTransFn`, and `jacInvFn`
 #' @param control a list of tuning parameters for optimization
 #' @return a list of `code` and `x`
 #' code 1: qualifying `x` found
@@ -109,21 +109,13 @@ line_search <- function(x, grad, objFn, NewtonStep, alpha = 1e-4,
 #' Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
 #' J <- function(x){matrix(c(2*x[1], 2*x[2],
 #'                           exp(x[1] - 1), 3*x[2]^2), 2, 2, byrow=T)}
-#' gradNewtonFn = function(x) {
-#'   Fn_val <- Fn(x)
-#'   J_val <- J(x)
-#'   grad <- t(J_val) %*% Fn_val
-#'   Newton_step <- - solve(J_val) %*% Fn_val
-#'   list(
-#'     grad = grad,
-#'     Newton_step = Newton_step
-#'   )
-#' }
+#' jac_trans_fn <- function(x){as.vector(t(J(x)) %*% Fn(x))}
+#' jac_inv_fn <- function(x){as.vector(solve(J(x)) %*% Fn(x))}
 #' x <- c(2, 0.5)
-#' ret <- my_nleqslv(x, Fn, gradNewtonFn)
+#' ret <- my_nleqslv(x, Fn, jac_trans_fn, jac_inv_fn)
 #' cat("Solution is", ret$x, "where f(x) is", ret$obj, "and code is", ret$code,
 #'     "\n")
-my_nleqslv <- function(x0, fn, gradNewtonFn, ..., control = list()) {
+my_nleqslv <- function(x0, fn, jacTransFn, jacInvFn, ..., control = list()) {
   x <- x0
   maxit <- control[["maxit"]]
   if (is.null(maxit)) {
@@ -141,9 +133,8 @@ my_nleqslv <- function(x0, fn, gradNewtonFn, ..., control = list()) {
     0.5 * sum(fn(x, ...)^2)
   }
   for (i in 1:maxit) {
-    grad_NewtonStep <- gradNewtonFn(x, ...)
-    grad <- grad_NewtonStep$grad
-    Newton_step <- grad_NewtonStep$Newton_step
+    grad <- jacTransFn(x, ...)
+    Newton_step <- -jacInvFn(x, ...)
     ret <- line_search(x, grad, obj_fn, Newton_step, stepTol = step_tol)
     if (ret$code == 1) {
       x <- ret$x_new
