@@ -73,41 +73,38 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
   # find tilting parameter beta -----------------------------------
   trunc_expect <- etruncnorm(lower_ord, upper_ord)
   x0 <- c(trunc_expect, rep(0, n))
-  solv_idea_5_sp <- my_nleqslv(
+  solv_idea_5_sp <- optim(
     x0,
     fn = function(x, ...) {
       ret <- grad_jacprod_jacsolv_idea5(x, ...,
         retJac = F,
         retProd = F, retSolv = F
       )
-      ret$grad
+      0.5 * sum((ret$grad)^2)
     },
-    jacTransFn = function(x, ...) {
+    gr = function(x, ...) {
       ret <- grad_jacprod_jacsolv_idea5(x, ...,
         retJac = F,
         retProd = T, retSolv = F
       )
       ret$jac_grad
     },
-    jacInvFn = function(x, ...) {
-      ret <- grad_jacprod_jacsolv_idea5(x, ...,
-        retJac = F,
-        retProd = F, retSolv = T
-      )
-      ret$jac_inv_grad
-    },
+    method = "L-BFGS-B",
     veccCondMeanVarObj = vecc_obj,
     a = lower_ord, b = upper_ord, verbose = verbose,
-    control = list(maxit = 1000L)
+    lower = c(lower_ord, rep(-Inf, n)), upper = c(upper_ord, rep(Inf, n))
   )
   if (verbose) {
-    cat("Gradient norm at the optimal beta is", solv_idea_5_sp$obj, "\n")
+    cat(
+      "Gradient norm at the optimal beta is", sqrt(2 * solv_idea_5_sp$value),
+      "\n"
+    )
   }
-  if (any(solv_idea_5_sp$x[1:n] < lower_ord) ||
-    any(solv_idea_5_sp$x[1:n] > upper_ord)) {
+  if (any(solv_idea_5_sp$par[1:n] < lower_ord) ||
+    any(solv_idea_5_sp$par[1:n] > upper_ord)) {
     warning("Optimal x is outside the integration region during minmax tilting\n")
   }
-  beta <- solv_idea_5_sp$x[(n + 1):(2 * n)]
+  beta <- solv_idea_5_sp$par[(n + 1):(2 * n)]
   # compute MVN probs and est error ---------------------------------
   exp_psi <- sample_psi_idea5_cpp(vecc_obj, lower_ord, upper_ord,
     beta = beta, N_level1 = N_level1,
@@ -126,6 +123,8 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
 # library(TruncatedNormal)
 # library(mvtnorm)
 # library(VeccTMVN)
+#
+#
 # ## example MVN probabilities --------------------------------
 # set.seed(123)
 # n1 <- 10
@@ -145,21 +144,35 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
 #   a <- a_list[[i]]
 #   b <- b_list[[i]]
 #   ### Compute MVN prob with idea V -----------------------
-#   est_Vecc <- VeccTMVN::pmvn(a, b, 0, locs,
-#     covName = "matern15_isotropic",
-#     covParms = covparms, m = m
-#   )
+#   time_Vecc <- system.time(est_Vecc <- VeccTMVN::pmvn(a, b, 0, locs,
+#                                                       covName = "matern15_isotropic",
+#                                                       covParms = covparms, m = m, verbose = F
+#   ))[[3]]
 #   ### Compute MVN prob with other methods -----------------------
-#   est_TN <- TruncatedNormal::pmvnorm(
+#   time_TN <- system.time(est_TN <- TruncatedNormal::pmvnorm(
 #     rep(0, n), cov_mat,
 #     lb = a, ub = b
-#   )
-#   est_TLR <- tlrmvnmvt::pmvn(a, b, sigma = cov_mat)
-#   est_Genz <- mvtnorm::pmvnorm(a, b, sigma = cov_mat)
+#   ))[[3]]
+#   time_TLR <- system.time(
+#     est_TLR <- tlrmvnmvt::pmvn(a, b, sigma = cov_mat)
+#   )[[3]]
+#   time_Genz <- system.time(
+#     est_Genz <- mvtnorm::pmvnorm(a, b, sigma = cov_mat)
+#   )[[3]]
 #   cat(
-#     "est_Vecc", est_Vecc, "err_Vecc", attributes(est_Vecc)$error, "\n",
-#     "est_TN", est_TN, "err_TN", attributes(est_TN)$relerr * est_TN, "\n",
-#     "est_TLR", est_TLR, "err_TLR", attributes(est_TLR)$error, "\n",
-#     "est_Genz", est_Genz, "err_Genz", attributes(est_Genz)$error, "\n"
+#     "est_Vecc", est_Vecc, "err_Vecc", attributes(est_Vecc)$error, "time_Vecc",
+#     time_Vecc, "\n"
+#   )
+#   cat(
+#     "est_TN", est_TN, "err_TN", attributes(est_TN)$relerr * est_TN, "time_TN",
+#     time_TN, "\n"
+#   )
+#   cat(
+#     "est_TLR", est_TLR, "err_TLR", attributes(est_TLR)$error, "time_TLR",
+#     time_TLR, "\n"
+#   )
+#   cat(
+#     "est_Genz", est_Genz, "err_Genz", attributes(est_Genz)$error, "time_Genz",
+#     time_Genz, "\n"
 #   )
 # }

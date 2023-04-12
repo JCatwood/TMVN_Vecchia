@@ -99,6 +99,7 @@ for (i in 1:length(a_list_ord)) {
       method = "L-BFGS-B",
       veccCondMeanVarObj = vecc_cond_mean_var_obj_sp,
       a = a_ord, b = b_ord, verbose = F,
+      lower = c(a_ord, rep(-Inf, n)), upper = c(b_ord, rep(Inf, n)),
       control = list(maxit = 1000L)
     )
   )[[3]], "seconds\n")
