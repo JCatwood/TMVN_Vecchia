@@ -17,7 +17,7 @@ library(truncnorm)
 #' @param verbose verbose or not
 #' @return estimated MVN probability and estimation error
 #'
-pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
+pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic",
                  covParms = c(1.0, 0.1, 0.0), m = 30, sigma = NULL,
                  NLevel1 = 12, NLevel2 = 1e4, verbose = F) {
   # standardize the input MVN prob -----------------------------
@@ -107,11 +107,11 @@ pmvn <- function(lower, upper, mean, locs, covName = "matern15_isotropic",
   beta <- solv_idea_5_sp$par[(n + 1):(2 * n)]
   # compute MVN probs and est error ---------------------------------
   exp_psi <- sample_psi_idea5_cpp(vecc_obj, lower_ord, upper_ord,
-    beta = beta, N_level1 = N_level1,
-    N_level2 = N_level2
+    beta = beta, N_level1 = NLevel1,
+    N_level2 = NLevel2
   )
   est_prob <- mean(exp_psi)
-  est_prob_err <- sd(exp_psi) / sqrt(N_level1)
+  est_prob_err <- sd(exp_psi) / sqrt(NLevel1)
   attr(est_prob, "error") <- est_prob_err
   return(est_prob)
 }
