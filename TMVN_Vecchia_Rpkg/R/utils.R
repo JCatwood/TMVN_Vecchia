@@ -27,3 +27,18 @@ find_nn_corr <- function(corrMat, m) {
   }
   return(NN)
 }
+
+
+#' Compute the covariance matrix under the Vecchia approximation
+#'
+#' @param covMat the original covariance matrix
+#' @param m the number of nearest neighbors
+#' @return an n X n matrix
+#'
+get_Vecc_cov_mat <- function(covMat, m) {
+  margin_sd <- sqrt(diag(covMat))
+  corr_mat <- t(t(covMat / margin_sd) / margin_sd)
+  NN <- find_nn_corr(corr_mat, m)
+  inv_chol <- get_sp_inv_chol(covMat, NN)
+  solve(inv_chol %*% t(inv_chol))
+}
