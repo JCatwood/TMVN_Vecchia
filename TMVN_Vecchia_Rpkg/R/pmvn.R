@@ -12,13 +12,15 @@ library(truncnorm)
 #' @param covParms parameters for `covName`
 #' @param m Vecchia conditioning set size
 #' @param sigma dense covariance matrix, not needed when `locs` is not null
+#' @param reorder whether to reorder integration variables. `0` for no,
+#' `1` for non-iterative reorder, and `2` for iterative reorder
 #' @param NLevel1 first level Monte Carlo sample size
 #' @param NLevel2 second level Monte Carlo sample size
 #' @param verbose verbose or not
 #' @return estimated MVN probability and estimation error
 #'
 pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic",
-                 covParms = c(1.0, 0.1, 0.0), m = 30, sigma = NULL,
+                 covParms = c(1.0, 0.1, 0.0), m = 30, sigma = NULL, reorder = 0,
                  NLevel1 = 12, NLevel2 = 1e4, verbose = F) {
   # standardize the input MVN prob -----------------------------
   lower <- lower - mean
@@ -46,32 +48,36 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
   lower_upper <- matrix(0, n, 2)
   lower_upper[, 1] <- lower
   lower_upper[, 2] <- upper
+  lower <- lower_upper[, 1]
+  upper <- lower_upper[, 2]
   # reorder based on tmvn_prob_1D --------------------------------
-  ord <- order(tmvn_prob_1D, decreasing = F)
-  lower_ord <- lower_upper[ord, 1]
-  upper_ord <- lower_upper[ord, 2]
-  if (use_sigma) {
-    sigma_ord <- sigma[ord, ord, drop = F]
-  } else {
-    locs_ord <- locs[ord, , drop = F]
+  if (reorder == 1) {
+    ord <- order(tmvn_prob_1D, decreasing = F)
+    lower <- lower[ord]
+    upper <- upper[ord]
+    if (use_sigma) {
+      sigma <- sigma[ord, ord, drop = F]
+    } else {
+      locs <- locs[ord, , drop = F]
+    }
   }
   # find nearest neighbors for Vecchia --------------------------------
   if (use_sigma) {
-    NN <- find_nn_corr(sigma_ord, m)
+    NN <- find_nn_corr(sigma, m)
   } else {
-    NN <- GpGp::find_ordered_nn(locs_ord, m)
+    NN <- GpGp::find_ordered_nn(locs, m)
   }
   # find Vecchia approx object -----------------------------------
   if (use_sigma) {
-    vecc_obj <- vecc_cond_mean_var_sp(NN, covMat = sigma_ord)
+    vecc_obj <- vecc_cond_mean_var_sp(NN, covMat = sigma)
   } else {
     vecc_obj <- vecc_cond_mean_var_sp(NN,
-      locs = locs_ord, covName = covName,
+      locs = locs, covName = covName,
       covParms = covParms
     )
   }
   # find tilting parameter beta -----------------------------------
-  trunc_expect <- etruncnorm(lower_ord, upper_ord)
+  trunc_expect <- etruncnorm(lower, upper)
   x0 <- c(trunc_expect, rep(0, n))
   solv_idea_5_sp <- optim(
     x0,
@@ -91,8 +97,8 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
     },
     method = "L-BFGS-B",
     veccCondMeanVarObj = vecc_obj,
-    a = lower_ord, b = upper_ord, verbose = verbose,
-    lower = c(lower_ord, rep(-Inf, n)), upper = c(upper_ord, rep(Inf, n))
+    a = lower, b = upper, verbose = verbose,
+    lower = c(lower, rep(-Inf, n)), upper = c(upper, rep(Inf, n))
   )
   if (verbose) {
     cat(
@@ -100,13 +106,13 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
       "\n"
     )
   }
-  if (any(solv_idea_5_sp$par[1:n] < lower_ord) ||
-    any(solv_idea_5_sp$par[1:n] > upper_ord)) {
+  if (any(solv_idea_5_sp$par[1:n] < lower) ||
+    any(solv_idea_5_sp$par[1:n] > upper)) {
     warning("Optimal x is outside the integration region during minmax tilting\n")
   }
   beta <- solv_idea_5_sp$par[(n + 1):(2 * n)]
   # compute MVN probs and est error ---------------------------------
-  exp_psi <- sample_psi_idea5_cpp(vecc_obj, lower_ord, upper_ord,
+  exp_psi <- sample_psi_idea5_cpp(vecc_obj, lower, upper,
     beta = beta, N_level1 = NLevel1,
     N_level2 = NLevel2
   )
