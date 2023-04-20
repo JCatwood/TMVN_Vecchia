@@ -13,7 +13,7 @@ library(truncnorm)
 #' @param m Vecchia conditioning set size
 #' @param sigma dense covariance matrix, not needed when `locs` is not null
 #' @param reorder whether to reorder integration variables. `0` for no,
-#' `1` for non-iterative reorder, and `2` for iterative reorder
+#' `1` for FIC-based univariate ordering, and `2` for iterative reorder
 #' @param NLevel1 first level Monte Carlo sample size
 #' @param NLevel2 second level Monte Carlo sample size
 #' @param verbose verbose or not
@@ -40,8 +40,7 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
     lower <- lower / margin_sd
     sigma <- t(t(sigma / margin_sd) / margin_sd)
   }
-  tmvn_prob_1D <- pnorm(upper) - pnorm(lower)
-  if (any(tmvn_prob_1D < 0)) {
+  if (any(upper < lower)) {
     stop("Invalid MVN probability. Truncated marginal
          probabilities have negative value(s)\n")
   }
@@ -50,9 +49,16 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
   lower_upper[, 2] <- upper
   lower <- lower_upper[, 1]
   upper <- lower_upper[, 2]
-  # reorder based on tmvn_prob_1D --------------------------------
+  # reorder --------------------------------
   if (reorder == 1) {
-    ord <- order(tmvn_prob_1D, decreasing = F)
+    if (use_sigma) {
+      ord <- FIC_univar_reorder(lower, upper, m, covMat = sigma)
+    } else {
+      ord <- FIC_univar_reorder(
+        lower, upper, m, locs, "matern15_isotropic",
+        covParms
+      )
+    }
     lower <- lower[ord]
     upper <- upper[ord]
     if (use_sigma) {
@@ -98,7 +104,8 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
     method = "L-BFGS-B",
     veccCondMeanVarObj = vecc_obj,
     a = lower, b = upper, verbose = verbose,
-    lower = c(lower, rep(-Inf, n)), upper = c(upper, rep(Inf, n))
+    lower = c(lower, rep(-Inf, n)), upper = c(upper, rep(Inf, n)),
+    control = list(maxit = 500)
   )
   if (verbose) {
     cat(
