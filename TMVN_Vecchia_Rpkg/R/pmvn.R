@@ -76,11 +76,23 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
   # find Vecchia approx object -----------------------------------
   if (use_sigma) {
     vecc_obj <- vecc_cond_mean_var_sp(NN, covMat = sigma)
+    idx <- which(vecc_obj$cond_var < 0.01)
+    if (length(idx) > 0) {
+      diag(sigma)[idx] <- diag(sigma)[idx] + 0.01
+      vecc_obj <- vecc_cond_mean_var_sp(NN, covMat = sigma)
+    }
   } else {
     vecc_obj <- vecc_cond_mean_var_sp(NN,
       locs = locs, covName = covName,
       covParms = covParms
     )
+    if (any(vecc_obj$cond_var < 0.01)) {
+      covParms[length(covParms)] <- 0.01 # nugget
+      vecc_obj <- vecc_cond_mean_var_sp(NN,
+        locs = locs, covName = covName,
+        covParms = covParms
+      )
+    }
   }
   # find tilting parameter beta -----------------------------------
   trunc_expect <- etruncnorm(lower, upper)
