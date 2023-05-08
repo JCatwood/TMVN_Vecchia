@@ -79,10 +79,10 @@ for (i in 1:niter) {
 if (!file.exists("results")) {
   dir.create("results")
 }
-save(m_vec, time_df, prob_df, file = "results/Vecc_bias.RData")
+save(m_vec, time_df, prob_df, file = "results/Vecc_bias_lowdim.RData")
 
 # Plotting -----------------------------------
-load("results/Vecc_bias.RData")
+load("results/Vecc_bias_lowdim.RData")
 library(ggplot2)
 library(tidyr)
 box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL) {

@@ -34,8 +34,8 @@ for (i in 1:length(a_list)) {
   ord_maxmin <- GpGp::order_maxmin(locs)
   est_Vecc_maxmin <- pmvn(a_list[[i]], b_list[[i]], ord_maxmin)
   ### univariate under FIC ------------------------------
-  ord_FIC_univar <- VeccTMVN::FIC_univar_reorder(a_list[[i]], b_list[[i]], 
-                                                 m = 30, locs,
+  ord_FIC_univar <- VeccTMVN::FIC_univar_reorder(a_list[[i]], b_list[[i]],
+    m = 30, locs,
     "matern15_isotropic", covparms,
   )
   est_Vecc_FIC_univar <- pmvn(a_list[[i]], b_list[[i]], ord_FIC_univar)
