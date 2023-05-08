@@ -18,7 +18,7 @@ sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
                                  beta = rep(0, length(x)), N_level1 = 10,
                                  N_level2 = 1000) {
   cond_sd <- sqrt(veccCondMeanVarObj$cond_var)
-  exp_psi <- VeccTMVN::mvndns(a, b, veccCondMeanVarObj$nn,
+  exp_psi <- mvndns(a, b, veccCondMeanVarObj$nn,
     veccCondMeanVarObj$cond_mean_coeff,
     cond_sd, beta,
     NLevel1 = N_level1, NLevel2 = N_level2
