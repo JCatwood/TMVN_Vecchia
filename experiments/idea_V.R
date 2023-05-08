@@ -1,6 +1,6 @@
 library(GpGp)
 library(TruncatedNormal)
-source("../funcs/inv_chol.R")
+library(VeccTMVN)
 ## example MVN probabilities --------------------------------
 n1 <- 10
 n2 <- 10
