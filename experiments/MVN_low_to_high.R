@@ -6,12 +6,12 @@ library(tlrmvnmvt)
 library(GpGp)
 source("../funcs/utils.R")
 ## MVN prob gen funcs ----------------------------------------
-prob_gen_fix_dom <- function(n, d) {
+prob_gen_fix_dom <- function(n, d, upper = 0) {
   grid_obj <- grid_gen(n, d)
   locs <- grid_obj$grid
   unit_dist <- grid_obj$unit_dist
   a <- rep(-Inf, n)
-  b <- rep(0, n)
+  b <- rep(upper, n)
   cov_parms <- c(1.0, 0.1, 0.03)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
@@ -21,12 +21,12 @@ prob_gen_fix_dom <- function(n, d) {
     cov_name = cov_name, smoothness = smoothness, dom_type = "fixed_grid"
   ))
 }
-prob_gen_exp_dom <- function(n, d) {
+prob_gen_exp_dom <- function(n, d, upper = 0) {
   grid_obj <- grid_gen(n, d)
   locs <- grid_obj$grid
   unit_dist <- grid_obj$unit_dist
   a <- rep(-Inf, n)
-  b <- rep(0, n)
+  b <- rep(upper, n)
   cov_parms <- c(1.0, 3 * unit_dist, 0.01)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
@@ -41,6 +41,7 @@ set.seed(123)
 n_vec <- c(900, 1600, 2500, 3600, 4900, 6400)
 d <- 2
 m <- 30
+upper <- -2
 ## Iteratively compute the same MVN prob -----------------------
 niter <- 30
 time_df_Vecc <- data.frame(matrix(NA, niter, length(n_vec)))
@@ -52,7 +53,7 @@ prob_df_TLR <- data.frame(matrix(NA, niter, length(n_vec)))
 for (j in 1:length(n_vec)) {
   ### prob gen -----------------------
   n <- n_vec[j]
-  prob_obj <- prob_gen_exp_dom(n, d)
+  prob_obj <- prob_gen_exp_dom(n, d, upper = upper)
   a <- prob_obj$a
   b <- prob_obj$b
   locs <- prob_obj$locs
@@ -88,34 +89,44 @@ if (!file.exists("results")) {
 }
 save(n_vec, time_df_Vecc, prob_df_Vecc, err_df_Vecc,
   time_df_TLR, prob_df_TLR, err_df_TLR,
-  file = paste0("results/MVN_low_to_high_", dom_type, ".RData")
+  file = paste0("results/MVN_low_to_high_", dom_type, "_b", b[1], ".RData")
 )
 
 # Plotting -----------------------------------
-load("results/MVN_low_to_high_fixed_grid.RData")
+load("results/MVN_low_to_high_expand_grid.RData")
 library(ggplot2)
 library(tidyr)
-box_plt_low_to_high <- function(mydf, yLim = NULL, yName = NULL) {
+library(tibble)
+box_plt_low_to_high_cmb <- function(..., yLim = NULL, yName = NULL,
+                                    legends = NULL) {
   mtd_names <- c(paste0("n = ", n_vec))
-  colnames(mydf) <- mtd_names
-  mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
-  ggplot(mydf_pivot, aes(x = method, y = value)) +
+  dfs <- list(...)
+  for (i in 1:length(dfs)) {
+    colnames(dfs[[i]]) <- mtd_names
+    dfs[[i]] <- pivot_longer(dfs[[i]], cols = 1:ncol(dfs[[i]]), names_to = "method")
+  }
+  if (is.null(legends)) {
+    legends <- as.character(c(1:length(dfs)))
+  }
+  df_cmb <- add_column(dfs[[1]], group = legends[1])
+  if (length(dfs) > 1) {
+    for (i in 2:length(dfs)) {
+      df_cmb <- rbind(df_cmb, add_column(dfs[[i]], group = legends[i]))
+    }
+  }
+  ggplot(df_cmb, aes(x = method, y = value, fill = group)) +
     scale_x_discrete(limits = mtd_names) +
     scale_y_continuous(limits = yLim, name = yName) +
     geom_boxplot()
 }
-get_relerr <- function(df) {
-  col_mean_mat <- matrix(colMeans(df),
-    nrow = nrow(df),
-    ncol = ncol(df), byrow = T
-  )
-  abs((df - col_mean_mat) / col_mean_mat)
-}
-prob_relerr_df_Vecc <- get_relerr(prob_df_Vecc)
-prob_relerr_df_TLR <- get_relerr(prob_df_TLR)
-box_plt_low_to_high(prob_relerr_df_Vecc, yName = "Vecc MVN prob relerr")
-box_plt_low_to_high(prob_relerr_df_TLR, yName = "TLR MVN prob relerr")
-box_plt_low_to_high(log(prob_df_Vecc), yName = "Vecc MVN log-prob")
-box_plt_low_to_high(log(prob_df_TLR), yName = "TLR MVN log-prob")
-box_plt_low_to_high(time_df_Vecc, yName = "Vecc time")
-box_plt_low_to_high(time_df_TLR, yName = "TLR time")
+box_plt_low_to_high_cmb(log(prob_df_Vecc), log(prob_df_TLR),
+  yName = "Log-probability Estimates",
+  legends = c("Vecc", "TLR")
+)
+box_plt_low_to_high_cmb(prob_df_Vecc, prob_df_TLR,
+  yName = "Probability Estimates",
+  legends = c("Vecc", "TLR")
+)
+box_plt_low_to_high_cmb(time_df_Vecc, time_df_TLR,
+  yName = "Time", legends = c("Vecc", "TLR")
+)
