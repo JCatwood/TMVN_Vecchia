@@ -34,11 +34,11 @@ vecc_cond_mean_var <- function(covMat, NNarray) {
 #'
 vecc_cond_mean_var_sp <- function(NNarray, covMat = NULL, locs = NULL,
                                   covName = NULL, covParms = NULL) {
+  n <- nrow(NNarray)
+  m <- ncol(NNarray) - 1
   if (any(NNarray[, 1] != 1:n)) {
     stop("Unexpected NNarray: first col is not 1 : n\n")
   }
-  n <- nrow(NNarray)
-  m <- ncol(NNarray) - 1
   cond_mean_coeff <- matrix(0, n, m)
   cond_var <- rep(NA, n)
   if (is.null(locs)) {
