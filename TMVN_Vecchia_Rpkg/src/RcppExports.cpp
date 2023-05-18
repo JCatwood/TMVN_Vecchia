@@ -11,7 +11,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // find_nn_corr_internal
-IntegerVector find_nn_corr_internal(const NumericMatrix& corrMat, int m);
+IntegerMatrix find_nn_corr_internal(const NumericMatrix& corrMat, int m);
 RcppExport SEXP _VeccTMVN_find_nn_corr_internal(SEXP corrMatSEXP, SEXP mSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -23,20 +23,21 @@ BEGIN_RCPP
 END_RCPP
 }
 // mvndns
-NumericVector mvndns(const NumericVector& a, const NumericVector& b, const IntegerMatrix& NN, const NumericMatrix& muCoeff, const NumericVector& condSd, const NumericVector& beta, int NLevel1, int NLevel2);
-RcppExport SEXP _VeccTMVN_mvndns(SEXP aSEXP, SEXP bSEXP, SEXP NNSEXP, SEXP muCoeffSEXP, SEXP condSdSEXP, SEXP betaSEXP, SEXP NLevel1SEXP, SEXP NLevel2SEXP) {
+NumericVector mvndns(const NumericVector& a, const NumericVector& b, const IntegerMatrix& NN, const NumericVector& muCond, const NumericMatrix& muCoeff, const NumericVector& condSd, const NumericVector& beta, int NLevel1, int NLevel2);
+RcppExport SEXP _VeccTMVN_mvndns(SEXP aSEXP, SEXP bSEXP, SEXP NNSEXP, SEXP muCondSEXP, SEXP muCoeffSEXP, SEXP condSdSEXP, SEXP betaSEXP, SEXP NLevel1SEXP, SEXP NLevel2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const NumericVector& >::type a(aSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type b(bSEXP);
     Rcpp::traits::input_parameter< const IntegerMatrix& >::type NN(NNSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type muCond(muCondSEXP);
     Rcpp::traits::input_parameter< const NumericMatrix& >::type muCoeff(muCoeffSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type condSd(condSdSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< int >::type NLevel1(NLevel1SEXP);
     Rcpp::traits::input_parameter< int >::type NLevel2(NLevel2SEXP);
-    rcpp_result_gen = Rcpp::wrap(mvndns(a, b, NN, muCoeff, condSd, beta, NLevel1, NLevel2));
+    rcpp_result_gen = Rcpp::wrap(mvndns(a, b, NN, muCond, muCoeff, condSd, beta, NLevel1, NLevel2));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -58,7 +59,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_VeccTMVN_find_nn_corr_internal", (DL_FUNC) &_VeccTMVN_find_nn_corr_internal, 2},
-    {"_VeccTMVN_mvndns", (DL_FUNC) &_VeccTMVN_mvndns, 8},
+    {"_VeccTMVN_mvndns", (DL_FUNC) &_VeccTMVN_mvndns, 9},
     {"_VeccTMVN_sp_mat_mul_query", (DL_FUNC) &_VeccTMVN_sp_mat_mul_query, 5},
     {NULL, NULL, 0}
 };

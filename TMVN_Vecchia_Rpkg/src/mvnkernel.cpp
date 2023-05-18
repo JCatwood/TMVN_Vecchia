@@ -53,7 +53,8 @@ void primes(int n, int sz, int *primeVec)
 // [[Rcpp::export]]
 NumericVector mvndns(
     const NumericVector &a, const NumericVector &b,
-    const IntegerMatrix &NN, const NumericMatrix &muCoeff,
+    const IntegerMatrix &NN, const NumericVector &muCond,
+    const NumericMatrix &muCoeff,
     const NumericVector &condSd, const NumericVector &beta,
     int NLevel1, int NLevel2)
 {
@@ -120,7 +121,7 @@ NumericVector mvndns(
             fill(a_bat, a_bat + NLevel2, a[i]);
             fill(b_bat, b_bat + NLevel2, b[i]);
             // Compute mu
-            fill(mu, mu + NLevel2, 0.0);
+            fill(mu, mu + NLevel2, muCond[i]);
             if(i > 0){
                 for(int j = 0; j < m; j++){
                     int cond_ind_j = cond_ind[i * m + j];

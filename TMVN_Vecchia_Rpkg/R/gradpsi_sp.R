@@ -60,12 +60,12 @@ HInv22_mul <- function(veccCondMeanVarObj, dPsi, D, V, S, x) {
 #' and we don't need to know the value of x_n anyways
 grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
                                        retJac = F, retProd = T, retSolv = T,
-                                       VAdj = T, verbose = T) {
+                                       VAdj = T, verbose = T, mu = rep(0, length(a))) {
   n <- length(a)
   x <- xAndBeta[1:n]
   beta <- xAndBeta[(n + 1):(2 * n)]
   D <- sqrt(veccCondMeanVarObj$cond_var)
-  mu_c <- as.vector(veccCondMeanVarObj$A %*% x)
+  mu_c <- as.vector(veccCondMeanVarObj$A %*% (x - mu)) + mu
   a_tilde_shift <- (a - mu_c) / D - beta
   b_tilde_shift <- (b - mu_c) / D - beta
   log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
@@ -241,6 +241,7 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
 # cov_mat <- matern15_isotropic(covparms, locs)
 # a_list <- list(rep(-Inf, n), rep(-1, n), -runif(n) * 2)
 # b_list <- list(rep(-2, n), rep(1, n), runif(n) * 2)
+# mu <- runif(n)
 #
 # ## ordering and NN --------------------------------
 # m <- 30
@@ -253,6 +254,7 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
 # b_list_ord <- lapply(b_list, function(x) {
 #   x[ord]
 # })
+# mu_ord <- mu[ord]
 # NNarray <- find_ordered_nn(locs_ord, m = m)
 #
 # ## Vecchia approx --------------------------------
@@ -267,11 +269,15 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
 #   x0_padded <- runif(2 * n)
 #   x0_padded[2 * n] <- 0
 #   x0 <- x0_padded[-c(n, 2 * n)]
-#   grad_ds <- grad_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
-#   jac_ds <- jac_idea5(x0, vecc_cond_mean_var_obj, a_ord, b_ord)
+#   a_ord_demean <- a_ord - mu_ord
+#   b_ord_demean <- b_ord - mu_ord
+#   x0_padded_demean <- x0_padded - c(mu_ord, rep(0, n))
+#   x0_demean <- x0_padded_demean[-c(n, 2 * n)]
+#   grad_ds <- grad_idea5(x0_demean, vecc_cond_mean_var_obj, a_ord_demean, b_ord_demean)
+#   jac_ds <- jac_idea5(x0_demean, vecc_cond_mean_var_obj, a_ord_demean, b_ord_demean)
 #   solve_obj <- grad_jacprod_jacsolv_idea5(x0_padded, vecc_cond_mean_var_obj,
-#     a_ord, b_ord,
-#     retJac = T
+#                                           a_ord, b_ord,
+#                                           retJac = T, mu = mu_ord
 #   )
 #   cat("grad error: ", sum(abs(grad_ds - solve_obj$grad[-c(n, 2 * n)])), "\n")
 #   cat(

@@ -12,13 +12,14 @@
 #'   beta - parameter of the proposal density
 #'   N_level1 - First level Monte Carlo sample size
 #'   N_level2 - Second level Monte Carlo sample size
+#'   mu - Mean of the MVN prob
 #' Return the a vector of length N, representing the exp(psi) values
 #'
 sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
-                                 beta = rep(0, length(x)), N_level1 = 10,
-                                 N_level2 = 1000) {
+                                 beta = rep(0, length(a)), N_level1 = 10,
+                                 N_level2 = 1000, mu = rep(0, length(a))) {
   cond_sd <- sqrt(veccCondMeanVarObj$cond_var)
-  exp_psi <- mvndns(a, b, veccCondMeanVarObj$nn,
+  exp_psi <- mvndns(a, b, veccCondMeanVarObj$nn, mu,
     veccCondMeanVarObj$cond_mean_coeff,
     cond_sd, beta,
     NLevel1 = N_level1, NLevel2 = N_level2
@@ -32,6 +33,8 @@ sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
 # library(TruncatedNormal)
 # library(mvtnorm)
 # library(nleqslv)
+# library(VeccTMVN)
+# library(tlrmvnmvt)
 #
 # ## example MVN probabilities --------------------------------
 # n1 <- 10
