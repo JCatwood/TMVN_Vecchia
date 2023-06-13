@@ -30,7 +30,7 @@ prob1_gen <- function(n, d, retDenseCov = F) {
 set.seed(123)
 n <- 900
 d <- 2
-m_vec <- seq(from = 5, to = 30, by = 5)
+m_vec <- seq(from = 10, to = 30, by = 10)
 prob_obj <- prob1_gen(n, d, retDenseCov = T)
 a <- prob_obj$a
 b <- prob_obj$b
@@ -85,14 +85,15 @@ save(m_vec, time_df, prob_df, file = "results/Vecc_bias_lowdim.RData")
 load("results/Vecc_bias_lowdim.RData")
 library(ggplot2)
 library(tidyr)
-box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL) {
-  mtd_names <- c(paste0("m = ", m_vec), "Botev", "TLRMVN", "NB")
+box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL,
+                            yTrans = "identity") {
+  mtd_names <- c(paste0("m = ", m_vec), "ET", "TLR", "VCDF")
   colnames(mydf) <- mtd_names
   mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
   ggplot(mydf_pivot, aes(x = method, y = value)) +
-    scale_x_discrete(limits = mtd_names) +
-    scale_y_continuous(limits = yLim, name = yName) +
+    scale_x_discrete(limits = mtd_names, name = NULL) +
+    scale_y_continuous(limits = yLim, name = yName, trans = yTrans) +
     geom_boxplot()
 }
 box_plt_low_dim(prob_df, yName = "MVN prob", yLim = c(0, 1e-7))
-box_plt_low_dim(time_df, yName = "time")
+box_plt_low_dim(time_df, yName = "time (seconds)", yTrans = "log2")
