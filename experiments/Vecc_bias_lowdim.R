@@ -95,5 +95,10 @@ box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL,
     scale_y_continuous(limits = yLim, name = yName, trans = yTrans) +
     geom_boxplot()
 }
+if (!file.exists("plots")) {
+  dir.create("plots")
+}
 box_plt_low_dim(prob_df, yName = "MVN prob", yLim = c(0, 1e-7))
+ggsave("plots/prob_lowdim_exp1.pdf", width = 5, height = 5)
 box_plt_low_dim(time_df, yName = "time (seconds)", yTrans = "log2")
+ggsave("plots/time_lowdim_exp1.pdf", width = 5, height = 5)

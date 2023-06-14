@@ -52,9 +52,9 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
   # reorder --------------------------------
   if (reorder == 1) {
     if (use_sigma) {
-      ord <- FIC_univar_reorder(lower, upper, m, covMat = sigma)
+      ord <- FIC_reorder_univar(lower, upper, m, covMat = sigma)
     } else {
-      ord <- FIC_univar_reorder(
+      ord <- FIC_reorder_univar(
         lower, upper, m, locs, "matern15_isotropic",
         covParms
       )
