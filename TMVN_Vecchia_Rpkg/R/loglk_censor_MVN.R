@@ -118,50 +118,50 @@ loglk_censor_MVN <- function(locs, indCensor, y, bCensor,
 
 
 # TEST -------------------------------------------------------
-library(GpGp)
-library(mvtnorm)
-library(TruncatedNormal)
-library(VeccTMVN)
-set.seed(123)
-n1 <- 10
-n2 <- 10
-n <- n1 * n2
-locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
-covparms <- c(2, 0.1, 0)
-cov_mat <- matern15_isotropic(covparms, locs)
-y <- as.vector(t(chol(cov_mat)) %*% rnorm(n))
-odr <- order(y, decreasing = T)
-y <- y[odr]
-locs <- locs[odr, , drop = F]
-cov_mat <- cov_mat[odr, odr]
-b_censor <- 1
-ind_censor <- which(y < b_censor)
-ind_obs <- which(!(y < b_censor))
-logpdf <- mvtnorm::dmvnorm(y[ind_obs],
-  sigma = cov_mat[ind_obs, ind_obs],
-  log = T
-)
-tmp_mat <- cov_mat[ind_censor, ind_obs] %*% solve(cov_mat[ind_obs, ind_obs])
-cond_mean <- as.vector(tmp_mat %*% y[ind_obs])
-cond_cov_mat <- cov_mat[ind_censor, ind_censor] -
-  tmp_mat %*% cov_mat[ind_obs, ind_censor]
-logcdf <- log(TruncatedNormalBeta::pmvnorm(cond_mean, cond_cov_mat, ub = b_censor))
-loglk_Vecc <- loglk_censor_MVN(locs, ind_censor, y, b_censor, "matern15_isotropic",
-  covparms,
-  m = 50
-)
-
-ranges <- seq(from = 0.07, to = 0.1, by = 0.001)
-loglk_Vecc_vec <- rep(0, length(ranges))
-idx <- 1
-for (myrange in ranges) {
-  covparms[2] <- myrange
-  set.seed(123)
-  loglk_Vecc_vec[idx] <- loglk_censor_MVN(locs, ind_censor, y, b_censor, "matern15_isotropic",
-    covparms,
-    m = 50
-  )
-  idx <- idx + 1
-}
-
-plot(ranges, loglk_Vecc_vec)
+# library(GpGp)
+# library(mvtnorm)
+# library(TruncatedNormal)
+# library(VeccTMVN)
+# set.seed(123)
+# n1 <- 10
+# n2 <- 10
+# n <- n1 * n2
+# locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
+# covparms <- c(2, 0.1, 0)
+# cov_mat <- matern15_isotropic(covparms, locs)
+# y <- as.vector(t(chol(cov_mat)) %*% rnorm(n))
+# odr <- order(y, decreasing = T)
+# y <- y[odr]
+# locs <- locs[odr, , drop = F]
+# cov_mat <- cov_mat[odr, odr]
+# b_censor <- 1
+# ind_censor <- which(y < b_censor)
+# ind_obs <- which(!(y < b_censor))
+# logpdf <- mvtnorm::dmvnorm(y[ind_obs],
+#   sigma = cov_mat[ind_obs, ind_obs],
+#   log = T
+# )
+# tmp_mat <- cov_mat[ind_censor, ind_obs] %*% solve(cov_mat[ind_obs, ind_obs])
+# cond_mean <- as.vector(tmp_mat %*% y[ind_obs])
+# cond_cov_mat <- cov_mat[ind_censor, ind_censor] -
+#   tmp_mat %*% cov_mat[ind_obs, ind_censor]
+# logcdf <- log(TruncatedNormalBeta::pmvnorm(cond_mean, cond_cov_mat, ub = b_censor))
+# loglk_Vecc <- loglk_censor_MVN(locs, ind_censor, y, b_censor, "matern15_isotropic",
+#   covparms,
+#   m = 50
+# )
+# 
+# ranges <- seq(from = 0.07, to = 0.1, by = 0.001)
+# loglk_Vecc_vec <- rep(0, length(ranges))
+# idx <- 1
+# for (myrange in ranges) {
+#   covparms[2] <- myrange
+#   set.seed(123)
+#   loglk_Vecc_vec[idx] <- loglk_censor_MVN(locs, ind_censor, y, b_censor, "matern15_isotropic",
+#     covparms,
+#     m = 50
+#   )
+#   idx <- idx + 1
+# }
+# 
+# plot(ranges, loglk_Vecc_vec)
