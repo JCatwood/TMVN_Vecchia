@@ -38,14 +38,19 @@ loglk_censor_MVN <- function(locs, indCensor, y, bCensor,
   } else {
     b_censor <- rep(bCensor, n_censor)
   }
-  # maxmin order --------------------------------
-  # odr_obs <- GpGp::order_maxmin(locs_obs)
-  # odr_censor <- GpGp::order_maxmin(locs_censor)
-  # locs_obs <- locs_obs[odr_obs, , drop = F]
-  # locs_censor <- locs_censor[odr_censor, , drop = F]
-  # y_obs <- y_obs[odr_obs]
-  # b_censor <- b_censor[odr_censor]
+  # reorder --------------------------------
   locs <- rbind(locs_obs, locs_censor)
+  # odr <- FIC_reorder_univar(c(y_obs, rep(-Inf, n_censor)), c(y_obs, b_censor),
+  #                           m, locs = locs, covName = covName,
+  #                           covParms = covParms)
+  # if(any(odr[(n_obs + 1) : n] <= n_obs)){
+  #   warning("FIC_reorder_univar failed\n")
+  # }else{
+  #   odr_censor <- odr[(n_obs + 1) : n] - n_obs
+  #   locs_censor <- locs_censor[odr_censor, , drop = F]
+  #   b_censor <- b_censor[odr_censor]
+  #   locs <- rbind(locs_obs, locs_censor)
+  # }
   # NN and Vecchia approx obj --------------------------------
   NN <- GpGp::find_ordered_nn(locs, m)
   vecc_obj <- vecc_cond_mean_var_sp(NN,
@@ -150,7 +155,7 @@ loglk_censor_MVN <- function(locs, indCensor, y, bCensor,
 #   covparms,
 #   m = 50
 # )
-# 
+#
 # ranges <- seq(from = 0.07, to = 0.1, by = 0.001)
 # loglk_Vecc_vec <- rep(0, length(ranges))
 # idx <- 1
@@ -163,5 +168,5 @@ loglk_censor_MVN <- function(locs, indCensor, y, bCensor,
 #   )
 #   idx <- idx + 1
 # }
-# 
+#
 # plot(ranges, loglk_Vecc_vec)
