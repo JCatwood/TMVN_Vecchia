@@ -58,6 +58,7 @@ FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
   }
   ## TMVN expectation ------------------------------
   x_first_m <- truncnorm::etruncnorm(a[1:m], b[1:m])
+  x_first_m[is.nan(x_first_m)] <- a[1:m]
   ## compute TMVN probs under FIC ----------------------------
   tmvn_prob_1D <- rep(-1.0, n)
   for (i in (m + 1):n) {
@@ -149,6 +150,9 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
     j_hat <- j + i - 1
     x_first_m[i] <- truncnorm::etruncnorm(a_tilde[j], b_tilde[j]) * sd_cond[j] +
       mu_cond[j]
+    if (is.nan(x_first_m[i])) {
+      x_first_m[i] <- a[j_hat]
+    }
     tmp <- a[j_hat]
     a[j_hat] <- a[i]
     a[i] <- tmp
