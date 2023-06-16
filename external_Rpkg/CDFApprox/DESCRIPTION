@@ -1,0 +1,13 @@
+Package: CDFNormalAproxPackNoC
+Type: Package
+Title: Approximation of the Normal CDF
+Version: 0.1.6
+Author: Mau
+Maintainer: Mauricio Nascimento <mfn120@psu.edu>
+Description: This packages approximate the CDF of a Multivariate Normal Distribution using only the most correlated observations. It can be done sequentially or in parallel
+License: W
+Encoding: UTF-8
+LazyData: true
+Imports: mvPot, foreach, doParallel, mvtnorm
+Suggests: Rmpi, doMPI
+Built: R 4.1.0; ; 2021-08-20 16:27:28 UTC; unix
