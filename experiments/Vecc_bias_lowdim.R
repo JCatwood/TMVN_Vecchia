@@ -38,6 +38,18 @@ prob2_gen <- function(n, d, retDenseCov = F) {
     cov_name = cov_name, cov_mat = cov_mat
   ))
 }
+prob3_gen <- function(n, d, retDenseCov = F) {
+  locs <- grid_gen(n, d)$grid
+  a <- rep(-1, n)
+  b <- rep(1, n)
+  cov_parms <- c(1.0, 0.1, 0.01)
+  cov_name <- "matern15_isotropic"
+  cov_mat <- get(cov_name)(cov_parms, locs)
+  return(list(
+    a = a, b = b, locs = locs, cov_parms = cov_parms,
+    cov_name = cov_name, cov_mat = cov_mat
+  ))
+}
 ## Prob setups -----------------------
 set.seed(123)
 n <- 900
