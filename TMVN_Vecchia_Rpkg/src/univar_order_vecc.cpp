@@ -1,24 +1,32 @@
+// [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 #include <algorithm>
+#include <utility>
 #include <cmath>
 #include <numeric>
 #include "mvphi.h"
+
+#include <iostream>
 
 
 using namespace Rcpp;
 using namespace std;
 
 
-void update_cond_pars(const arma::mat &corrMatSub, const arma::uvec &corrVecSub,
+void update_cond_pars(const arma::mat &corrMatSub, const arma::vec &corrVecSub,
 	arma::mat &mean_coeff, arma::vec &cond_var, int j)
 {
-
+	int m = corrVecSub.n_elem;
+	arma::mat mat_inv = arma::inv_sympd(corrMatSub);
+	mean_coeff(j, arma::span(0, m - 1)) = (mat_inv * corrVecSub).t();
+	cond_var(j) = 1.0 - arma::dot(mean_coeff(j, arma::span(0, m - 1)), 
+		corrVecSub);
 }
 
-
+// [[Rcpp::export]]
 List univar_order_vecc(arma::vec a, arma::vec b, arma::mat corrMat, int m)
 {
-	int n = a.length();
+	int n = a.n_elem;
 	arma::umat NN(n, m, arma::fill::none);
 	arma::mat mean_coeff(n, m, arma::fill::zeros);
 	arma::mat dist(n, m, arma::fill::zeros);
@@ -27,26 +35,51 @@ List univar_order_vecc(arma::vec a, arma::vec b, arma::mat corrMat, int m)
 	arma::vec pnorm_diff(n);
 	arma::vec cond_expectation(n);
 	arma::vec cond_mean(n, arma::fill::zeros);
-	arma::vec cond_var(covMat.diag());
+	arma::vec cond_var(corrMat.diag());
 	arma::uvec odr(n);
 	for(int i = 0; i < n; i++) 
 		odr(i) = i;
 	for(int i = 0; i < n; i++){
 		if(i > 0){
-			if(i > m){
-				// update NN, mean_coeff, and cond_var
-				
-				// compute cond_mean
-			}else{
-				for(int j = i; j < n; j++){
+			for(unsigned int j = i; j < n; j++){
+				if(i > m){
+					if(dist(j, m - 1) > - corrMat(odr(j), odr(i - 1))){
+						// update dist, NN, mean_coeff, and cond_var
+						dist(j, m - 1) = - corrMat(odr(j), odr(i - 1));
+						NN(j, m - 1) = i - 1;
+						arma::uvec odr_row_j = sort_index(dist(j, arma::span(0, m - 1)));
+						NN(j, arma::span(0, m - 1)) = NN(arma::uvec({j}), odr_row_j);
+						dist(j, arma::span(0, m - 1)) = dist(arma::uvec({j}),
+							odr_row_j);
+						arma::mat corr_mat_sub = corrMat(odr(NN(j, arma::span(0, m - 1))), 
+							odr(NN(j, arma::span(0, m - 1))));
+						arma::vec corr_vec_sub = corrMat(arma::uvec({odr(j)}),
+							odr(NN(j, arma::span(0, m - 1)))).t();
+						update_cond_pars(corr_mat_sub, corr_vec_sub, mean_coeff, 
+							cond_var, j);
+						// compute cond_mean
+						cond_mean(j) = 0;
+						for(int k = 0; k < m; k++)
+							cond_mean(j) += mean_coeff(j, k) * cond_expectation(NN(j, k));
+					}
+				}else{
+					// update dist, NN, mean_coeff, and cond_var
 					dist(j, i - 1) = - corrMat(odr(j), odr(i - 1));
-					NN.subvec(0, i - 1) = sort_index(dist.subvec(0, i - 1));
-					arma::mat corr_mat_sub = corrMat(odr(NN.subvec(0, i - 1)), 
-						odr(NN.subvec(0, i - 1)));
-					arma::vec corr_vec_sub = corrMat(odr(j), 
-						odr(NN.subvec(0, i - 1)));
+					NN(j, i - 1) = i - 1;
+					arma::uvec odr_row_j = sort_index(dist(j, arma::span(0, i - 1)));
+					NN(j, arma::span(0, i - 1)) = NN(arma::uvec({j}), odr_row_j);
+					dist(j, arma::span(0, i - 1)) = dist(arma::uvec({j}), 
+						NN(j, arma::span(0, i - 1)));
+					arma::mat corr_mat_sub = corrMat(odr(NN(j, arma::span(0, i - 1))), 
+						odr(NN(j, arma::span(0, i - 1))));
+					arma::vec corr_vec_sub = corrMat(arma::uvec({odr(j)}),
+						odr(NN(j, arma::span(0, i - 1)))).t();
 					update_cond_pars(corr_mat_sub, corr_vec_sub, mean_coeff, 
 						cond_var, j);
+					// compute cond_mean
+					cond_mean(j) = 0;
+					for(int k = 0; k < i; k++)
+						cond_mean(j) += mean_coeff(j, k) * cond_expectation(NN(j, k));
 				}
 			}
 		}
@@ -55,15 +88,26 @@ List univar_order_vecc(arma::vec a, arma::vec b, arma::mat corrMat, int m)
 		a_sub /= sqrt(cond_var.subvec(i, n - 1));
 		b_sub /= sqrt(cond_var.subvec(i, n - 1));
 		lc_vdCdfNorm(n - i, a_sub.memptr(), pnorm_at_a.memptr() + i);
-        lc_vdCdfNorm(n - i, b_sub.memptr(), pnorm_at_b.memptr() + i);
-        arma::vec pnorm_diff = pnorm_at_b.subvec(i, n - 1) - 
-        	pnorm_at_a.subvec(i, n - 1);
-        int j_hat = pnorm_diff.index_min();
-        int i_hat = j_hat + i;
-        // compute cond_expectation
-
-        // switch pairs in a, b, odr
-        
-
+    lc_vdCdfNorm(n - i, b_sub.memptr(), pnorm_at_b.memptr() + i);
+    arma::vec pnorm_diff = pnorm_at_b.subvec(i, n - 1) - 
+    	pnorm_at_a.subvec(i, n - 1);
+    int j_hat = pnorm_diff.index_min();
+    int i_hat = j_hat + i;
+    // compute cond_expectation
+    double dnorm_diff = (exp(- b_sub(j_hat) * b_sub(j_hat) / 2) - 
+    	exp(- a_sub(j_hat) * a_sub(j_hat) / 2)) / sqrt(2 * M_PI);
+    cond_expectation(i) = - dnorm_diff / pnorm_diff(j_hat) * 
+    	sqrt(cond_var(j_hat)) + cond_mean(i_hat);
+    // switch pairs in a, b, odr
+    swap(a(i), a(i_hat));
+    swap(b(i), b(i_hat));
+    swap(odr(i), odr(i_hat));
+    NN.swap_rows(i, i_hat);
+    mean_coeff.swap_rows(i, i_hat);
+    dist.swap_rows(i, i_hat);
+    swap(cond_mean(i), cond_mean(i_hat));
+    swap(cond_var(i), cond_var(i_hat));
 	}
+	return List::create(Named("order") = odr, Named("NN") = NN,
+		Named("mean_coeff") = mean_coeff, Named("cond_var") = cond_var);
 }
