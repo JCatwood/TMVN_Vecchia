@@ -165,3 +165,83 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
   }
   odr
 }
+
+
+#' Univariate ordering under Vecchia approximation
+#'
+#' @example
+#' library(lhs)
+#' library(GpGp)
+#' set.seed(123)
+#' n <- 100
+#' m <- 5
+#' locs <- lhs::geneticLHS(n, 2)
+#' covparms <- c(1, 0.1, 0)
+#' cov_name <- "matern15_isotropic"
+#' cov_mat <- get(cov_name)(covparms, locs)
+#' a <- rep(-Inf, n)
+#' b <- runif(n)
+#' odr_TN <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
+#' rslt <- Vecc_reorder(a, b, m,
+#'                      locs = locs, covName = cov_name,
+#'                      covParms = covparms
+#' )
+#' # compare order
+#' cat(rslt$order, "\n")
+#' cat(odr_TN, "\n")
+#' # check NN array
+#' locs_odr <- locs[rslt$order, , drop = F]
+#' cov_mat_odr <- get(cov_name)(covparms, locs_odr)
+#' NN <- GpGp::find_ordered_nn(locs_odr, m)
+#' cat("nn difference is", sum(rslt$nn - NN, na.rm = T), "\n")
+#' # check A matrix and conditional var
+#' rslt_check <- vecc_cond_mean_var_sp(rslt$nn, covMat = cov_mat_odr)
+#' cat("A difference is", sum(rslt$A - rslt_check$A), "\n")
+#' cat(
+#'   "Conditional variance difference is",
+#'   sum(rslt$cond_var - rslt_check$cond_var), "\n"
+#' )
+Vecc_reorder <- function(a, b, m, locs = NULL, covName = NULL,
+                         covParms = NULL, covMat = NULL) {
+  n <- length(a)
+  if (is.null(covMat)) {
+    covMat <- get(covName)(covParms, locs)
+  }
+  margin_sd <- sqrt(diag(covMat))
+  b <- b / margin_sd
+  a <- a / margin_sd
+  corr_mat <- t(t(covMat / margin_sd) / margin_sd)
+  rslt <- univar_order_vecc(a, b, corr_mat, m)
+  # adjust for indexing
+  rslt$order <- as.numeric(rslt$order + 1)
+  rslt$nn <- cbind(1:n, rslt$nn + 1)
+  for (i in 1:m) {
+    rslt$nn[i, (i + 1):(m + 1)] <- NA
+  }
+  # create sparse matrix A
+  nnz_A <- (m + 1) * m / 2 + (n - m) * (m + 1) # num of non-zero
+  A_row_inds <- rep(0, nnz_A)
+  A_col_inds <- rep(0, nnz_A)
+  A_vals <- rep(0, nnz_A)
+  ind <- 1
+  # iteration through rows
+  for (i in 1:n) {
+    nnz_A_i <- min(m + 1, i)
+    A_row_inds[ind:(ind + nnz_A_i - 1)] <- i
+    # first col ind is i
+    A_col_inds[ind:(ind + nnz_A_i - 1)] <- rslt$nn[i, 1:nnz_A_i]
+    # first A[i, i] should be zero
+    A_vals[ind] <- 0
+    if (i > 1) {
+      A_vals[(ind + 1):(ind + nnz_A_i - 1)] <-
+        rslt$cond_mean_coeff[i, 1:min(i - 1, m)]
+    }
+    ind <- ind + nnz_A_i
+  }
+  # create sparse A
+  rslt$A <- Matrix::sparseMatrix(
+    i = A_row_inds, j = A_col_inds, x = A_vals,
+    dims = c(n, n)
+  )
+  return(rslt)
+}

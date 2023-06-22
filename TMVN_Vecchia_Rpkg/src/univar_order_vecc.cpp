@@ -29,7 +29,7 @@ List univar_order_vecc(arma::vec a, arma::vec b, arma::mat corrMat, int m)
 	int n = a.n_elem;
 	arma::umat NN(n, m, arma::fill::none);
 	arma::mat mean_coeff(n, m, arma::fill::zeros);
-	arma::mat dist(n, m, arma::fill::zeros);
+	arma::mat dist(n, m, arma::fill::ones);
 	arma::vec pnorm_at_a(n);
 	arma::vec pnorm_at_b(n);
 	arma::vec pnorm_diff(n);
@@ -47,7 +47,7 @@ List univar_order_vecc(arma::vec a, arma::vec b, arma::mat corrMat, int m)
 						// update dist, NN, mean_coeff, and cond_var
 						dist(j, m - 1) = - corrMat(odr(j), odr(i - 1));
 						NN(j, m - 1) = i - 1;
-						arma::uvec odr_row_j = sort_index(dist(j, arma::span(0, m - 1)));
+						arma::uvec odr_row_j = arma::sort_index(dist(j, arma::span(0, m - 1)));
 						NN(j, arma::span(0, m - 1)) = NN(arma::uvec({j}), odr_row_j);
 						dist(j, arma::span(0, m - 1)) = dist(arma::uvec({j}),
 							odr_row_j);
@@ -66,10 +66,10 @@ List univar_order_vecc(arma::vec a, arma::vec b, arma::mat corrMat, int m)
 					// update dist, NN, mean_coeff, and cond_var
 					dist(j, i - 1) = - corrMat(odr(j), odr(i - 1));
 					NN(j, i - 1) = i - 1;
-					arma::uvec odr_row_j = sort_index(dist(j, arma::span(0, i - 1)));
+					arma::uvec odr_row_j = arma::sort_index(dist(j, arma::span(0, i - 1)));
 					NN(j, arma::span(0, i - 1)) = NN(arma::uvec({j}), odr_row_j);
 					dist(j, arma::span(0, i - 1)) = dist(arma::uvec({j}), 
-						NN(j, arma::span(0, i - 1)));
+						odr_row_j);
 					arma::mat corr_mat_sub = corrMat(odr(NN(j, arma::span(0, i - 1))), 
 						odr(NN(j, arma::span(0, i - 1))));
 					arma::vec corr_vec_sub = corrMat(arma::uvec({odr(j)}),
@@ -108,6 +108,6 @@ List univar_order_vecc(arma::vec a, arma::vec b, arma::mat corrMat, int m)
     swap(cond_mean(i), cond_mean(i_hat));
     swap(cond_var(i), cond_var(i_hat));
 	}
-	return List::create(Named("order") = odr, Named("NN") = NN,
-		Named("mean_coeff") = mean_coeff, Named("cond_var") = cond_var);
+	return List::create(Named("order") = odr, Named("nn") = NN,
+		Named("cond_mean_coeff") = mean_coeff, Named("cond_var") = cond_var);
 }
