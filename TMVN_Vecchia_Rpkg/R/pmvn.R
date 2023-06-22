@@ -13,15 +13,18 @@ library(truncnorm)
 #' @param m Vecchia conditioning set size
 #' @param sigma dense covariance matrix, not needed when `locs` is not null
 #' @param reorder whether to reorder integration variables. `0` for no,
-#' `1` for FIC-based univariate ordering, and `2` for iterative reorder
+#' `1` for FIC-based univariate ordering, and `2` for Vecchia-based univariate
+#' ordering
 #' @param NLevel1 first level Monte Carlo sample size
 #' @param NLevel2 second level Monte Carlo sample size
 #' @param verbose verbose or not
+#' @param ... could be
+#' m_ord for conditioning set size for reordering
 #' @return estimated MVN probability and estimation error
 #'
 pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic",
                  covParms = c(1.0, 0.1, 0.0), m = 30, sigma = NULL, reorder = 0,
-                 NLevel1 = 12, NLevel2 = 1e4, verbose = F) {
+                 NLevel1 = 12, NLevel2 = 1e4, verbose = F, ...) {
   # standardize the input MVN prob -----------------------------
   lower <- lower - mean
   upper <- upper - mean
@@ -50,14 +53,35 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
   lower <- lower_upper[, 1]
   upper <- lower_upper[, 2]
   # reorder --------------------------------
+  if (is.null(list(...)[["m_ord"]])) {
+    m_ord <- m
+  } else {
+    m_ord <- list(...)[["m_ord"]]
+  }
   if (reorder == 1) {
     if (use_sigma) {
-      ord <- FIC_reorder_univar(lower, upper, m, covMat = sigma)
+      ord <- FIC_reorder_univar(lower, upper, m_ord, covMat = sigma)
     } else {
       ord <- FIC_reorder_univar(
-        lower, upper, m, locs, "matern15_isotropic",
+        lower, upper, m_ord, locs, "matern15_isotropic",
         covParms
       )
+    }
+    lower <- lower[ord]
+    upper <- upper[ord]
+    if (use_sigma) {
+      sigma <- sigma[ord, ord, drop = F]
+    } else {
+      locs <- locs[ord, , drop = F]
+    }
+  } else if (reorder == 2) {
+    if (use_sigma) {
+      ord <- Vecc_reorder(lower, upper, m_ord, covMat = sigma)$order
+    } else {
+      ord <- Vecc_reorder(
+        lower, upper, m_ord, locs, "matern15_isotropic",
+        covParms
+      )$order
     }
     lower <- lower[ord]
     upper <- upper[ord]
