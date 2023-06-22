@@ -36,6 +36,7 @@ set.seed(123)
 n <- 6400
 d <- 2
 m_vec <- seq(from = 30, to = 90, by = 20)
+m_ord <- 30
 prob_ind <- 1
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
@@ -58,7 +59,7 @@ for (i in 1:niter) {
       locs = locs, covName = cov_name,
       reorder = 1, covParms = cov_parms,
       m = m, verbose = T,
-      NLevel1 = 10, NLevel2 = 1e3,
+      NLevel1 = 10, NLevel2 = 1e3, m_ord = m_ord
     ))[[3]]
   }
   ### Compute MVN prob with other methods -----------------------
