@@ -7,24 +7,34 @@ library(GpGp)
 source("../funcs/CDFNormalAproxPackNoC_pmvn.R")
 source("../funcs/utils.R")
 ## MVN prob gen funcs ----------------------------------------
-prob1_gen <- function(n, d, retDenseCov = F) {
+prob1_gen <- function(n, d, ...) {
   locs <- grid_gen(n, d)$grid
   a <- rep(-Inf, n)
   b <- rep(0, n)
   cov_parms <- c(1.0, 0.1, 0.01)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
+  odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
+  a <- a[odr]
+  b <- b[odr]
+  locs <- locs[odr, , drop = F]
+  cov_mat <- get(cov_name)(cov_parms, locs)
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
     cov_name = cov_name, cov_mat = cov_mat
   ))
 }
-prob2_gen <- function(n, d, retDenseCov = F) {
+prob2_gen <- function(n, d, ...) {
   locs <- grid_gen(n, d)$grid
   a <- rep(-1, n)
   b <- rep(1, n)
   cov_parms <- c(1.0, 0.1, 0.01)
   cov_name <- "matern15_isotropic"
+  cov_mat <- get(cov_name)(cov_parms, locs)
+  odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
+  a <- a[odr]
+  b <- b[odr]
+  locs <- locs[odr, , drop = F]
   cov_mat <- get(cov_name)(cov_parms, locs)
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
