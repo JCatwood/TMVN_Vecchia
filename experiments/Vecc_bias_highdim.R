@@ -67,7 +67,7 @@ for (i in 1:niter) {
     m <- m_vec[j]
     time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(a, b, 0,
       locs = locs, covName = cov_name,
-      reorder = 1, covParms = cov_parms,
+      reorder = 0, covParms = cov_parms,
       m = m, verbose = T,
       NLevel1 = 10, NLevel2 = 1e3, m_ord = m_ord
     ))[[3]]
