@@ -11,13 +11,8 @@ prob1_gen <- function(n, d, ...) {
   locs <- grid_gen(n, d)$grid
   a <- rep(-Inf, n)
   b <- rep(0, n)
-  cov_parms <- c(1.0, 0.1, 0.01)
+  cov_parms <- c(1.0, 0.1, 0.03)
   cov_name <- "matern15_isotropic"
-  cov_mat <- get(cov_name)(cov_parms, locs)
-  odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
-  a <- a[odr]
-  b <- b[odr]
-  locs <- locs[odr, , drop = F]
   cov_mat <- get(cov_name)(cov_parms, locs)
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
@@ -28,13 +23,8 @@ prob2_gen <- function(n, d, ...) {
   locs <- grid_gen(n, d)$grid
   a <- rep(-1, n)
   b <- rep(1, n)
-  cov_parms <- c(1.0, 0.1, 0.01)
+  cov_parms <- c(1.0, 0.1, 0.03)
   cov_name <- "matern15_isotropic"
-  cov_mat <- get(cov_name)(cov_parms, locs)
-  odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
-  a <- a[odr]
-  b <- b[odr]
-  locs <- locs[odr, , drop = F]
   cov_mat <- get(cov_name)(cov_parms, locs)
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
@@ -67,7 +57,7 @@ for (i in 1:niter) {
     m <- m_vec[j]
     time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(a, b, 0,
       locs = locs, covName = cov_name,
-      reorder = 0, covParms = cov_parms,
+      reorder = 2, covParms = cov_parms,
       m = m, verbose = T,
       NLevel1 = 10, NLevel2 = 1e3, m_ord = m_ord
     ))[[3]]
@@ -76,7 +66,8 @@ for (i in 1:niter) {
   time_TLR <- system.time(
     est_TLR <- tlrmvnmvt::pmvn(a, b,
       sigma = cov_mat,
-      algorithm = tlrmvnmvt::GenzBretz(N = 500)
+      # algorithm = tlrmvnmvt::GenzBretz(N = 500)
+      algorithm = tlrmvnmvt::TLRQMC(N = 500)
     )
   )[[3]]
   ### save results ------------------------
