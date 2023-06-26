@@ -66,6 +66,7 @@ n <- 900
 d <- 2
 m_vec <- seq(from = 10, to = 30, by = 10)
 prob_ind <- 1
+order_mtd <- 1
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
 b <- prob_obj$b
@@ -98,7 +99,8 @@ for (i in 1:niter) {
   time_TLR <- system.time(
     est_TLR <- tlrmvnmvt::pmvn(a, b,
       sigma = cov_mat,
-      algorithm = tlrmvnmvt::GenzBretz(N = 500)
+      # algorithm = tlrmvnmvt::GenzBretz(N = 500)
+      algorithm = tlrmvnmvt::TLRQMC(N = 500)
     )
   )[[3]]
   time_Nascimento <- system.time(
@@ -116,19 +118,19 @@ if (!file.exists("results")) {
 }
 save(m_vec, time_df, prob_df, file = paste0(
   "results/Vecc_bias_lowdim_exp",
-  prob_ind, ".RData"
+  prob_ind, "_", order_mtd, ".RData"
 ))
 
 # Plotting -----------------------------------
 load(paste0(
   "results/Vecc_bias_lowdim_exp",
-  prob_ind, ".RData"
+  prob_ind, "_", order_mtd, ".RData"
 ))
 library(ggplot2)
 library(tidyr)
 box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL,
                             yTrans = "identity") {
-  mtd_names <- c(paste0("m = ", m_vec), "ET", "TLR", "VCDF")
+  mtd_names <- c(paste0("m = ", m_vec), "MET", "TLR", "VCDF")
   colnames(mydf) <- mtd_names
   mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
   ggplot(mydf_pivot, aes(x = method, y = value)) +
@@ -138,7 +140,7 @@ box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL,
 }
 box_plt_low_dim_Botev_only <- function(mydf, yLim = NULL, yName = NULL,
                                        yTrans = "identity") {
-  mtd_names <- c(paste0("m = ", m_vec), "ET")
+  mtd_names <- c(paste0("m = ", m_vec), "MET")
   colnames(mydf) <- mtd_names
   mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
   ggplot(mydf_pivot, aes(x = method, y = value)) +
@@ -150,13 +152,13 @@ if (!file.exists("plots")) {
   dir.create("plots")
 }
 box_plt_low_dim(prob_df, yName = "log MVN prob", yTrans = "log2")
-ggsave(paste0("plots/logprob_lowdim_exp", prob_ind, ".pdf"),
+ggsave(paste0("plots/logprob_lowdim_exp", prob_ind, "_", order_mtd, ".pdf"),
   width = 5,
   height = 5
 )
 box_plt_low_dim_Botev_only(prob_df[, 1:(length(m_vec) + 1)],
   yName = "MVN prob"
 )
-ggsave(paste0("plots/prob_lowdim_exp", prob_ind, ".pdf"), width = 5, height = 5)
+ggsave(paste0("plots/prob_lowdim_exp", prob_ind, "_", order_mtd, ".pdf"), width = 5, height = 5)
 box_plt_low_dim(time_df, yName = "time (seconds)", yTrans = "log2")
-ggsave(paste0("plots/time_lowdim_exp", prob_ind, ".pdf"), width = 5, height = 5)
+ggsave(paste0("plots/time_lowdim_exp", prob_ind, "_", order_mtd, ".pdf"), width = 5, height = 5)
