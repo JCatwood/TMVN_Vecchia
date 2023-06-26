@@ -30,7 +30,7 @@ prob2_gen <- function(n, d, retDenseCov = F) {
   locs <- latin_gen(n, d)
   a <- rep(-Inf, n)
   b <- -runif(n, 0, 2)
-  cov_parms <- c(1.0, 0.1, 0.01)
+  cov_parms <- c(1.0, 0.1, 0.03)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
   # odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
