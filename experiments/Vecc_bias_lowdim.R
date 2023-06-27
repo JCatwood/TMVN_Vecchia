@@ -55,8 +55,8 @@ set.seed(123)
 n <- 900
 d <- 2
 m_vec <- seq(from = 10, to = 30, by = 10)
-prob_ind <- 2
-order_mtd <- 1
+prob_ind <- 1
+order_mtd <- 2
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
 b <- prob_obj$b
@@ -132,7 +132,14 @@ library(ggplot2)
 library(tidyr)
 box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL,
                             yTrans = "identity") {
-  mtd_names <- c(paste0("m = ", m_vec), "MET", "TLR", "VCDF")
+  mtd_names <- c(paste0("m = ", m_vec), "MET", "TLR", "SOV", "VCDF")
+  i <- which(mtd_names == "MET")
+  tmp <- mydf[, i]
+  mydf[, i] <- mydf[, length(mtd_names)]
+  mydf[, length(mtd_names)] <- tmp
+  tmp <- mtd_names[i]
+  mtd_names[i] <- mtd_names[length(mtd_names)]
+  mtd_names[length(mtd_names)] <- tmp
   colnames(mydf) <- mtd_names
   mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
   ggplot(mydf_pivot, aes(x = method, y = value)) +

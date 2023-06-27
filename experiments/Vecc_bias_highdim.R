@@ -48,8 +48,8 @@ cov_parms <- prob_obj$cov_parms
 z_order <- tlrmvnmvt::zorder(locs)
 ## Iteratively compute the same MVN prob -----------------------
 niter <- 30
-time_df <- data.frame(matrix(NA, niter, 1 + length(m_vec)))
-prob_df <- data.frame(matrix(NA, niter, 1 + length(m_vec)))
+time_df <- data.frame(matrix(NA, niter, 2 + length(m_vec)))
+prob_df <- data.frame(matrix(NA, niter, 2 + length(m_vec)))
 for (i in 1:niter) {
   est_Vecc <- rep(NA, length(m_vec))
   time_Vecc <- rep(NA, length(m_vec))
