@@ -30,14 +30,9 @@ prob2_gen <- function(n, d, retDenseCov = F) {
   locs <- latin_gen(n, d)
   a <- rep(-Inf, n)
   b <- -runif(n, 0, 2)
-  cov_parms <- c(1.0, 0.1, 0.03)
+  cov_parms <- c(1.0, 0.1, 0.01)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
-  # odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
-  # a <- a[odr]
-  # b <- b[odr]
-  # locs <- locs[odr, , drop = F]
-  # cov_mat <- get(cov_name)(cov_parms, locs)
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
     cov_name = cov_name, cov_mat = cov_mat
@@ -50,11 +45,6 @@ prob3_gen <- function(n, d, retDenseCov = F) {
   cov_parms <- c(1.0, 0.1, 0.01)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
-  # odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
-  # a <- a[odr]
-  # b <- b[odr]
-  # locs <- locs[odr, , drop = F]
-  # cov_mat <- get(cov_name)(cov_parms, locs)
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
     cov_name = cov_name, cov_mat = cov_mat
@@ -65,7 +55,7 @@ set.seed(123)
 n <- 900
 d <- 2
 m_vec <- seq(from = 10, to = 30, by = 10)
-prob_ind <- 1
+prob_ind <- 2
 order_mtd <- 1
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
@@ -74,10 +64,11 @@ locs <- prob_obj$locs
 cov_mat <- prob_obj$cov_mat
 cov_name <- prob_obj$cov_name
 cov_parms <- prob_obj$cov_parms
+z_order <- tlrmvnmvt::zorder(locs)
 ## Iteratively compute the same MVN prob -----------------------
 niter <- 30
-time_df <- data.frame(matrix(NA, niter, 3 + length(m_vec)))
-prob_df <- data.frame(matrix(NA, niter, 3 + length(m_vec)))
+time_df <- data.frame(matrix(NA, niter, 4 + length(m_vec)))
+prob_df <- data.frame(matrix(NA, niter, 4 + length(m_vec)))
 for (i in 1:niter) {
   est_Vecc <- rep(NA, length(m_vec))
   time_Vecc <- rep(NA, length(m_vec))
@@ -86,23 +77,34 @@ for (i in 1:niter) {
     m <- m_vec[j]
     time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(a, b, 0,
       locs = locs, covName = cov_name,
-      reorder = 2, covParms = cov_parms,
+      reorder = order_mtd, covParms = cov_parms,
       m = m, verbose = T,
       NLevel1 = 10, NLevel2 = 1e3, m_ord = m
     ))[[3]]
   }
   ### Compute MVN prob with other methods -----------------------
+  err_obj <- try(
+    time_TLR <- system.time(
+      est_TLR <- tlrmvnmvt::pmvn(a[z_order], b[z_order],
+        sigma = cov_mat[z_order, z_order],
+        algorithm = tlrmvnmvt::TLRQMC(N = 500, m = sqrt(n), epsl = 1e-6)
+      )
+    )[[3]]
+  )
+  if (class(err_obj) == "try-error") {
+    time_TLR <- NA
+    est_TLR <- NA
+  }
+  time_SOV <- system.time(
+    est_SOV <- tlrmvnmvt::pmvn(a, b,
+      sigma = cov_mat,
+      algorithm = tlrmvnmvt::GenzBretz(N = 500)
+    )
+  )[[3]]
   time_TN <- system.time(est_TN <- TruncatedNormal::pmvnorm(
     rep(0, n), cov_mat,
     lb = a, ub = b, B = 1e4
   ))[[3]]
-  time_TLR <- system.time(
-    est_TLR <- tlrmvnmvt::pmvn(a, b,
-      sigma = cov_mat,
-      # algorithm = tlrmvnmvt::GenzBretz(N = 500)
-      algorithm = tlrmvnmvt::TLRQMC(N = 500)
-    )
-  )[[3]]
   time_Nascimento <- system.time(
     est_Nascimento <- exp(CDFNormalAproxPackNoC.pmvn(b,
       mean = rep(0, n),
@@ -110,8 +112,8 @@ for (i in 1:niter) {
     ))
   )[[3]]
   ### save results ------------------------
-  time_df[i, ] <- c(time_Vecc, time_TN, time_TLR, time_Nascimento)
-  prob_df[i, ] <- c(est_Vecc, est_TN, est_TLR, est_Nascimento)
+  time_df[i, ] <- c(time_Vecc, time_TN, time_TLR, time_SOV, time_Nascimento)
+  prob_df[i, ] <- c(est_Vecc, est_TN, est_TLR, est_SOV, est_Nascimento)
 }
 if (!file.exists("results")) {
   dir.create("results")

@@ -35,7 +35,7 @@ prob2_gen <- function(n, d, ...) {
 set.seed(123)
 n <- 6400
 d <- 2
-m_vec <- seq(from = 30, to = 90, by = 20)
+m_vec <- seq(from = 30, to = 50, by = 10)
 m_ord <- 30
 prob_ind <- 1
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
@@ -45,6 +45,7 @@ locs <- prob_obj$locs
 cov_mat <- prob_obj$cov_mat
 cov_name <- prob_obj$cov_name
 cov_parms <- prob_obj$cov_parms
+z_order <- tlrmvnmvt::zorder(locs)
 ## Iteratively compute the same MVN prob -----------------------
 niter <- 30
 time_df <- data.frame(matrix(NA, niter, 1 + length(m_vec)))
@@ -63,16 +64,27 @@ for (i in 1:niter) {
     ))[[3]]
   }
   ### Compute MVN prob with other methods -----------------------
-  time_TLR <- system.time(
-    est_TLR <- tlrmvnmvt::pmvn(a, b,
+  err_obj <- try(
+    time_TLR <- system.time(
+      est_TLR <- tlrmvnmvt::pmvn(a[z_order], b[z_order],
+        sigma = cov_mat[z_order, z_order],
+        algorithm = tlrmvnmvt::TLRQMC(N = 500, m = sqrt(n), epsl = 1e-6)
+      )
+    )[[3]]
+  )
+  if (class(err_obj) == "try-error") {
+    time_TLR <- NA
+    est_TLR <- NA
+  }
+  time_SOV <- system.time(
+    est_SOV <- tlrmvnmvt::pmvn(a, b,
       sigma = cov_mat,
-      # algorithm = tlrmvnmvt::GenzBretz(N = 500)
-      algorithm = tlrmvnmvt::TLRQMC(N = 500)
+      algorithm = tlrmvnmvt::GenzBretz(N = 500)
     )
   )[[3]]
   ### save results ------------------------
-  time_df[i, ] <- c(time_Vecc, time_TLR)
-  prob_df[i, ] <- c(est_Vecc, est_TLR)
+  time_df[i, ] <- c(time_Vecc, time_TLR, time_SOV)
+  prob_df[i, ] <- c(est_Vecc, est_TLR, est_SOV)
 }
 if (!file.exists("results")) {
   dir.create("results")
@@ -91,7 +103,7 @@ library(ggplot2)
 library(tidyr)
 box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL,
                             yTrans = "identity") {
-  mtd_names <- c(paste0("m = ", m_vec), "TLR")
+  mtd_names <- c(paste0("m = ", m_vec), "TLR", "SOV")
   colnames(mydf) <- mtd_names
   mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
   ggplot(mydf_pivot, aes(x = method, y = value)) +
