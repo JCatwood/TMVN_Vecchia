@@ -64,13 +64,14 @@ prob3_gen <- function(n, d, retDenseCov = F, reorder = F) {
   ))
 }
 ## Prob setups -----------------------
-set.seed(123)
 n <- 900
 d <- 2
 m <- 30
 prob_ind <- 1
+set.seed(123)
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T,
   reorder = F)
+set.seed(123)
 prob_obj_reorder <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T,
   reorder = T)
 ## Iteratively compute the same MVN prob -----------------------

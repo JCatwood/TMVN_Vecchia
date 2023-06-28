@@ -119,5 +119,5 @@ ggsave(paste0("plots/logprob_highdim_exp", prob_ind, ".pdf"),
   width = 5,
   height = 5
 )
-box_plt_low_dim(time_df, yName = "time (seconds)", yTrans = "log2")
+box_plt_low_dim(time_df, yName = "time (seconds)")
 ggsave(paste0("plots/time_highdim_exp", prob_ind, ".pdf"), width = 5, height = 5)
