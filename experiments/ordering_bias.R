@@ -3,7 +3,6 @@ rm(list = ls())
 # Simulation -------------------------------
 library(VeccTMVN)
 library(TruncatedNormalBeta)
-library(TruncatedNormal)
 library(GpGp)
 source("../funcs/utils.R")
 ## MVN prob gen funcs ----------------------------------------
@@ -15,7 +14,7 @@ prob1_gen <- function(n, d, retDenseCov = F, reorder = F) {
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
   if (reorder) {
-    odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
+    odr <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
     a <- a[odr]
     b <- b[odr]
     locs <- locs[odr, , drop = F]
@@ -34,7 +33,7 @@ prob2_gen <- function(n, d, retDenseCov = F, reorder = F) {
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
   if (reorder) {
-    odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
+    odr <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
     a <- a[odr]
     b <- b[odr]
     locs <- locs[odr, , drop = F]
@@ -53,7 +52,7 @@ prob3_gen <- function(n, d, retDenseCov = F, reorder = F) {
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
   if (reorder) {
-    odr <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
+    odr <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
     a <- a[odr]
     b <- b[odr]
     locs <- locs[odr, , drop = F]
