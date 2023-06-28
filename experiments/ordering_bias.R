@@ -111,7 +111,7 @@ for (i in 1:niter) {
 if (!file.exists("results")) {
   dir.create("results")
 }
-save(m_vec, time_df, prob_df, file = paste0(
+save(time_df, prob_df, file = paste0(
   "results/ordering_bias",
   prob_ind, ".RData"
 ))
