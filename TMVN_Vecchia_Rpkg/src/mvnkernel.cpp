@@ -132,10 +132,10 @@ NumericVector mvndns(
                             mu[j2] += mu_coeff_j * X_row_cond_ind_j[j2];
                     }
                 }
-                for(int j = 0; j < NLevel2; j++){
-                    a_bat[j] -= mu[j];
-                    b_bat[j] -= mu[j];
-                }
+            }
+            for(int j = 0; j < NLevel2; j++){
+                a_bat[j] -= mu[j];
+                b_bat[j] -= mu[j];
             }
             // update a_bat and b_bat
             double cond_sd_i = condSd[i];
