@@ -60,7 +60,7 @@ for (i in 1:niter) {
       locs = locs, covName = cov_name,
       reorder = 2, covParms = cov_parms,
       m = m, verbose = T,
-      NLevel1 = 10, NLevel2 = 1e3, m_ord = m_ord
+      NLevel1 = 10, NLevel2 = 1e4, m_ord = m # m_ord
     ))[[3]]
   }
   ### Compute MVN prob with other methods -----------------------
@@ -68,7 +68,7 @@ for (i in 1:niter) {
     time_TLR <- system.time(
       est_TLR <- tlrmvnmvt::pmvn(a[z_order], b[z_order],
         sigma = cov_mat[z_order, z_order],
-        algorithm = tlrmvnmvt::TLRQMC(N = 500, m = sqrt(n), epsl = 1e-6)
+        algorithm = tlrmvnmvt::TLRQMC(N = 5000, m = sqrt(n), epsl = 1e-6)
       )
     )[[3]]
   )
@@ -79,7 +79,7 @@ for (i in 1:niter) {
   time_SOV <- system.time(
     est_SOV <- tlrmvnmvt::pmvn(a, b,
       sigma = cov_mat,
-      algorithm = tlrmvnmvt::GenzBretz(N = 500)
+      algorithm = tlrmvnmvt::GenzBretz(N = 5000)
     )
   )[[3]]
   ### save results ------------------------
