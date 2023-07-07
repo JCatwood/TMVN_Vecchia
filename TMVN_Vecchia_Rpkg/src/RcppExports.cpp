@@ -24,7 +24,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // mvndns
-NumericVector mvndns(const NumericVector& a, const NumericVector& b, const IntegerMatrix& NN, const NumericVector& muCond, const NumericMatrix& muCoeff, const NumericVector& condSd, const NumericVector& beta, int NLevel1, int NLevel2);
+List mvndns(const NumericVector& a, const NumericVector& b, const IntegerMatrix& NN, const NumericVector& muCond, const NumericMatrix& muCoeff, const NumericVector& condSd, const NumericVector& beta, int NLevel1, int NLevel2);
 RcppExport SEXP _VeccTMVN_mvndns(SEXP aSEXP, SEXP bSEXP, SEXP NNSEXP, SEXP muCondSEXP, SEXP muCoeffSEXP, SEXP condSdSEXP, SEXP betaSEXP, SEXP NLevel1SEXP, SEXP NLevel2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

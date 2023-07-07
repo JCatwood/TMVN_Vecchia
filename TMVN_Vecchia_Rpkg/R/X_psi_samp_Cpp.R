@@ -13,7 +13,9 @@
 #'   N_level1 - First level Monte Carlo sample size
 #'   N_level2 - Second level Monte Carlo sample size
 #'   mu - Mean of the MVN prob
-#' Return the a vector of length N, representing the exp(psi) values
+#' Return a list of two:
+#'   [[1]] a vector of length N_level1, representing the exp(psi) values
+#'   [[2]] a vector of length N_level1, representing the exponents
 #'
 sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
                                  beta = rep(0, length(a)), N_level1 = 10,
@@ -80,6 +82,7 @@ sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
 #   exp_psi <- sample_psi_idea5_cpp(vecc_cond_mean_var_obj, a_ord, b_ord,
 #                           beta = beta, N_level1 = N_level1,
 #                           N_level2 = N_level2)
+#   exp_psi <- exp_psi[[1]] * exp(exp_psi[[2]])
 #   est_tilt_quasi <- mean(exp_psi)
 #   err_tilt_quasi <- sd(exp_psi) / sqrt(N_level1)
 #

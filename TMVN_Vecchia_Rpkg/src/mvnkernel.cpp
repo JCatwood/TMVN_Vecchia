@@ -51,7 +51,7 @@ void primes(int n, int sz, int *primeVec)
     Indexing is row-major for 2d arrays.
 */
 // [[Rcpp::export]]
-NumericVector mvndns(
+List mvndns(
     const NumericVector &a, const NumericVector &b,
     const IntegerMatrix &NN, const NumericVector &muCond,
     const NumericMatrix &muCoeff,
@@ -63,6 +63,7 @@ NumericVector mvndns(
     int m = NN.cols() - 1;
     NLevel2 = N * 2;
     NumericVector p_L1(NLevel1);
+    NumericVector common_exponent(NLevel1);
     double * psi_L2 = new double[NLevel2];
     double * MC_grid = new double[n * N];
     double * MC_rnd = new double[n];
@@ -169,8 +170,12 @@ NumericVector mvndns(
         double beta_sq_norm = inner_product(beta.begin(), beta.end(),
             beta.begin(), 0.0);
         for(int j = 0; j < NLevel2; j++){
-            psi_L2[j] = exp(- inner_prod[j] + lnNpr_sum[j] +
-                0.5 * beta_sq_norm);
+            psi_L2[j] = - inner_prod[j] + lnNpr_sum[j] +
+                0.5 * beta_sq_norm;
+        }
+        common_exponent[k] = *std::max_element(psi_L2, psi_L2 + NLevel2);
+        for(int j = 0; j < NLevel2; j++){
+            psi_L2[j] = exp(psi_L2[j] - common_exponent[k]);
         }
         p_L1[k] = accumulate(psi_L2, psi_L2 + NLevel2, 0.0) / NLevel2;
     }
@@ -192,5 +197,5 @@ NumericVector mvndns(
     delete[] inner_prod;
     delete[] cond_ind;
 
-    return p_L1;
+    return List::create(p_L1, common_exponent);
 }

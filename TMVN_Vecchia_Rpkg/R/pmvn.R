@@ -18,13 +18,14 @@ library(truncnorm)
 #' @param NLevel1 first level Monte Carlo sample size
 #' @param NLevel2 second level Monte Carlo sample size
 #' @param verbose verbose or not
+#' @param retlog TRUE or FALSE for whether to return loglk or not
 #' @param ... could be
 #' m_ord for conditioning set size for reordering
 #' @return estimated MVN probability and estimation error
 #'
 pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic",
                  covParms = c(1.0, 0.1, 0.0), m = 30, sigma = NULL, reorder = 0,
-                 NLevel1 = 12, NLevel2 = 1e4, verbose = F, ...) {
+                 NLevel1 = 12, NLevel2 = 1e4, verbose = F, retlog = F, ...) {
   # standardize the input MVN prob -----------------------------
   lower <- lower - mean
   upper <- upper - mean
@@ -159,10 +160,18 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
     beta = beta, N_level1 = NLevel1,
     N_level2 = NLevel2
   )
-  est_prob <- mean(exp_psi)
-  est_prob_err <- sd(exp_psi) / sqrt(NLevel1)
-  attr(est_prob, "error") <- est_prob_err
-  return(est_prob)
+  if (retlog) {
+    exponent <- min(exp_psi[[2]])
+    log_est_prob <- exponent +
+      log(mean(exp_psi[[1]] * exp(exp_psi[[2]] - exponent)))
+    return(log_est_prob)
+  } else {
+    exp_psi <- exp_psi[[1]] * exp(exp_psi[[2]])
+    est_prob <- mean(exp_psi)
+    est_prob_err <- sd(exp_psi) / sqrt(NLevel1)
+    attr(est_prob, "error") <- est_prob_err
+    return(est_prob)
+  }
 }
 
 

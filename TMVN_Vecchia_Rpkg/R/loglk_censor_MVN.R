@@ -115,10 +115,10 @@ loglk_censor_MVN <- function(locs, indCensor, y, bCensor,
   exp_psi <- sample_psi_idea5_cpp(vecc_obj_censor, a, b,
     beta = beta, NLevel1, NLevel2, mu = cond_mean
   )
-  est_prob <- mean(exp_psi)
-  # est_prob_err <- sd(exp_psi) / sqrt(NLevel1)
-  # attr(est_prob, "error") <- est_prob_err
-  return(log(est_prob) + loglik_pdf)
+  exponent <- min(exp_psi[[2]])
+  log_est_prob <- exponent +
+    log(mean(exp_psi[[1]] * exp(exp_psi[[2]] - exponent)))
+  return(log_est_prob + loglik_pdf)
 }
 
 
