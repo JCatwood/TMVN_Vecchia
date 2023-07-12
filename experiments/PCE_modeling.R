@@ -67,15 +67,18 @@ neglk_func <- function(covparms, ...) {
   }
   set.seed(123)
   smoothness <- 1.5
-  covparms_with_smooth <- c(covparms_init[1:3], smoothness, covparms_init[4])
-  -loglk_censor_MVN(
+  covparms_with_smooth <- c(covparms[1:3], smoothness, covparms[4])
+  negloglk <- -loglk_censor_MVN(
     locs_scaled, ind_censor, y_scaled, b_scaled, cov_name,
     covparms_with_smooth, ...
   )
+  cat("covparms is", covparms, "\n")
+  cat("Neg loglk is", negloglk, "\n")
+  return(negloglk)
 }
 opt_obj <- optim(
   par = covparms_init, fn = neglk_func,
-  control = list(trace = 1), m = 50, NLevel2 = 1e4
+  control = list(trace = 1), m = 50, NLevel2 = 1e3
 )
 # save results ------------------------------------
 save(opt_obj, file = paste0(
