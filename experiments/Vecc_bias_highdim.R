@@ -32,7 +32,7 @@ prob2_gen <- function(n, d, ...) {
   ))
 }
 ## Prob setups -----------------------
-set.seed(123)
+set.seed(321)
 n <- 6400
 d <- 2
 m_vec <- seq(from = 30, to = 50, by = 10)
