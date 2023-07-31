@@ -9,6 +9,14 @@ mvndns <- function(a, b, NN, muCond, muCoeff, condSd, beta, NLevel1, NLevel2) {
   .Call(`_VeccTMVN_mvndns`, a, b, NN, muCond, muCoeff, condSd, beta, NLevel1, NLevel2)
 }
 
+mvnrnd <- function(a, b, NN, muCond, muCoeff, condSd, beta, N) {
+  .Call(`_VeccTMVN_mvnrnd`, a, b, NN, muCond, muCoeff, condSd, beta, N)
+}
+
+psi <- function(a, b, NN, muCond, muCoeff, condSd, beta, x) {
+  .Call(`_VeccTMVN_psi`, a, b, NN, muCond, muCoeff, condSd, beta, x)
+}
+
 sp_mat_mul_query <- function(queryRow, queryCol, idx, cidx, val) {
   .Call(`_VeccTMVN_sp_mat_mul_query`, queryRow, queryCol, idx, cidx, val)
 }

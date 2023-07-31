@@ -42,6 +42,42 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// mvnrnd
+List mvnrnd(const NumericVector& a, const NumericVector& b, const IntegerMatrix& NN, const NumericVector& muCond, const NumericMatrix& muCoeff, const NumericVector& condSd, const NumericVector& beta, int N);
+RcppExport SEXP _VeccTMVN_mvnrnd(SEXP aSEXP, SEXP bSEXP, SEXP NNSEXP, SEXP muCondSEXP, SEXP muCoeffSEXP, SEXP condSdSEXP, SEXP betaSEXP, SEXP NSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const IntegerMatrix& >::type NN(NNSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type muCond(muCondSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type muCoeff(muCoeffSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type condSd(condSdSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    rcpp_result_gen = Rcpp::wrap(mvnrnd(a, b, NN, muCond, muCoeff, condSd, beta, N));
+    return rcpp_result_gen;
+END_RCPP
+}
+// psi
+double psi(const NumericVector& a, const NumericVector& b, const IntegerMatrix& NN, const NumericVector& muCond, const NumericMatrix& muCoeff, const NumericVector& condSd, const NumericVector& beta, const NumericVector& x);
+RcppExport SEXP _VeccTMVN_psi(SEXP aSEXP, SEXP bSEXP, SEXP NNSEXP, SEXP muCondSEXP, SEXP muCoeffSEXP, SEXP condSdSEXP, SEXP betaSEXP, SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const IntegerMatrix& >::type NN(NNSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type muCond(muCondSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type muCoeff(muCoeffSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type condSd(condSdSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(psi(a, b, NN, muCond, muCoeff, condSd, beta, x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sp_mat_mul_query
 NumericVector sp_mat_mul_query(const IntegerVector& queryRow, const IntegerVector& queryCol, const IntegerVector& idx, const IntegerVector& cidx, const NumericVector& val);
 RcppExport SEXP _VeccTMVN_sp_mat_mul_query(SEXP queryRowSEXP, SEXP queryColSEXP, SEXP idxSEXP, SEXP cidxSEXP, SEXP valSEXP) {
@@ -75,6 +111,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_VeccTMVN_find_nn_corr_internal", (DL_FUNC) &_VeccTMVN_find_nn_corr_internal, 2},
     {"_VeccTMVN_mvndns", (DL_FUNC) &_VeccTMVN_mvndns, 9},
+    {"_VeccTMVN_mvnrnd", (DL_FUNC) &_VeccTMVN_mvnrnd, 8},
+    {"_VeccTMVN_psi", (DL_FUNC) &_VeccTMVN_psi, 8},
     {"_VeccTMVN_sp_mat_mul_query", (DL_FUNC) &_VeccTMVN_sp_mat_mul_query, 5},
     {"_VeccTMVN_univar_order_vecc", (DL_FUNC) &_VeccTMVN_univar_order_vecc, 4},
     {NULL, NULL, 0}
