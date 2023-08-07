@@ -224,6 +224,37 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
   return(rslt)
 }
 
+#' Wrapper around the C function psi so that the first argument is `x`
+#' The inputs `x`, `beta`, `a`, `b`, and `mu` should be of the same length
+#' This function is used for finding optimal (argmax) `x` given beta
+#' This function is intended to be used inside `mvnrnd_wrap`
+psi_wrapper <- function(x, beta, veccCondMeanVarObj, NN, a, b,
+                        mu) {
+  psi(
+    a, b, NN, mu, veccCondMeanVarObj$cond_mean_coeff,
+    sqrt(veccCondMeanVarObj$cond_var), beta, x
+  )
+}
+
+#' Computed dpsi/dx
+#' The inputs `x`, `beta`, `a`, `b`, and `mu` should be of the same length
+#' This function is used for finding optimal (argmax) `x` given beta
+#' This function is intended to be used inside `mvnrnd_wrap`
+dpsi_dx <- function(x, beta, veccCondMeanVarObj, NN, a, b, mu) {
+  n <- length(a)
+  D <- sqrt(veccCondMeanVarObj$cond_var)
+  mu_c <- as.vector(veccCondMeanVarObj$A %*% (x - mu)) + mu
+  a_tilde_shift <- (a - mu_c) / D - beta
+  b_tilde_shift <- (b - mu_c) / D - beta
+  log_diff_cdf <- TruncatedNormal::lnNpr(a_tilde_shift, b_tilde_shift)
+  pl <- exp(-0.5 * a_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
+  pu <- exp(-0.5 * b_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
+  Psi <- pl - pu
+  # compute grad ------------------------------------------------
+  dpsi_dx <- as.vector(t(veccCondMeanVarObj$A) %*%
+    (beta / D + Psi / D)) - beta / D
+  return(dpsi_dx)
+}
 
 # # TEST-------------------------------
 #
