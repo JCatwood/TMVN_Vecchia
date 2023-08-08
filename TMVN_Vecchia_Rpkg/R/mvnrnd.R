@@ -111,22 +111,26 @@ mvnrnd_wrap <- function(a, b, mu, NN, veccObj, N, verbose = 0) {
 # library(GpGp)
 # library(VeccTMVN)
 # library(truncnorm)
+# library(TruncatedNormal)
 # ## example MVN probabilities --------------------------------
 # set.seed(123)
 # n1 <- 10
 # n2 <- 10
 # n <- n1 * n2
 # locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
-# covparms <- c(2, 0.1, 0.01)
+# covparms <- c(2, 0.3, 0.01)
 # cov_name <- "matern15_isotropic"
 # cov_mat <- get(cov_name)(covparms, locs)
-# a <- rep(-2, n)
-# b <- rep(0, n)
+# a <- rep(-Inf, n)
+# b <- rep(-2, n)
+# mu <- rep(0, n)
 # N <- 1e3
+# ## Sample with TruncatedNormal -----------------------
+# samp_TN <- TruncatedNormal::mvrandn(a, b, cov_mat, n = N, mu = mu)
 # ## Vecc approx objs --------------------------------
 # m <- 30 # num of nearest neighbors
 # ord <- VeccTMVN::Vecc_reorder(
-#   a, b, m, locs, "matern15_isotropic",
+#   a, b, m, locs, cov_name,
 #   covparms
 # )$order
 # a_vecc_ord <- a[ord]
@@ -134,14 +138,18 @@ mvnrnd_wrap <- function(a, b, mu, NN, veccObj, N, verbose = 0) {
 # locs_vecc_ord <- locs[ord, , drop = F]
 # NN <- GpGp::find_ordered_nn(locs_vecc_ord, m)
 # vecc_obj <- vecc_cond_mean_var_sp(NN,
-#   locs = locs_vecc_ord, covName = cov_name,
-#   covParms = covparms
+#                                   locs = locs_vecc_ord, covName = cov_name,
+#                                   covParms = covparms
 # )
 # ## Sample with mvnrnd_wrap -----------------------
-# time_Vecc <-
-#   system.time(
-#     samp_vecc <- mvnrnd_wrap(
-#       a_vecc_ord, b_vecc_ord, 0,
-#       NN = NN, veccObj = vecc_obj, N = N, verbose = 1
-#     )
-#   )[[3]]
+# samp_Vecc_ord <- mvnrnd_wrap(
+#   a_vecc_ord, b_vecc_ord, mu,
+#   NN = NN, veccObj = vecc_obj, N = N, verbose = 1
+# )
+# ord_rev <- integer(n)
+# ord_rev[ord] <- 1 : n
+# samp_Vecc <- samp_Vecc_ord[ord_rev, , drop = F]
+# ## Visual comparison of two TMVN samples -------------------------------
+# par(mfrow = c(1, 2))
+# hist(samp_Vecc)
+# hist(samp_TN)
