@@ -172,6 +172,7 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
 #' @example
 #' library(lhs)
 #' library(GpGp)
+#' library(VeccTMVN)
 #' set.seed(123)
 #' n <- 100
 #' m <- 5

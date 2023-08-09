@@ -4,6 +4,7 @@
 #include <utility>
 #include <cmath>
 #include <numeric>
+#include <stdexcept>
 #include "mvphi.h"
 
 #include <iostream>
@@ -88,25 +89,39 @@ List univar_order_vecc(arma::vec a, arma::vec b, arma::mat corrMat, int m)
 		a_sub /= sqrt(cond_var.subvec(i, n - 1));
 		b_sub /= sqrt(cond_var.subvec(i, n - 1));
 		lc_vdCdfNorm(n - i, a_sub.memptr(), pnorm_at_a.memptr() + i);
-    lc_vdCdfNorm(n - i, b_sub.memptr(), pnorm_at_b.memptr() + i);
-    arma::vec pnorm_diff = pnorm_at_b.subvec(i, n - 1) - 
-    	pnorm_at_a.subvec(i, n - 1);
-    int j_hat = pnorm_diff.index_min();
-    int i_hat = j_hat + i;
-    // compute cond_expectation
-    double dnorm_diff = (exp(- b_sub(j_hat) * b_sub(j_hat) / 2) - 
-    	exp(- a_sub(j_hat) * a_sub(j_hat) / 2)) / sqrt(2 * M_PI);
-    cond_expectation(i) = - dnorm_diff / pnorm_diff(j_hat) * 
-    	sqrt(cond_var(j_hat)) + cond_mean(i_hat);
-    // switch pairs in a, b, odr
-    swap(a(i), a(i_hat));
-    swap(b(i), b(i_hat));
-    swap(odr(i), odr(i_hat));
-    NN.swap_rows(i, i_hat);
-    mean_coeff.swap_rows(i, i_hat);
-    dist.swap_rows(i, i_hat);
-    swap(cond_mean(i), cond_mean(i_hat));
-    swap(cond_var(i), cond_var(i_hat));
+	    lc_vdCdfNorm(n - i, b_sub.memptr(), pnorm_at_b.memptr() + i);
+	    arma::vec pnorm_diff = pnorm_at_b.subvec(i, n - 1) - 
+	    	pnorm_at_a.subvec(i, n - 1);
+	    int j_hat = pnorm_diff.index_min();
+	    int i_hat = j_hat + i;
+	    // compute cond_expectation
+	    double dnorm_diff = (exp(- b_sub(j_hat) * b_sub(j_hat) / 2) - 
+	    	exp(- a_sub(j_hat) * a_sub(j_hat) / 2)) / sqrt(2 * M_PI);
+	    if(pnorm_diff(j_hat) < 1e-20) {
+	    	if(isfinite(a_sub(j_hat))) {
+	    		cond_expectation(i) = a_sub(j_hat) * 
+	    			sqrt(cond_var(i_hat)) + cond_mean(i_hat);
+	    	} else if(isfinite(b_sub(j_hat))) {
+	    		cond_expectation(i) = b_sub(j_hat) * 
+	    			sqrt(cond_var(i_hat)) + cond_mean(i_hat);
+	    	} else {
+	    		throw invalid_argument(
+	    			"a[i_hat] and b[i_hat] are equal and both infinite\n");
+	    	}
+	    } else {
+	    	cond_expectation(i) = - dnorm_diff / pnorm_diff(j_hat) * 
+	    		sqrt(cond_var(i_hat)) + cond_mean(i_hat);
+	    }
+	    
+	    // switch pairs in a, b, odr
+	    swap(a(i), a(i_hat));
+	    swap(b(i), b(i_hat));
+	    swap(odr(i), odr(i_hat));
+	    NN.swap_rows(i, i_hat);
+	    mean_coeff.swap_rows(i, i_hat);
+	    dist.swap_rows(i, i_hat);
+	    swap(cond_mean(i), cond_mean(i_hat));
+	    swap(cond_var(i), cond_var(i_hat));
 	}
 	return List::create(Named("order") = odr, Named("nn") = NN,
 		Named("cond_mean_coeff") = mean_coeff, Named("cond_var") = cond_var);
