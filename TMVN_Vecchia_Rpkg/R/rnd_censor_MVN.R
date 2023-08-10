@@ -38,7 +38,7 @@ mvnrnd_censor_MVN <- function(locs, indCensor, y, bCensor,
   }
   ## reorder --------------------------------
   locs <- rbind(locs_obs, locs_censor)
-  ord <- VeccTMVN::Vecc_reorder(
+  ord <- Vecc_reorder(
     c(y_obs, rep(-Inf, n_censor)), c(y_obs, b_censor),
     m,
     locs = locs, covName = covName,
