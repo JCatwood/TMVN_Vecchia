@@ -64,7 +64,7 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
       ord <- FIC_reorder_univar(lower, upper, m_ord, covMat = sigma)
     } else {
       ord <- FIC_reorder_univar(
-        lower, upper, m_ord, locs, "matern15_isotropic",
+        lower, upper, m_ord, locs, covName,
         covParms
       )
     }
@@ -80,8 +80,7 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
       ord <- Vecc_reorder(lower, upper, m_ord, covMat = sigma)$order
     } else {
       ord <- Vecc_reorder(
-        lower, upper, m_ord, locs, "matern15_isotropic",
-        covParms
+        lower, upper, m_ord, locs, covName, covParms
       )$order
     }
     lower <- lower[ord]
