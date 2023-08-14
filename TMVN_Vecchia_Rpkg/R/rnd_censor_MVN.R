@@ -19,7 +19,7 @@ library(truncnorm)
 
 mvnrnd_censor_MVN <- function(locs, indCensor, y, bCensor,
                               covName = NULL, covParms = NULL, m = 30,
-                              N = 1e3, verbose = T) {
+                              N = 1e3, verbose = T, reorder = T) {
   ## extract and separate observed and censored data ---------------------------
   n <- nrow(locs)
   n_obs <- n - length(indCensor)
@@ -38,12 +38,16 @@ mvnrnd_censor_MVN <- function(locs, indCensor, y, bCensor,
   }
   ## reorder --------------------------------
   locs <- rbind(locs_obs, locs_censor)
-  ord <- Vecc_reorder(
-    c(y_obs, rep(-Inf, n_censor)), c(y_obs, b_censor),
-    m,
-    locs = locs, covName = covName,
-    covParms = covParms
-  )$order
+  if (reorder) {
+    ord <- Vecc_reorder(
+      c(y_obs, rep(-Inf, n_censor)), c(y_obs, b_censor),
+      m,
+      locs = locs, covName = covName,
+      covParms = covParms
+    )$order
+  } else {
+    ord <- 1:n
+  }
   if (any(ord[(n_obs + 1):n] <= n_obs)) {
     warning("Vecc_reorder failed\n")
   } else {
