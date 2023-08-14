@@ -90,8 +90,11 @@ mvnrnd_wrap <- function(a, b, mu, NN, veccObj, N, verbose = 0) {
     }
     accept <- accept + m # keep track of # of accepted
     iter <- iter + 1L # keep track of while loop iterations
-    n_sim <- min(c(1e6, N, ceiling(n_sim / m)))
-    n_sim <- floor(n_sim / 2) * 2
+    if (verbose) {
+      cat("Iteration", iter, "n_sim", n_sim, "n_accept", m, "\n")
+    }
+    n_sim <- min(c(1e6, N, ceiling(n_sim / m * (N - accept))))
+    n_sim <- ceiling(n_sim / 2) * 2
     if ((ntotsim > 1e4) && (accept / ntotsim < 1e-3)) { # if iterations are getting large, give warning
       warning("Acceptance probability smaller than 0.001")
     } else if (iter > 1e5) { # if iterations too large, seek approximation only
