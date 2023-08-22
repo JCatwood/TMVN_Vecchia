@@ -20,6 +20,11 @@ library(truncnorm)
 ptmvrandn <- function(locs, indCensor, y, bCensor,
                       covName = NULL, covParms = NULL, m = 30,
                       N = 1e3, verbose = T, reorder = T) {
+  ## standardize variance ------------------------------
+  parm_sd <- sqrt(covParms[1])
+  y <- y / parm_sd
+  bCensor <- bCensor / parm_sd
+  covParms[1] <- 1
   ## extract and separate observed and censored data ---------------------------
   n <- nrow(locs)
   n_obs <- n - length(indCensor)
@@ -65,8 +70,11 @@ ptmvrandn <- function(locs, indCensor, y, bCensor,
   ## vecc approx object for censored data --------------------------------
   y_obs_padded <- c(y_obs, rep(0, n_censor))
   cond_mean <- as.vector(vecc_obj$A %*% y_obs_padded)[(n_obs + 1):n]
-  a <- rep(-Inf, n_censor)
+  a <- rep(-10, n_censor)
   b <- b_censor
+  if (any(a > b)) {
+    stop("b_censor is too small (smaller than 10 std) \n")
+  }
   cond_var <- vecc_obj$cond_var[(n_obs + 1):n]
   NN <- NN[(n_obs + 1):n, , drop = F] - n_obs
   NN_mask <- NN <= 0
@@ -84,7 +92,7 @@ ptmvrandn <- function(locs, indCensor, y, bCensor,
     a, b,
     mu = cond_mean,
     NN = NN, veccObj = vecc_obj_censor, N = N, verbose = 1
-  )
+  ) * parm_sd
   ord_rev <- integer(n_censor)
   ord_rev[odr_censor] <- 1:n_censor
   samp_Vecc <- matrix(0, n, N)
@@ -120,7 +128,7 @@ ptmvrandn <- function(locs, indCensor, y, bCensor,
 #   cond_cov_mat,
 #   n = N, mu = cond_mean
 # )
-# samp_Vecc <- mvnrnd_censor_MVN(
+# samp_Vecc <- ptmvrandn(
 #   locs, ind_censor, y, b_censor, "matern15_isotropic", covparms,
 #   m = 30, N = N
 # )

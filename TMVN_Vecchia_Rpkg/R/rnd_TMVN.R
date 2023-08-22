@@ -38,6 +38,18 @@ mvrandn <- function(lower, upper, mean, locs = NULL,
     lower <- lower / margin_sd
     sigma <- t(t(sigma / margin_sd) / margin_sd)
   }
+  if (any(lower < -10)) {
+    lower[lower < -10] <- -10
+  }
+  if (any(upper < -10)) {
+    upper[upper < -10] <- -10
+  }
+  if (any(lower > 10)) {
+    lower[lower > 10] <- 10
+  }
+  if (any(upper > 10)) {
+    upper[upper > 10] <- 10
+  }
   if (any(upper < lower)) {
     stop("Invalid MVN probability. Truncated marginal
          probabilities have negative value(s)\n")

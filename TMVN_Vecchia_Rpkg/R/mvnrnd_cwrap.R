@@ -42,29 +42,29 @@ mvnrnd_wrap <- function(a, b, mu, NN, veccObj, N, verbose = 0) {
   x_star <- solv_idea_5_sp$par[1:n]
   beta <- solv_idea_5_sp$par[(n + 1):(2 * n)]
   # 2nd opt for finding x_star ---------------------------
-  # solv_xstar <- optim(
-  #   x_star,
-  #   fn = function(x, ...) {
-  #     -psi_wrapper(x, ...)
-  #   },
-  #   gr = function(x, ...) {
-  #     -dpsi_dx(x, ...)
-  #   },
-  #   method = "L-BFGS-B",
-  #   beta = beta,
-  #   veccCondMeanVarObj = veccObj,
-  #   a = a, b = b, mu = mu, NN = NN,
-  #   lower = c(a, rep(-Inf, n)), upper = c(b, rep(Inf, n)),
-  #   control = list(maxit = 500)
-  # )
-  # if (verbose) {
-  #   cat("Psi value is", -solv_xstar$value, "\n")
-  # }
-  # if (any(solv_xstar$par < a) ||
-  #   any(solv_xstar$par > b)) {
-  #   warning("Optimal x is outside the integration region during minmax tilting\n")
-  # }
-  # x_star <- solv_xstar$par
+  solv_xstar <- optim(
+    x_star,
+    fn = function(x, ...) {
+      -psi_wrapper(x, ...)
+    },
+    gr = function(x, ...) {
+      -dpsi_dx(x, ...)
+    },
+    method = "L-BFGS-B",
+    beta = beta,
+    veccCondMeanVarObj = veccObj,
+    a = a, b = b, mu = mu, NN = NN,
+    lower = c(a, rep(-Inf, n)), upper = c(b, rep(Inf, n)),
+    control = list(maxit = 500)
+  )
+  if (verbose) {
+    cat("Psi value is", -solv_xstar$value, "\n")
+  }
+  if (any(solv_xstar$par < a) ||
+    any(solv_xstar$par > b)) {
+    warning("Optimal x is outside the integration region during minmax tilting\n")
+  }
+  x_star <- solv_xstar$par
   # psi_star --------------------------------------
   psi_star <- psi_wrapper(x_star,
     beta = beta,
