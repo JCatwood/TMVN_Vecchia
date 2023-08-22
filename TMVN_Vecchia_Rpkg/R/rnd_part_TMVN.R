@@ -17,9 +17,9 @@ library(truncnorm)
 #' @return n X N matrix of generated samples
 #'
 
-mvnrnd_censor_MVN <- function(locs, indCensor, y, bCensor,
-                              covName = NULL, covParms = NULL, m = 30,
-                              N = 1e3, verbose = T, reorder = T) {
+ptmvrandn <- function(locs, indCensor, y, bCensor,
+                      covName = NULL, covParms = NULL, m = 30,
+                      N = 1e3, verbose = T, reorder = T) {
   ## extract and separate observed and censored data ---------------------------
   n <- nrow(locs)
   n_obs <- n - length(indCensor)

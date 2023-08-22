@@ -22,7 +22,7 @@ n_obs <- n - n_censor
 cov_name <- "matern15_isotropic"
 # joint inference with VeccTMVN --------------------------
 time_joint_Vecc <- system.time(
-  samp_Vecc <- mvnrnd_censor_MVN(locs, ind_censor, y, b_censor, cov_name,
+  samp_Vecc <- ptmvrandn(locs, ind_censor, y, b_censor, cov_name,
     covparms,
     m = m, N = N
   )
@@ -37,7 +37,7 @@ locs_censor_mask <- (locs_censor[, 1]) < 0.6 & (locs_censor[, 2] > 0.4)
 locs_censor <- locs_censor[locs_censor_mask, , drop = F]
 locs_northwest <- rbind(locs_obs, locs_censor)
 time_northwest_Vecc <- system.time(
-  samp_Vecc_northwest <- mvnrnd_censor_MVN(
+  samp_Vecc_northwest <- ptmvrandn(
     locs_northwest,
     c((1 + n_obs):(n_obs + nrow(locs_censor))),
     c(y_obs, rep(NA, nrow(locs_censor))),
