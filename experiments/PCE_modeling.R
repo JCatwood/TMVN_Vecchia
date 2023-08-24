@@ -1,4 +1,6 @@
 library(VeccTMVN)
+library(sf)
+library(spData)
 rm(list = ls())
 
 load("PCE.RData")
@@ -61,12 +63,12 @@ for (i in 1:d) {
 # model fitting -------------------------------
 cov_name <- "matern_spacetime"
 covparms_init <- c(1, 0.1, 0.1, 0.5) # var, range1, range2, nugget
+smoothness <- 1.5
 neglk_func <- function(covparms, ...) {
   if (any(covparms < c(0.01, 1e-6, 1e-6, 0.01))) {
     return(Inf)
   }
   set.seed(123)
-  smoothness <- 1.5
   covparms_with_smooth <- c(covparms[1:3], smoothness, covparms[4])
   negloglk <- -loglk_censor_MVN(
     locs_scaled, ind_censor, y_scaled, b_scaled, cov_name,
@@ -76,12 +78,62 @@ neglk_func <- function(covparms, ...) {
   cat("Neg loglk is", negloglk, "\n")
   return(negloglk)
 }
-opt_obj <- optim(
-  par = covparms_init, fn = neglk_func,
-  control = list(trace = 1), m = 50, NLevel2 = 1e3
+# opt_obj <- optim(
+#   par = covparms_init, fn = neglk_func,
+#   control = list(trace = 1), m = 50, NLevel2 = 1e3
+# )
+# if (!file.exists("results")) {
+#   dir.create("results")
+# }
+# save(opt_obj, file = paste0(
+#   "results/PCE_modeling.RData"
+# ))
+# Find State information for locs -----------------------------------
+lonlat_to_state <- function(locs) {
+  ## State DF
+  states <- spData::us_states
+  ## Convert points data.frame to an sf POINTS object
+  pts <- st_as_sf(locs, coords = 1:2, crs = 4326)
+  ## Transform spatial data to some planar coordinate system
+  ## (e.g. Web Mercator) as required for geometric operations
+  states <- st_transform(states, crs = 3857)
+  pts <- st_transform(pts, crs = 3857)
+  ## Find names of state (if any) intersected by each point
+  state_names <- states[["NAME"]]
+  ii <- as.integer(st_intersects(pts, states))
+  state_names[ii]
+}
+state_names <- lonlat_to_state(data.frame(locs))
+ind_Texas <- which(state_names == "Texas")
+ind_Texas_neighbor <- which(
+  state_names %in%
+    c("Texas", "Oklahoma", "New Mexico", "Arkansas", "Louisiana")
 )
-# save results ------------------------------------
-save(opt_obj, file = paste0(
-  "results/PCE_modeling.RData"
-))
+# Define a enveloping box for Texas -------------------------------------------
+## TX boundary lat: 25.83333 to 36.5 lon: -93.51667 to -106.6333
+ind_Texas_box <- which((locs[, 1] < -93.02) & (locs[, 1] > -107.13) &
+  (locs[, 2] > 25.33) & (locs[, 2] < 37))
+# Sample at locations given by `ind_Texas_big` --------------------------------
+load("results/PCE_modeling.RData")
+ind_Texas_big <- ind_Texas
+ind_censor_Texas_big <- which(is.na(y[ind_Texas_big]))
+locs_scaled_Texas_big <- locs_scaled[ind_Texas_big, , drop = F]
+y_scaled_Texas_big <- y_scaled[ind_Texas_big]
+b_scaled_Texas_big <- b_scaled[ind_Texas_big]
+N <- 1000
+time_sim_Texas_big <- system.time(
+  samp_Texas_big <- ptmvrandn(
+    locs_scaled_Texas_big,
+    ind_censor_Texas_big,
+    y_scaled_Texas_big,
+    b_scaled_Texas_big, cov_name, c(opt_obj$par[1:3], smoothness, opt_obj$par[4]),
+    m = 50, N = N
+  )
+)[[3]]
+if (!file.exists("results")) {
+  dir.create("results")
+}
+save(samp_Texas_big, time_sim_Texas_big,
+  file = "results/PCE_modeling_sample.RData"
+)
 # plots -------------------------------------------
