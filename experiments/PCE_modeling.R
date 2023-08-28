@@ -116,6 +116,8 @@ ind_Texas_box <- which((locs[, 1] < -93.02) & (locs[, 1] > -107.13) &
 # Sample at locations given by `ind_Texas_big` --------------------------------
 load("results/PCE_modeling.RData")
 ind_Texas_big <- ind_Texas
+ind_obs <- which(!is.na(y))
+ind_Texas_big <- union(ind_Texas_big, ind_obs)
 ind_censor_Texas_big <- which(is.na(y[ind_Texas_big]))
 locs_scaled_Texas_big <- locs_scaled[ind_Texas_big, , drop = F]
 y_scaled_Texas_big <- y_scaled[ind_Texas_big]
