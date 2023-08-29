@@ -1,6 +1,7 @@
 library(VeccTMVN)
 library(sf)
 library(spData)
+library(GpGp)
 rm(list = ls())
 
 load("PCE.RData")
@@ -105,10 +106,6 @@ lonlat_to_state <- function(locs) {
 }
 state_names <- lonlat_to_state(data.frame(locs))
 ind_Texas <- which(state_names == "Texas")
-ind_Texas_neighbor <- which(
-  state_names %in%
-    c("Texas", "Oklahoma", "New Mexico", "Arkansas", "Louisiana")
-)
 # Define a enveloping box for Texas -------------------------------------------
 ## TX boundary lat: 25.83333 to 36.5 lon: -93.51667 to -106.6333
 ind_Texas_box <- which((locs[, 1] < -93.02) & (locs[, 1] > -107.13) &
@@ -123,19 +120,54 @@ locs_scaled_Texas_big <- locs_scaled[ind_Texas_big, , drop = F]
 y_scaled_Texas_big <- y_scaled[ind_Texas_big]
 b_scaled_Texas_big <- b_scaled[ind_Texas_big]
 N <- 1000
-time_sim_Texas_big <- system.time(
-  samp_Texas_big <- ptmvrandn(
-    locs_scaled_Texas_big,
-    ind_censor_Texas_big,
-    y_scaled_Texas_big,
-    b_scaled_Texas_big, cov_name, c(opt_obj$par[1:3], smoothness, opt_obj$par[4]),
-    m = 50, N = N
-  )
-)[[3]]
-if (!file.exists("results")) {
-  dir.create("results")
-}
-save(samp_Texas_big, time_sim_Texas_big,
-  file = "results/PCE_modeling_sample.RData"
-)
+covparms <- c(opt_obj$par[1:3], smoothness, opt_obj$par[4])
+# time_sim_Texas_big <- system.time(
+#   samp_Texas_big <- ptmvrandn(
+#     locs_scaled_Texas_big,
+#     ind_censor_Texas_big,
+#     y_scaled_Texas_big,
+#     b_scaled_Texas_big, cov_name, covparms,
+#     m = 50, N = N
+#   )
+# )[[3]]
+# if (!file.exists("results")) {
+#   dir.create("results")
+# }
+# save(samp_Texas_big, time_sim_Texas_big, covparms, cov_name, ind_Texas_big,
+#   file = "results/PCE_modeling_sample.RData"
+# )
 # plots -------------------------------------------
+library(fields)
+library(RColorBrewer)
+load("results/PCE_modeling_sample.RData")
+lon_grid <- seq(from = -106.6, to = -93.5, length.out = 100)
+lat_grid <- seq(from = 25.8, to = 36.6, length.out = 100)
+TX_grid <- expand.grid(lon_grid, lat_grid)
+colnames(TX_grid) <- c("lon", "lat")
+TX_grid_scaled <- TX_grid
+for (i in 1:2) {
+  TX_grid_scaled[, i] <- (TX_grid_scaled[, i] - min(locs[, i])) /
+    (max(locs[, i]) - min(locs[, i]))
+}
+TX_grid_scaled <- cbind(TX_grid_scaled, rep(1, nrow(TX_grid)))
+colnames(TX_grid_scaled) <- c("lon", "lat", "time")
+cov_mat <- get(cov_name)(covparms, rbind(
+  locs_scaled_Texas_big,
+  as.matrix(TX_grid_scaled)
+))
+n_obs <- nrow(locs_scaled_Texas_big)
+n_grid <- nrow(TX_grid)
+pred_GP <- rowMeans(cov_mat[(n_obs + 1):(n_obs + n_grid), 1:n_obs] %*%
+  solve(cov_mat[1:n_obs, 1:n_obs], samp_Texas_big))
+pred_GP <- pred_GP * sd(y, na.rm = T) + mean(y, na.rm = T)
+image.plot(lon_grid, lat_grid, matrix(pred_GP, 100, 100),
+  col = colorRampPalette(brewer.pal(11, "RdBu")[11:1])(30),
+  xlab = "longitude", ylab = "latitude", cex.lab = 1.3,
+  cex.axis = 1.3, legend.shrink = 0.8, legend.cex = 2.5, legend.width = 2,
+  mgp = c(2, 1, 0)
+)
+points(
+  x = locs[ind_obs, 1], y = locs[ind_obs, 2], col = "white",
+  cex = 0.6, pch = 21, bg = "white"
+)
+fields::US(xlim = c(-106.6, -93.5), ylim = c(25.8, 36.6), add = T)
