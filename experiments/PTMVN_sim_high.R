@@ -4,9 +4,9 @@ library(mvtnorm)
 library(TruncatedNormal)
 library(VeccTMVN)
 # generate TMVN realization ---------------------
-set.seed(234)
-n1 <- 70
-n2 <- 70
+set.seed(123)
+n1 <- 80
+n2 <- 80
 n <- n1 * n2
 n_test <- 500
 m <- 40
@@ -15,7 +15,7 @@ locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
 locs_test <- matrix(runif(n_test * 2), n_test, 2)
 locs_test[, 1] <- locs_test[, 1] * 0.5
 locs_test[, 2] <- locs_test[, 2] * 0.5 + 0.5
-covparms <- c(1, 0.1, 0.01)
+covparms <- c(1, 0.1, 0.03)
 cov_mat <- matern15_isotropic(covparms, rbind(locs, locs_test))
 y_all <- as.vector(t(chol(cov_mat)) %*% rnorm(n + n_test))
 y_test <- y_all[(n + 1):(n + n_test)]

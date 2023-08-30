@@ -5,14 +5,14 @@ library(mvtnorm)
 library(TruncatedNormal)
 library(VeccTMVN)
 set.seed(123)
-n1 <- 100
-n2 <- 100
+n1 <- 80
+n2 <- 80
 n <- n1 * n2
 locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
 covparms <- c(1, 0.1, 0.03)
 cov_mat <- matern15_isotropic(covparms, locs)
 y <- as.vector(t(chol(cov_mat)) %*% rnorm(n))
-b_censor <- 1
+b_censor <- 0
 ind_censor <- which(y < b_censor)
 ind_obs <- which(!(y < b_censor))
 n_censor <- length(ind_censor)
@@ -87,7 +87,11 @@ ggplot(mydf, aes(x = range, y = loglk, group = model, color = model)) +
   geom_vline(xintercept = 0.1, linetype = "dotdash", color = "black") +
   geom_vline(xintercept = max_range_CMVN, linetype = "dashed", color = mycol[1]) +
   geom_vline(xintercept = max_range_GP, linetype = "dashed", color = mycol[2]) +
-  theme(legend.position = c(0.8, 0.2))
+  theme(
+    legend.position = c(0.8, 0.9), legend.text = element_text(size = 12),
+    legend.title = element_blank(), text = element_text(size = 12),
+    axis.text = element_text(size = 12)
+  )
 if (!file.exists("plots")) {
   dir.create("plots")
 }
