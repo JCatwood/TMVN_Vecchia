@@ -5,8 +5,8 @@ library(TruncatedNormal)
 library(VeccTMVN)
 # generate TMVN realization ---------------------
 set.seed(123)
-n1 <- 40
-n2 <- 40
+n1 <- 30
+n2 <- 30
 n <- n1 * n2
 m <- 40
 N <- 1e3
@@ -52,7 +52,26 @@ samp_intest_northwest <-
   samp_Vecc_northwest[mask_interest_northwest, , drop = F]
 mast_interest_all <- (locs[, 1] < 0.5) & (locs[, 2] > 0.5)
 samp_interest_all <- samp_Vecc[mast_interest_all, , drop = F]
-plot(sort(samp_interest_all), sort(samp_intest_northwest),
-  xlab = "Joint Sim",
-  ylab = "Regional Sim"
+lim_qq <- c(min(samp_interest_all, samp_intest_northwest), 0)
+if (!file.exists("plots")) {
+  dir.create("plots")
+}
+pdf(file = "plots/PTMVN_sim_low.pdf", width = 15, height = 5)
+par(mfrow = c(1, 3))
+hist(samp_interest_all[samp_interest_all < 0],
+     breaks = 30, main = "Global Samples", cex.lab = 1.3,
+     cex.axis = 1.3, xlab = NULL
 )
+hist(samp_intest_northwest[samp_intest_northwest < 0],
+     breaks = 30, main = "Regional Samples", cex.lab = 1.3,
+     cex.axis = 1.3, xlab = NULL
+)
+plot(sort(samp_interest_all), sort(samp_intest_northwest),
+  xlab = "Global Simulation",
+  ylab = "Regional Simulation",
+  xlim = lim_qq, ylim = lim_qq,
+  cex.lab = 1.3,
+  cex.axis = 1.3
+)
+abline(a = 0, b = 1, col = "red", lty = "dashed")
+dev.off()
