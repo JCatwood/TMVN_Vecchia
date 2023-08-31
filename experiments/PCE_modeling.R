@@ -140,6 +140,9 @@ covparms <- c(opt_obj$par[1:3], smoothness, opt_obj$par[4])
 library(fields)
 library(RColorBrewer)
 load("results/PCE_modeling_sample.RData")
+if (!file.exists("plots")) {
+  dir.create("plots")
+}
 lon_grid <- seq(from = -106.6, to = -93.5, length.out = 100)
 lat_grid <- seq(from = 25.8, to = 36.6, length.out = 100)
 TX_grid <- expand.grid(lon_grid, lat_grid)
@@ -151,23 +154,54 @@ for (i in 1:2) {
 }
 TX_grid_scaled <- cbind(TX_grid_scaled, rep(1, nrow(TX_grid)))
 colnames(TX_grid_scaled) <- c("lon", "lat", "time")
+## pred_VMET --------------------------------------
 cov_mat <- get(cov_name)(covparms, rbind(
   locs_scaled_Texas_big,
   as.matrix(TX_grid_scaled)
 ))
 n_obs <- nrow(locs_scaled_Texas_big)
 n_grid <- nrow(TX_grid)
-pred_GP <- rowMeans(cov_mat[(n_obs + 1):(n_obs + n_grid), 1:n_obs] %*%
+pred_VMET <- rowMeans(cov_mat[(n_obs + 1):(n_obs + n_grid), 1:n_obs] %*%
   solve(cov_mat[1:n_obs, 1:n_obs], samp_Texas_big))
+pred_VMET <- pred_VMET * sd(y, na.rm = T) + mean(y, na.rm = T)
+pred_VMET[!(lonlat_to_state(TX_grid) == "Texas") |
+  (is.na(lonlat_to_state(TX_grid)))] <- NA
+## pred_GP --------------------------------------
+locs_obs_scaled <- locs_scaled[-ind_censor, , drop = F]
+y_obs_scaled <- y_scaled[-ind_censor]
+cov_mat <- get(cov_name)(covparms, rbind(
+  locs_obs_scaled,
+  as.matrix(TX_grid_scaled)
+))
+n_obs <- nrow(locs_obs_scaled)
+n_grid <- nrow(TX_grid)
+pred_GP <- rowMeans(cov_mat[(n_obs + 1):(n_obs + n_grid), 1:n_obs] %*%
+  solve(cov_mat[1:n_obs, 1:n_obs], y_obs_scaled))
 pred_GP <- pred_GP * sd(y, na.rm = T) + mean(y, na.rm = T)
+pred_GP[!(lonlat_to_state(TX_grid) == "Texas") |
+  (is.na(lonlat_to_state(TX_grid)))] <- NA
+## actual plot ----------------------------------------
+pdf(file = "plots/PCE_modeling.pdf", width = 12, height = 5)
+par(mfrow = c(1, 2), mar = c(4, 4, 1, 6))
+image.plot(lon_grid, lat_grid, matrix(pred_VMET, 100, 100),
+  col = colorRampPalette(brewer.pal(11, "RdBu")[11:1])(30),
+  xlab = "longitude", ylab = "latitude", cex.lab = 1.3,
+  cex.axis = 1.3, legend.shrink = 0.8, legend.cex = 2.5, legend.width = 2,
+  mgp = c(2, 1, 0), zlim = c(-13.1, 0.07)
+)
+points(
+  x = locs[ind_obs, 1], y = locs[ind_obs, 2], col = "black",
+  cex = 0.6, pch = 4,
+)
+# fields::US(xlim = c(-106.6, -93.5), ylim = c(25.8, 36.6), add = T)
 image.plot(lon_grid, lat_grid, matrix(pred_GP, 100, 100),
   col = colorRampPalette(brewer.pal(11, "RdBu")[11:1])(30),
   xlab = "longitude", ylab = "latitude", cex.lab = 1.3,
   cex.axis = 1.3, legend.shrink = 0.8, legend.cex = 2.5, legend.width = 2,
-  mgp = c(2, 1, 0)
+  mgp = c(2, 1, 0), zlim = c(-13.1, 0.07)
 )
 points(
-  x = locs[ind_obs, 1], y = locs[ind_obs, 2], col = "white",
-  cex = 0.6, pch = 21, bg = "white"
+  x = locs[ind_obs, 1], y = locs[ind_obs, 2], col = "black",
+  cex = 0.6, pch = 4,
 )
-fields::US(xlim = c(-106.6, -93.5), ylim = c(25.8, 36.6), add = T)
+dev.off()

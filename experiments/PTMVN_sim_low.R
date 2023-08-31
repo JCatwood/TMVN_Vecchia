@@ -59,12 +59,12 @@ if (!file.exists("plots")) {
 pdf(file = "plots/PTMVN_sim_low.pdf", width = 15, height = 5)
 par(mfrow = c(1, 3))
 hist(samp_interest_all[samp_interest_all < 0],
-     breaks = 30, main = "Global Samples", cex.lab = 1.3,
-     cex.axis = 1.3, xlab = NULL
+  breaks = 30, main = "Global Sampling", cex.lab = 1.3,
+  cex.axis = 1.3, xlab = NULL
 )
 hist(samp_intest_northwest[samp_intest_northwest < 0],
-     breaks = 30, main = "Regional Samples", cex.lab = 1.3,
-     cex.axis = 1.3, xlab = NULL
+  breaks = 30, main = "Regional Sampling", cex.lab = 1.3,
+  cex.axis = 1.3, xlab = NULL
 )
 plot(sort(samp_interest_all), sort(samp_intest_northwest),
   xlab = "Global Simulation",
