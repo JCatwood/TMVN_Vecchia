@@ -36,24 +36,25 @@ locs_censor <- locs_censor[locs_censor_mask, , drop = F]
 y_censor <- y_censor[locs_censor_mask]
 locs_northwest <- rbind(locs_obs, locs_censor)
 y_northwest <- c(y_obs, y_censor)
-time_northwest_Vecc <- system.time(
-  samp_Vecc_northwest <- ptmvrandn(
-    locs_northwest,
-    c((1 + n_obs):(n_obs + nrow(locs_censor))),
-    c(y_obs, rep(NA, nrow(locs_censor))),
-    b_censor, cov_name, covparms,
-    m = m, N = N
-  )
-)[[3]]
-# save results ---------------------------------
-if (!file.exists("results")) {
-  dir.create("results")
-}
-save(time_northwest_Vecc, locs_northwest, samp_Vecc_northwest,
-  locs_test, y_test, locs_obs, y_obs, covparms, n_test, n_obs,
-  file = "results/PTMVN_sim_high.RData"
-)
+# time_northwest_Vecc <- system.time(
+#   samp_Vecc_northwest <- ptmvrandn(
+#     locs_northwest,
+#     c((1 + n_obs):(n_obs + nrow(locs_censor))),
+#     c(y_obs, rep(NA, nrow(locs_censor))),
+#     b_censor, cov_name, covparms,
+#     m = m, N = N
+#   )
+# )[[3]]
+# # save results ---------------------------------
+# if (!file.exists("results")) {
+#   dir.create("results")
+# }
+# save(time_northwest_Vecc, locs_northwest, samp_Vecc_northwest,
+#   locs_test, y_test, locs_obs, y_obs, covparms, n_test, n_obs,
+#   file = "results/PTMVN_sim_high.RData"
+# )
 # plot north-west corner samples --------------------------
+load("results/PTMVN_sim_high.RData")
 mask_interest_northwest <- (locs_northwest[, 1]) < 0.5 &
   (locs_northwest[, 2] > 0.5)
 samp_intest_northwest <-
