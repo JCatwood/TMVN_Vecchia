@@ -4,142 +4,145 @@ rm(list = ls())
 library(VeccTMVN)
 library(TruncatedNormalBeta)
 library(GpGp)
+library(R.utils)
 source("../funcs/utils.R")
 ## MVN prob gen funcs ----------------------------------------
-prob1_gen <- function(n, d, retDenseCov = F, reorder = F) {
+prob1_gen <- function(n, d, m) {
   locs <- grid_gen(n, d)$grid
   a <- rep(-Inf, n)
   b <- rep(0, n)
   cov_parms <- c(1.0, 0.1, 0.01)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
-  if (reorder) {
-    odr <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
-    a <- a[odr]
-    b <- b[odr]
-    locs <- locs[odr, , drop = F]
-    cov_mat <- get(cov_name)(cov_parms, locs)
-  }
+  odr_FIC <- FIC_reorder_univar(a, b, m, covMat = cov_mat)
+  odr_Vecc <- Vecc_reorder(a, b, m, covMat = cov_mat)$order
+  odr_univar <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
-    cov_name = cov_name, cov_mat = cov_mat
+    cov_name = cov_name, cov_mat = cov_mat,
+    odr_FIC = odr_FIC, odr_Vecc = odr_Vecc, odr_univar = odr_univar
   ))
 }
-prob2_gen <- function(n, d, retDenseCov = F, reorder = F) {
+prob2_gen <- function(n, d, m) {
   locs <- latin_gen(n, d)
   a <- rep(-Inf, n)
   b <- -runif(n, 0, 2)
   cov_parms <- c(1.0, 0.1, 0.01)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
-  if (reorder) {
-    odr <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
-    a <- a[odr]
-    b <- b[odr]
-    locs <- locs[odr, , drop = F]
-    cov_mat <- get(cov_name)(cov_parms, locs)
-  }
+  odr_FIC <- FIC_reorder_univar(a, b, m, covMat = cov_mat)
+  odr_Vecc <- Vecc_reorder(a, b, m, covMat = cov_mat)$order
+  odr_univar <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
-    cov_name = cov_name, cov_mat = cov_mat
+    cov_name = cov_name, cov_mat = cov_mat,
+    odr_FIC = odr_FIC, odr_Vecc = odr_Vecc, odr_univar = odr_univar
   ))
 }
-prob3_gen <- function(n, d, retDenseCov = F, reorder = F) {
+prob3_gen <- function(n, d, m) {
   locs <- grid_gen(n, d)$grid
   a <- rep(-1, n)
   b <- rep(1, n)
   cov_parms <- c(1.0, 0.1, 0.01)
   cov_name <- "matern15_isotropic"
   cov_mat <- get(cov_name)(cov_parms, locs)
-  if (reorder) {
-    odr <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
-    a <- a[odr]
-    b <- b[odr]
-    locs <- locs[odr, , drop = F]
-    cov_mat <- get(cov_name)(cov_parms, locs)
-  }
+  odr_FIC <- FIC_reorder_univar(a, b, m, covMat = cov_mat)
+  odr_Vecc <- Vecc_reorder(a, b, m, covMat = cov_mat)$order
+  odr_univar <- TruncatedNormalBeta::cholperm(cov_mat, a, b)$perm
   return(list(
     a = a, b = b, locs = locs, cov_parms = cov_parms,
-    cov_name = cov_name, cov_mat = cov_mat
+    cov_name = cov_name, cov_mat = cov_mat,
+    odr_FIC = odr_FIC, odr_Vecc = odr_Vecc, odr_univar = odr_univar
   ))
+}
+## Experiment function -------------------------
+exp_func <- function(pron_obj, odr, runTN = T) {
+  time_Vecc <- system.time(est_Vecc <- VeccTMVN::pmvn(
+    prob_obj$a[odr], prob_obj$b[odr], 0,
+    locs = prob_obj$locs[odr, , drop = F], covName = prob_obj$cov_name,
+    reorder = 0, covParms = prob_obj$cov_parms,
+    m = m, verbose = T,
+    NLevel1 = 10, NLevel2 = 1e3
+  ))[[3]]
+  if (runTN) {
+    time_TN <- system.time(est_TN <- withTimeout(TruncatedNormalBeta::pmvnorm(
+      rep(0, n), prob_obj$cov_mat[odr, odr],
+      lb = prob_obj$a[odr], ub = prob_obj$b[odr], B = 1e4
+    ), timeout = 60, onTimeout = "silent"))[[3]]
+    if (is.null(est_TN)) {
+      est_TN <- NA
+      time_TN <- NA
+    }
+    return(list(
+      est_Vecc = est_Vecc, time_Vecc = time_Vecc,
+      est_TN = est_TN, time_TN = time_TN
+    ))
+  } else {
+    return(list(
+      est_Vecc = est_Vecc, time_Vecc = time_Vecc
+    ))
+  }
 }
 ## Prob setups -----------------------
 n <- 900
 d <- 2
 m <- 30
-prob_ind <- 1
-set.seed(123)
-prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T,
-  reorder = F)
-set.seed(123)
-prob_obj_reorder <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T,
-  reorder = T)
 ## Iteratively compute the same MVN prob -----------------------
+nprob <- 3
 niter <- 30
-time_df <- data.frame(matrix(NA, niter, 6))
-prob_df <- data.frame(matrix(NA, niter, 6))
-for (i in 1:niter) {
-  ### Compute MVN prob with idea V -----------------------
-  time_Vecc <- system.time(est_Vecc <- VeccTMVN::pmvn(prob_obj$a, prob_obj$b, 0,
-    locs = prob_obj$locs, covName = prob_obj$cov_name,
-    reorder = 0, covParms = prob_obj$cov_parms,
-    m = m, verbose = T,
-    NLevel1 = 10, NLevel2 = 1e3
-  ))[[3]]
-  time_Vecc_FIC_reorder <- system.time(est_Vecc_FIC_reorder <-
-    VeccTMVN::pmvn(prob_obj$a, prob_obj$b, 0,
-      locs = prob_obj$locs, covName = prob_obj$cov_name,
-      reorder = 1, covParms = prob_obj$cov_parms,
-      m = m, verbose = T,
-      NLevel1 = 10, NLevel2 = 1e3
-    ))[[3]]
-  time_Vecc_Vecc_reorder <- system.time(est_Vecc_Vecc_reorder <-
-    VeccTMVN::pmvn(prob_obj$a, prob_obj$b, 0,
-      locs = prob_obj$locs, covName = prob_obj$cov_name,
-      reorder = 2, covParms = prob_obj$cov_parms,
-      m = m, verbose = T,
-      NLevel1 = 10, NLevel2 = 1e3
-    ))[[3]]
-  time_Vecc_univar_reorder <- system.time(
-    est_Vecc_univar_reorder <- VeccTMVN::pmvn(
-      prob_obj_reorder$a, prob_obj_reorder$b, 0,
-      locs = prob_obj_reorder$locs, covName = prob_obj_reorder$cov_name,
-      reorder = 0, covParms = prob_obj_reorder$cov_parms,
-      m = m, verbose = T,
-      NLevel1 = 10, NLevel2 = 1e3
+nmtd <- 2
+nodr <- 4
+rslt <- data.frame(matrix(NA, nprob * niter * nmtd * nodr, 6))
+colnames(rslt) <- c("prob_ind", "iter_ind", "mtd", "order", "est", "time")
+for (prob_ind in c(1:nprob)) {
+  set.seed(123)
+  prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, m)
+  for (i in 1:niter) {
+    ind_offset <- (prob_ind - 1) * niter * nodr * nmtd +
+      (i - 1) * nodr * nmtd
+    rslt_noodr <- exp_func(prob_obj, 1:n, T)
+    rslt_FIC <- exp_func(prob_obj, prob_obj$odr_FIC, F)
+    rslt_Vecc <- exp_func(prob_obj, prob_obj$odr_Vecc, F)
+    rslt_univar <- exp_func(prob_obj, prob_obj$odr_univar, T)
+    rslt[ind_offset + 1, ] <- c(
+      prob_ind, i, "VMET", "no_order",
+      rslt_noodr$est_Vecc, rslt_noodr$time_Vecc
     )
-  )[[3]]
-  ### Compute MVN prob with other methods -----------------------
-  time_TN <- system.time(est_TN <- TruncatedNormalBeta::pmvnorm(
-    rep(0, n), prob_obj$cov_mat,
-    lb = prob_obj$a, ub = prob_obj$b, B = 1e4
-  ))[[3]]
-  time_TN_reorder <- system.time(est_TN_reorder <- TruncatedNormalBeta::pmvnorm(
-    rep(0, n), prob_obj_reorder$cov_mat,
-    lb = prob_obj_reorder$a, ub = prob_obj_reorder$b, B = 1e4
-  ))[[3]]
-  ### save results ------------------------
-  time_df[i, ] <- c(
-    time_Vecc, time_Vecc_FIC_reorder, time_Vecc_Vecc_reorder,
-    time_Vecc_univar_reorder, time_TN, time_TN_reorder
-  )
-  prob_df[i, ] <- c(
-    est_Vecc, est_Vecc_FIC_reorder, est_Vecc_Vecc_reorder,
-    est_Vecc_univar_reorder, est_TN, est_TN_reorder
-  )
+    rslt[ind_offset + 2, ] <- c(
+      prob_ind, i, "VMET", "FIC",
+      rslt_FIC$est_Vecc, rslt_FIC$time_Vecc
+    )
+    rslt[ind_offset + 3, ] <- c(
+      prob_ind, i, "VMET", "Vecc",
+      rslt_Vecc$est_Vecc, rslt_Vecc$time_Vecc
+    )
+    rslt[ind_offset + 4, ] <- c(
+      prob_ind, i, "VMET", "univar",
+      rslt_univar$est_Vecc, rslt_univar$time_Vecc
+    )
+    rslt[ind_offset + 5, ] <- c(
+      prob_ind, i, "MET", "no_order",
+      rslt_noodr$est_TN, rslt_noodr$time_TN
+    )
+    rslt[ind_offset + 6, ] <- c(prob_ind, i, "MET", "FIC", NA, NA)
+    rslt[ind_offset + 7, ] <- c(prob_ind, i, "MET", "Vecc", NA, NA)
+    rslt[ind_offset + 8, ] <- c(
+      prob_ind, i, "MET", "univar",
+      rslt_univar$est_TN, rslt_univar$time_TN
+    )
+  }
 }
+
 if (!file.exists("results")) {
   dir.create("results")
 }
-save(time_df, prob_df, file = paste0(
-  "results/ordering_bias",
-  prob_ind, ".RData"
+save(rslt, file = paste0(
+  "results/ordering_bias.RData"
 ))
 
 # Plotting -----------------------------------
 load(paste0(
-  "results/ordering_bias",
-  prob_ind, ".RData"
+  "results/ordering_bias.RData"
 ))
 library(ggplot2)
 library(tidyr)
