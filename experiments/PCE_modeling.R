@@ -190,6 +190,12 @@ image.plot(lon_grid, lat_grid, matrix(pred_VMET, 100, 100),
   mgp = c(2, 1, 0), zlim = c(-13.1, 0.07)
 )
 points(
+  locs[ind_Texas_big[ind_censor_Texas_big], 1],
+  locs[ind_Texas_big[ind_censor_Texas_big], 2],
+  col = "grey",
+  cex = 0.6, pch = 1,
+)
+points(
   x = locs[ind_obs, 1], y = locs[ind_obs, 2], col = "black",
   cex = 0.6, pch = 4,
 )

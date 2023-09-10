@@ -92,75 +92,126 @@ nprob <- 3
 niter <- 30
 nmtd <- 2
 nodr <- 4
-rslt <- data.frame(matrix(NA, nprob * niter * nmtd * nodr, 6))
-colnames(rslt) <- c("prob_ind", "iter_ind", "mtd", "order", "est", "time")
-for (prob_ind in c(1:nprob)) {
-  set.seed(123)
-  prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, m)
-  for (i in 1:niter) {
-    ind_offset <- (prob_ind - 1) * niter * nodr * nmtd +
-      (i - 1) * nodr * nmtd
-    rslt_noodr <- exp_func(prob_obj, 1:n, T)
-    rslt_FIC <- exp_func(prob_obj, prob_obj$odr_FIC, F)
-    rslt_Vecc <- exp_func(prob_obj, prob_obj$odr_Vecc, F)
-    rslt_univar <- exp_func(prob_obj, prob_obj$odr_univar, T)
-    rslt[ind_offset + 1, ] <- c(
-      prob_ind, i, "VMET", "no_order",
-      rslt_noodr$est_Vecc, rslt_noodr$time_Vecc
-    )
-    rslt[ind_offset + 2, ] <- c(
-      prob_ind, i, "VMET", "FIC",
-      rslt_FIC$est_Vecc, rslt_FIC$time_Vecc
-    )
-    rslt[ind_offset + 3, ] <- c(
-      prob_ind, i, "VMET", "Vecc",
-      rslt_Vecc$est_Vecc, rslt_Vecc$time_Vecc
-    )
-    rslt[ind_offset + 4, ] <- c(
-      prob_ind, i, "VMET", "univar",
-      rslt_univar$est_Vecc, rslt_univar$time_Vecc
-    )
-    rslt[ind_offset + 5, ] <- c(
-      prob_ind, i, "MET", "no_order",
-      rslt_noodr$est_TN, rslt_noodr$time_TN
-    )
-    rslt[ind_offset + 6, ] <- c(prob_ind, i, "MET", "FIC", NA, NA)
-    rslt[ind_offset + 7, ] <- c(prob_ind, i, "MET", "Vecc", NA, NA)
-    rslt[ind_offset + 8, ] <- c(
-      prob_ind, i, "MET", "univar",
-      rslt_univar$est_TN, rslt_univar$time_TN
-    )
-  }
-}
-
-if (!file.exists("results")) {
-  dir.create("results")
-}
-save(rslt, file = paste0(
-  "results/ordering_bias.RData"
-))
+# rslt <- data.frame(matrix(NA, nprob * niter * nmtd * nodr, 6))
+# colnames(rslt) <- c("prob_ind", "iter_ind", "mtd", "order", "est", "time")
+# for (prob_ind in c(1:nprob)) {
+#   set.seed(123)
+#   prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, m)
+#   for (i in 1:niter) {
+#     ind_offset <- (prob_ind - 1) * niter * nodr * nmtd +
+#       (i - 1) * nodr * nmtd
+#     rslt_noodr <- exp_func(prob_obj, 1:n, T)
+#     rslt_FIC <- exp_func(prob_obj, prob_obj$odr_FIC, F)
+#     rslt_Vecc <- exp_func(prob_obj, prob_obj$odr_Vecc, F)
+#     rslt_univar <- exp_func(prob_obj, prob_obj$odr_univar, T)
+#     rslt[ind_offset + 1, ] <- c(
+#       prob_ind, i, "VMET", "no_order",
+#       rslt_noodr$est_Vecc, rslt_noodr$time_Vecc
+#     )
+#     rslt[ind_offset + 2, ] <- c(
+#       prob_ind, i, "VMET", "FIC",
+#       rslt_FIC$est_Vecc, rslt_FIC$time_Vecc
+#     )
+#     rslt[ind_offset + 3, ] <- c(
+#       prob_ind, i, "VMET", "Vecc",
+#       rslt_Vecc$est_Vecc, rslt_Vecc$time_Vecc
+#     )
+#     rslt[ind_offset + 4, ] <- c(
+#       prob_ind, i, "VMET", "univar",
+#       rslt_univar$est_Vecc, rslt_univar$time_Vecc
+#     )
+#     rslt[ind_offset + 5, ] <- c(
+#       prob_ind, i, "MET", "no_order",
+#       rslt_noodr$est_TN, rslt_noodr$time_TN
+#     )
+#     rslt[ind_offset + 6, ] <- c(prob_ind, i, "MET", "FIC", NA, NA)
+#     rslt[ind_offset + 7, ] <- c(prob_ind, i, "MET", "Vecc", NA, NA)
+#     rslt[ind_offset + 8, ] <- c(
+#       prob_ind, i, "MET", "univar",
+#       rslt_univar$est_TN, rslt_univar$time_TN
+#     )
+#   }
+# }
+#
+# if (!file.exists("results")) {
+#   dir.create("results")
+# }
+# save(rslt, file = paste0(
+#   "results/ordering_bias.RData"
+# ))
 
 # Plotting -----------------------------------
 load(paste0(
   "results/ordering_bias.RData"
 ))
 library(ggplot2)
+library(scales)
 library(tidyr)
-box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL,
-                            yTrans = "identity") {
-  mtd_names <- c("VSOV", "VSOV_FIC", "VSOV_Vecc", "VSOV_uni", "MET", "MET_uni")
-  colnames(mydf) <- mtd_names
-  mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
-  ggplot(mydf_pivot, aes(x = method, y = value)) +
-    scale_x_discrete(limits = mtd_names, name = NULL) +
-    scale_y_continuous(limits = yLim, name = yName, trans = yTrans) +
-    geom_boxplot()
-}
+library(dplyr)
 if (!file.exists("plots")) {
   dir.create("plots")
 }
-box_plt_low_dim(prob_df, yName = "MVN prob")
-ggsave(paste0("plots/ordering_bias", prob_ind, ".pdf"),
-  width = 5,
-  height = 5
-)
+rslt <- as_tibble(rslt)
+rslt$est <- as.numeric(rslt$est)
+rslt$time <- as.numeric(rslt$time)
+for (i in 1:nprob) {
+  rslt_tmp <- rslt %>%
+    filter(order %in% c("no_order", "univar")) %>%
+    filter(prob_ind == i) %>%
+    unite("mtd_order", mtd, order, remove = F)
+  rslt_tmp %>%
+    ggplot(mapping = aes(x = mtd_order, y = est, fill = mtd)) +
+    geom_boxplot() +
+    ylab("Estimates of MVN probabilities") +
+    scale_y_continuous(
+      labels = signif(
+        seq(
+          from = min(rslt_tmp$est), to = max(rslt_tmp$est), length.out = 5
+        ),
+        digits = 2
+      )
+    ) +
+    scale_x_discrete(labels = c(
+      "MET", "MET with reorder",
+      "VMET", "VMET with reorder"
+    )) +
+    theme(
+      text = element_text(size = 14), legend.position = "none",
+      axis.title.x = element_blank(),
+      axis.text.x =
+      )
+  ggsave(paste0("plots/ordering_bias_MET_VMET", i, ".pdf"),
+    width = 6,
+    height = 6
+  )
+}
+
+for (i in 1:nprob) {
+  rslt_tmp <- rslt %>%
+    filter(mtd == "VMET") %>%
+    filter(prob_ind == i)
+  rslt_tmp %>%
+    ggplot(mapping = aes(x = order, y = est, fill = order)) +
+    geom_boxplot() +
+    ylab("Estimates of MVN probabilities") +
+    scale_y_continuous(
+      labels = signif(
+        seq(
+          from = min(rslt_tmp$est), to = max(rslt_tmp$est), length.out = 5
+        ),
+        digits = 2
+      )
+    ) +
+    scale_x_discrete(labels = c(
+      "No reorder", "FIC",
+      "Vecchia", "Univariate"
+    )) +
+    theme(
+      text = element_text(size = 14), legend.position = "none",
+      axis.title.x = element_blank(),
+    )
+  ggsave(paste0("plots/ordering_bias_FIC_Vecc", i, ".pdf"),
+    width = 6,
+    height = 6
+  )
+}
