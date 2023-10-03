@@ -36,6 +36,8 @@ locs_censor <- locs[ind_censor, , drop = F]
 locs_censor_mask <- (locs_censor[, 1]) < 0.6 & (locs_censor[, 2] > 0.4)
 locs_censor <- locs_censor[locs_censor_mask, , drop = F]
 locs_northwest <- rbind(locs_obs, locs_censor)
+y_censor <- y[ind_censor]
+y_censor <- y_censor[locs_censor_mask]
 time_northwest_Vecc <- system.time(
   samp_Vecc_northwest <- ptmvrandn(
     locs_northwest,
@@ -45,6 +47,17 @@ time_northwest_Vecc <- system.time(
     m = m, N = N
   )
 )[[3]]
+RMSE_region <- sqrt(mean((y_censor -
+  rowMeans(samp_Vecc_northwest)[
+    (1 + n_obs):(n_obs + nrow(locs_censor))
+  ])^2))
+RMSE_global <- sqrt(mean((y_censor -
+  rowMeans(samp_Vecc)[ind_censor][locs_censor_mask])^2))
+# predict with GP ---------------------
+covmat_tmp <- get(cov_name)(covparms, locs_northwest)
+y_pred_GP <- as.vector(covmat_tmp[(n_obs + 1):nrow(locs_northwest), 1:n_obs] %*%
+  solve(covmat_tmp[1:n_obs, 1:n_obs], y_obs))
+RMSE_GP <- sqrt(mean((y_censor - y_pred_GP)^2))
 # plot north-west corner samples --------------------------
 mask_interest_northwest <- (locs_northwest[, 1]) < 0.5 &
   (locs_northwest[, 2] > 0.5)
@@ -75,3 +88,6 @@ plot(sort(samp_interest_all), sort(samp_intest_northwest),
 )
 abline(a = 0, b = 1, col = "red", lty = "dashed")
 dev.off()
+# compute RMSE -----------------------------------------
+cat("RMSE for global sim", RMSE_global, "\n")
+cat("RMSE for regional sim", RMSE_region, "\n")
