@@ -181,8 +181,8 @@ for (i in 1:nprob) {
       axis.text.x =
       )
   ggsave(paste0("plots/ordering_bias_MET_VMET", i, ".pdf"),
-    width = 6,
-    height = 6
+    width = 5,
+    height = 5
   )
 }
 
@@ -211,7 +211,7 @@ for (i in 1:nprob) {
       axis.title.x = element_blank(),
     )
   ggsave(paste0("plots/ordering_bias_FIC_Vecc", i, ".pdf"),
-    width = 6,
-    height = 6
+    width = 5,
+    height = 5
   )
 }

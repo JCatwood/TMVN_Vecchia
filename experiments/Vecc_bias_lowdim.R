@@ -55,7 +55,7 @@ set.seed(123)
 n <- 900
 d <- 2
 m_vec <- seq(from = 10, to = 30, by = 10)
-prob_ind <- 2
+prob_ind <- 3
 order_mtd <- 2
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
@@ -180,8 +180,8 @@ if (!file.exists("plots")) {
 }
 box_plt_low_dim(prob_df, yName = "Log-probability estimates", yTrans = "log2")
 ggsave(paste0("plots/logprob_lowdim_exp", prob_ind, "_", order_mtd, ".pdf"),
-  width = 6,
-  height = 6
+  width = 5,
+  height = 5
 )
 # box_plt_low_dim_Botev_only(prob_df[, 1:(length(m_vec) + 1)],
 #   yName = "MVN prob"

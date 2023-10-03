@@ -45,28 +45,28 @@ cov_name <- "matern15_isotropic"
 ranges <- seq(from = 0.05, to = 0.25, by = 0.005)
 loglk_Vecc_vec <- rep(0, length(ranges))
 loglk_GPGP_vec <- rep(0, length(ranges))
-idx <- 1
-for (myrange in ranges) {
-  covparms[2] <- myrange
-  set.seed(123)
-  loglk_Vecc_vec[idx] <- loglk_censor_MVN(
-    locs, ind_censor, y, b_censor, cov_name,
-    covparms,
-    m = 50
-  )
-  NN_tmp <- tmp <- GpGp::find_ordered_nn(locs[-ind_censor, , drop = F],
-    m = 50
-  )
-  loglk_GPGP_vec[idx] <- GpGp::vecchia_meanzero_loglik(
-    covparms, cov_name, y[-ind_censor],
-    locs[-ind_censor, , drop = F],
-    NNarray = tmp
-  )$loglik
-  idx <- idx + 1
-}
-save(ranges, loglk_Vecc_vec, loglk_GPGP_vec,
-  file = "results/censored_normal_sim.RData"
-)
+# idx <- 1
+# for (myrange in ranges) {
+#   covparms[2] <- myrange
+#   set.seed(123)
+#   loglk_Vecc_vec[idx] <- loglk_censor_MVN(
+#     locs, ind_censor, y, b_censor, cov_name,
+#     covparms,
+#     m = 50
+#   )
+#   NN_tmp <- tmp <- GpGp::find_ordered_nn(locs[-ind_censor, , drop = F],
+#     m = 50
+#   )
+#   loglk_GPGP_vec[idx] <- GpGp::vecchia_meanzero_loglik(
+#     covparms, cov_name, y[-ind_censor],
+#     locs[-ind_censor, , drop = F],
+#     NNarray = tmp
+#   )$loglik
+#   idx <- idx + 1
+# }
+# save(ranges, loglk_Vecc_vec, loglk_GPGP_vec,
+#   file = "results/censored_normal_sim.RData"
+# )
 
 # plot the likelihood surface ------------------------------------
 load(paste0("results/censored_normal_sim.RData"))
@@ -89,8 +89,8 @@ ggplot(mydf, aes(x = range, y = loglk, group = model, color = model)) +
   geom_vline(xintercept = max_range_GP, linetype = "dashed", color = mycol[2]) +
   theme(
     legend.position = c(0.8, 0.9), legend.text = element_text(size = 12),
-    legend.title = element_blank(), text = element_text(size = 12),
-    axis.text = element_text(size = 12)
+    legend.title = element_blank(), text = element_text(size = 14),
+    axis.text = element_text(size = 14), axis.title = element_text(size = 14)
   )
 if (!file.exists("plots")) {
   dir.create("plots")
