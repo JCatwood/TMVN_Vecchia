@@ -37,7 +37,7 @@ n <- 6400
 d <- 2
 m_vec <- seq(from = 30, to = 50, by = 10)
 m_ord <- 30
-prob_ind <- 1
+prob_ind <- 2
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
 b <- prob_obj$b
@@ -101,23 +101,43 @@ load(paste0(
 ))
 library(ggplot2)
 library(tidyr)
-box_plt_low_dim <- function(mydf, yLim = NULL, yName = NULL,
+library(scales)
+box_plt_low_dim <- function(mydf, yName = NULL,
                             yTrans = "identity") {
-  mtd_names <- c(paste0("m = ", m_vec), "TLR", "SOV")
+  mtd_names <- c(paste0("m", m_vec), "TLR", "SOV")
   colnames(mydf) <- mtd_names
   mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
+  hex <- hue_pal()(3)
+  if (yTrans == "identity") {
+    breaks <- seq(from = min(mydf_pivot$value), to = max(mydf_pivot$value), length.out = 5)
+  } else {
+    breaks <- exp(seq(
+      from = log(min(mydf_pivot$value)),
+      to = log(max(mydf_pivot$value)), length.out = 5
+    ))
+  }
+
   ggplot(mydf_pivot, aes(x = method, y = value)) +
-    scale_x_discrete(limits = mtd_names, name = NULL) +
-    scale_y_continuous(limits = yLim, name = yName, trans = yTrans) +
-    geom_boxplot()
+    geom_boxplot(fill = c(rep(hex[1], length(m_vec)), hex[2:3])) +
+    scale_x_discrete(limits = mtd_names) +
+    scale_y_continuous(
+      name = yName, trans = yTrans, breaks = breaks,
+      labels = signif(breaks, digits = 2)
+    ) +
+    theme(
+      text = element_text(size = 14), legend.position = "none",
+      axis.title.x = element_blank()
+    )
 }
 if (!file.exists("plots")) {
   dir.create("plots")
 }
-box_plt_low_dim(prob_df, yName = "log MVN prob", yTrans = "log2")
+box_plt_low_dim(prob_df, yName = "Log-probability estimates", yTrans = "log2")
 ggsave(paste0("plots/logprob_highdim_exp", prob_ind, ".pdf"),
-  width = 5,
-  height = 5
+  width = 6,
+  height = 6
 )
-box_plt_low_dim(time_df, yName = "time (seconds)")
-ggsave(paste0("plots/time_highdim_exp", prob_ind, ".pdf"), width = 5, height = 5)
+box_plt_low_dim(time_df, yName = "Time (seconds)", yTrans = "log2")
+ggsave(paste0("plots/time_highdim_exp", prob_ind, ".pdf"),
+  width = 6, height = 6
+)
