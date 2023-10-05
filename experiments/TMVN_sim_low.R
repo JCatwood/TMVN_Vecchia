@@ -34,26 +34,48 @@ load("results/TMVN_sim_low.RData")
 if (!file.exists("plots")) {
   dir.create("plots")
 }
-pdf(file = "plots/TMVN_sim_low.pdf", width = 15, height = 5)
-par(mfrow = c(1, 3))
-hist(samp_Vecc_joint,
-  breaks = 30, main = "VMET Samples", cex.lab = 1.3,
-  cex.axis = 1.3
+ggplot(data = data.frame(val = as.vector(samp_Vecc_joint))) +
+  geom_histogram(
+    mapping = aes(x = val),
+    breaks = seq(from = -6.2, to = 0, by = 0.2)
+  ) +
+  scale_x_continuous(name = "VMET Samples") +
+  scale_y_continuous(name = "Frequency") +
+  theme(
+    text = element_text(size = 14), legend.position = "none"
+  )
+ggsave(paste0("plots/TMVN_sim_low_vecc_joint.pdf"),
+  width = 5,
+  height = 5
 )
-hist(samp_TN,
-  breaks = 30, main = "MET Samples", cex.lab = 1.3,
-  cex.axis = 1.3
+
+ggplot(data = data.frame(val = as.vector(samp_TN))) +
+  geom_histogram(
+    mapping = aes(x = val),
+    breaks = seq(from = -6.2, to = 0, by = 0.2)
+  ) +
+  scale_x_continuous(name = "MET Samples") +
+  scale_y_continuous(name = "Frequency") +
+  theme(
+    text = element_text(size = 14), legend.position = "none"
+  )
+ggsave(paste0("plots/TMVN_sim_low_TN.pdf"),
+  width = 5,
+  height = 5
 )
-lim_qq <- range(samp_TN)
-plot(sort(samp_Vecc_joint)[seq(from = 1, to = N * n, by = 10)],
-  sort(samp_TN)[seq(from = 1, to = N * n, by = 10)],
-  xlab = "VMET samples",
-  ylab = "MET samples",
-  xlim = lim_qq, ylim = lim_qq,
-  cex.lab = 1.3,
-  cex.axis = 1.3
+
+ggplot(data = data.frame(
+  x = sort(samp_Vecc_joint)[seq(from = 1, to = N * n, by = 10)],
+  y = sort(samp_TN)[seq(from = 1, to = N * n, by = 10)]
+)) +
+  geom_point(mapping = aes(x = x, y = y)) +
+  scale_x_continuous(name = "VMET samples", limits = c(range(samp_TN))) +
+  scale_y_continuous(name = "MET samples", limits = c(range(samp_TN))) +
+  theme(
+    text = element_text(size = 14), legend.position = "none"
+  ) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red")
+ggsave(paste0("plots/TMVN_sim_low_qqplot.pdf"),
+  width = 5,
+  height = 5
 )
-abline(a = 0, b = 1, col = "red", lty = "dashed")
-dev.off()
-image(matrix(samp_TN[, 1], n1, n2))
-image(matrix(samp_Vecc_joint[, 1], n1, n2))

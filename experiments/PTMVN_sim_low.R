@@ -69,25 +69,57 @@ lim_qq <- c(min(samp_interest_all, samp_intest_northwest), 0)
 if (!file.exists("plots")) {
   dir.create("plots")
 }
-pdf(file = "plots/PTMVN_sim_low.pdf", width = 15, height = 5)
-par(mfrow = c(1, 3))
-hist(samp_interest_all[samp_interest_all < 0],
-  breaks = 30, main = "Global Sampling", cex.lab = 1.3,
-  cex.axis = 1.3, xlab = NULL
+ggplot(data = data.frame(val = samp_interest_all[samp_interest_all < 0])) +
+  geom_histogram(
+    mapping = aes(x = val),
+    breaks = seq(from = -2.6, to = 0, by = 0.1)
+  ) +
+  scale_x_continuous(name = "Global Sampling") +
+  scale_y_continuous(name = "Frequency") +
+  theme(
+    text = element_text(size = 14), legend.position = "none"
+  )
+ggsave(paste0("plots/PTMVN_sim_low_global.pdf"),
+  width = 5,
+  height = 5
 )
-hist(samp_intest_northwest[samp_intest_northwest < 0],
-  breaks = 30, main = "Regional Sampling", cex.lab = 1.3,
-  cex.axis = 1.3, xlab = NULL
+
+ggplot(data = data.frame(val = samp_intest_northwest[samp_intest_northwest < 0])) +
+  geom_histogram(
+    mapping = aes(x = val),
+    breaks = seq(from = -2.6, to = 0, by = 0.1)
+  ) +
+  scale_x_continuous(name = "Global Sampling") +
+  scale_y_continuous(name = "Frequency") +
+  theme(
+    text = element_text(size = 14), legend.position = "none"
+  )
+ggsave(paste0("plots/PTMVN_sim_low_region.pdf"),
+  width = 5,
+  height = 5
 )
-plot(sort(samp_interest_all), sort(samp_intest_northwest),
-  xlab = "Global Simulation",
-  ylab = "Regional Simulation",
-  xlim = lim_qq, ylim = lim_qq,
-  cex.lab = 1.3,
-  cex.axis = 1.3
+
+ggplot(data = data.frame(
+  x = sort(samp_intest_northwest[samp_intest_northwest < 0]),
+  y = sort(samp_interest_all[samp_interest_all < 0])
+)) +
+  geom_point(mapping = aes(x = x, y = y)) +
+  scale_x_continuous(
+    name = "Regional samples",
+    limits = c(range(samp_interest_all[samp_interest_all < 0]))
+  ) +
+  scale_y_continuous(
+    name = "Global samples",
+    limits = c(range(samp_interest_all[samp_interest_all < 0]))
+  ) +
+  theme(
+    text = element_text(size = 14), legend.position = "none"
+  ) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red")
+ggsave(paste0("plots/PTMVN_sim_low_qqplot.pdf"),
+  width = 5,
+  height = 5
 )
-abline(a = 0, b = 1, col = "red", lty = "dashed")
-dev.off()
 # compute RMSE -----------------------------------------
 cat("RMSE for global sim", RMSE_global, "\n")
 cat("RMSE for regional sim", RMSE_region, "\n")
