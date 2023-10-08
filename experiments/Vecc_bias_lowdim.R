@@ -160,9 +160,11 @@ box_plt_low_dim <- function(mydf, yName = NULL,
       name = yName, trans = yTrans, breaks = breaks,
       labels = signif(breaks, digits = 2)
     ) +
+    ggtitle(paste("Scenario", prob_ind)) +
     theme(
       text = element_text(size = 14), legend.position = "none",
-      axis.title.x = element_blank()
+      axis.title.x = element_blank(),
+      plot.title = element_text(hjust = 0.5)
     )
 }
 box_plt_low_dim_Botev_only <- function(mydf, yLim = NULL, yName = NULL,

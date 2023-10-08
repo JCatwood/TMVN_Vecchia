@@ -37,7 +37,7 @@ n <- 6400
 d <- 2
 m_vec <- seq(from = 30, to = 50, by = 10)
 m_ord <- 30
-prob_ind <- 2
+prob_ind <- 1
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
 b <- prob_obj$b
@@ -124,9 +124,11 @@ box_plt_low_dim <- function(mydf, yName = NULL,
       name = yName, trans = yTrans, breaks = breaks,
       labels = signif(breaks, digits = 2)
     ) +
+    ggtitle(paste("Scenario", prob_ind * 2 - 1)) +
     theme(
       text = element_text(size = 14), legend.position = "none",
-      axis.title.x = element_blank()
+      axis.title.x = element_blank(),
+      plot.title = element_text(hjust = 0.5)
     )
 }
 if (!file.exists("plots")) {

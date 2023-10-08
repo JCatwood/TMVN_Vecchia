@@ -175,11 +175,12 @@ for (i in 1:nprob) {
       "MET", "MET with reorder",
       "VMET", "VMET with reorder"
     )) +
+    ggtitle(paste("Scenario", i)) +
     theme(
       text = element_text(size = 14), legend.position = "none",
       axis.title.x = element_blank(),
-      axis.text.x =
-      )
+      plot.title = element_text(hjust = 0.5)
+    )
   ggsave(paste0("plots/ordering_bias_MET_VMET", i, ".pdf"),
     width = 5,
     height = 5
@@ -206,9 +207,11 @@ for (i in 1:nprob) {
       "No reorder", "FIC",
       "Vecchia", "Univariate"
     )) +
+    ggtitle(paste("Scenario", i)) +
     theme(
       text = element_text(size = 14), legend.position = "none",
       axis.title.x = element_blank(),
+      plot.title = element_text(hjust = 0.5)
     )
   ggsave(paste0("plots/ordering_bias_FIC_Vecc", i, ".pdf"),
     width = 5,

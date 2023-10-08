@@ -89,7 +89,7 @@ ggplot(data = data.frame(val = samp_intest_northwest[samp_intest_northwest < 0])
     mapping = aes(x = val),
     breaks = seq(from = -2.6, to = 0, by = 0.1)
   ) +
-  scale_x_continuous(name = "Global Sampling") +
+  scale_x_continuous(name = "Regional Sampling") +
   scale_y_continuous(name = "Frequency") +
   theme(
     text = element_text(size = 14), legend.position = "none"
