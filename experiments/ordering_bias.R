@@ -100,57 +100,57 @@ nmtd <- 2
 nodr <- 5
 rslt <- data.frame(matrix(NA, nprob * niter * nmtd * nodr, 6))
 colnames(rslt) <- c("prob_ind", "iter_ind", "mtd", "order", "est", "time")
-for (prob_ind in c(1:nprob)) {
-  set.seed(123)
-  prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, m)
-  for (i in 1:niter) {
-    ind_offset <- (prob_ind - 1) * niter * nodr * nmtd +
-      (i - 1) * nodr * nmtd
-    rslt_noodr <- exp_func(prob_obj, 1:n, T)
-    rslt_FIC <- exp_func(prob_obj, prob_obj$odr_FIC, F)
-    rslt_FIC100 <- exp_func(prob_obj, prob_obj$odr_FIC100, F)
-    rslt_Vecc <- exp_func(prob_obj, prob_obj$odr_Vecc, F)
-    rslt_univar <- exp_func(prob_obj, prob_obj$odr_univar, T)
-    rslt[ind_offset + 1, ] <- c(
-      prob_ind, i, "VMET", "no_order",
-      rslt_noodr$est_Vecc, rslt_noodr$time_Vecc
-    )
-    rslt[ind_offset + 2, ] <- c(
-      prob_ind, i, "VMET", "FIC",
-      rslt_FIC$est_Vecc, rslt_FIC$time_Vecc
-    )
-    rslt[ind_offset + 3, ] <- c(
-      prob_ind, i, "VMET", "FIC100",
-      rslt_FIC100$est_Vecc, rslt_FIC100$time_Vecc
-    )
-    rslt[ind_offset + 4, ] <- c(
-      prob_ind, i, "VMET", "Vecc",
-      rslt_Vecc$est_Vecc, rslt_Vecc$time_Vecc
-    )
-    rslt[ind_offset + 5, ] <- c(
-      prob_ind, i, "VMET", "univar",
-      rslt_univar$est_Vecc, rslt_univar$time_Vecc
-    )
-    rslt[ind_offset + 6, ] <- c(
-      prob_ind, i, "MET", "no_order",
-      rslt_noodr$est_TN, rslt_noodr$time_TN
-    )
-    rslt[ind_offset + 7, ] <- c(prob_ind, i, "MET", "FIC", NA, NA)
-    rslt[ind_offset + 8, ] <- c(prob_ind, i, "MET", "FIC100", NA, NA)
-    rslt[ind_offset + 9, ] <- c(prob_ind, i, "MET", "Vecc", NA, NA)
-    rslt[ind_offset + 10, ] <- c(
-      prob_ind, i, "MET", "univar",
-      rslt_univar$est_TN, rslt_univar$time_TN
-    )
-  }
-}
-
-if (!file.exists("results")) {
-  dir.create("results")
-}
-save(rslt, file = paste0(
-  "results/ordering_bias.RData"
-))
+# for (prob_ind in c(1:nprob)) {
+#   set.seed(123)
+#   prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, m)
+#   for (i in 1:niter) {
+#     ind_offset <- (prob_ind - 1) * niter * nodr * nmtd +
+#       (i - 1) * nodr * nmtd
+#     rslt_noodr <- exp_func(prob_obj, 1:n, T)
+#     rslt_FIC <- exp_func(prob_obj, prob_obj$odr_FIC, F)
+#     rslt_FIC100 <- exp_func(prob_obj, prob_obj$odr_FIC100, F)
+#     rslt_Vecc <- exp_func(prob_obj, prob_obj$odr_Vecc, F)
+#     rslt_univar <- exp_func(prob_obj, prob_obj$odr_univar, T)
+#     rslt[ind_offset + 1, ] <- c(
+#       prob_ind, i, "VMET", "no_order",
+#       rslt_noodr$est_Vecc, rslt_noodr$time_Vecc
+#     )
+#     rslt[ind_offset + 2, ] <- c(
+#       prob_ind, i, "VMET", "FIC",
+#       rslt_FIC$est_Vecc, rslt_FIC$time_Vecc
+#     )
+#     rslt[ind_offset + 3, ] <- c(
+#       prob_ind, i, "VMET", "FIC100",
+#       rslt_FIC100$est_Vecc, rslt_FIC100$time_Vecc
+#     )
+#     rslt[ind_offset + 4, ] <- c(
+#       prob_ind, i, "VMET", "Vecc",
+#       rslt_Vecc$est_Vecc, rslt_Vecc$time_Vecc
+#     )
+#     rslt[ind_offset + 5, ] <- c(
+#       prob_ind, i, "VMET", "univar",
+#       rslt_univar$est_Vecc, rslt_univar$time_Vecc
+#     )
+#     rslt[ind_offset + 6, ] <- c(
+#       prob_ind, i, "MET", "no_order",
+#       rslt_noodr$est_TN, rslt_noodr$time_TN
+#     )
+#     rslt[ind_offset + 7, ] <- c(prob_ind, i, "MET", "FIC", NA, NA)
+#     rslt[ind_offset + 8, ] <- c(prob_ind, i, "MET", "FIC100", NA, NA)
+#     rslt[ind_offset + 9, ] <- c(prob_ind, i, "MET", "Vecc", NA, NA)
+#     rslt[ind_offset + 10, ] <- c(
+#       prob_ind, i, "MET", "univar",
+#       rslt_univar$est_TN, rslt_univar$time_TN
+#     )
+#   }
+# }
+#
+# if (!file.exists("results")) {
+#   dir.create("results")
+# }
+# save(rslt, file = paste0(
+#   "results/ordering_bias.RData"
+# ))
 
 # Plotting -----------------------------------
 load(paste0(
@@ -205,6 +205,7 @@ for (i in 1:nprob) {
     filter(mtd == "VMET") %>%
     filter(prob_ind == i)
   rslt_tmp %>%
+    mutate(order = factor(order, levels = unique(rslt_tmp$order))) %>%
     ggplot(mapping = aes(x = order, y = est, fill = order)) +
     geom_boxplot() +
     ylab("Estimates of MVN probabilities") +
@@ -222,7 +223,7 @@ for (i in 1:nprob) {
     scale_x_discrete(
       breaks = unique(rslt_tmp$order),
       labels = c(
-        "No reorder", "FIC", "FIC100",
+        "No reorder", "FIC30", "FIC100",
         "Vecchia", "Univariate"
       )
     ) +

@@ -62,49 +62,49 @@ z_order <- tlrmvnmvt::zorder(locs)
 niter <- 30
 time_df <- data.frame(matrix(NA, niter, 2 + length(m_vec)))
 prob_df <- data.frame(matrix(NA, niter, 2 + length(m_vec)))
-for (i in 1:niter) {
-  est_Vecc <- rep(NA, length(m_vec))
-  time_Vecc <- rep(NA, length(m_vec))
-  for (j in 1:length(m_vec)) {
-    ### Compute MVN prob with idea V -----------------------
-    m <- m_vec[j]
-    time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(a, b, 0,
-      locs = locs, covName = cov_name,
-      reorder = 2, covParms = cov_parms,
-      m = m, verbose = T,
-      NLevel1 = 10, NLevel2 = 1e4, m_ord = m # m_ord
-    ))[[3]]
-  }
-  ### Compute MVN prob with other methods -----------------------
-  err_obj <- try(
-    time_TLR <- system.time(
-      est_TLR <- tlrmvnmvt::pmvn(a[z_order], b[z_order],
-        sigma = cov_mat[z_order, z_order],
-        algorithm = tlrmvnmvt::TLRQMC(N = 5000, m = sqrt(n), epsl = 1e-6)
-      )
-    )[[3]]
-  )
-  if (class(err_obj) == "try-error") {
-    time_TLR <- NA
-    est_TLR <- NA
-  }
-  time_SOV <- system.time(
-    est_SOV <- tlrmvnmvt::pmvn(a, b,
-      sigma = cov_mat,
-      algorithm = tlrmvnmvt::GenzBretz(N = 5000)
-    )
-  )[[3]]
-  ### save results ------------------------
-  time_df[i, ] <- c(time_Vecc, time_TLR, time_SOV)
-  prob_df[i, ] <- c(est_Vecc, est_TLR, est_SOV)
-}
-if (!file.exists("results")) {
-  dir.create("results")
-}
-save(m_vec, time_df, prob_df, file = paste0(
-  "results/Vecc_bias_highdim_exp",
-  prob_ind, ".RData"
-))
+# for (i in 1:niter) {
+#   est_Vecc <- rep(NA, length(m_vec))
+#   time_Vecc <- rep(NA, length(m_vec))
+#   for (j in 1:length(m_vec)) {
+#     ### Compute MVN prob with idea V -----------------------
+#     m <- m_vec[j]
+#     time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(a, b, 0,
+#       locs = locs, covName = cov_name,
+#       reorder = 2, covParms = cov_parms,
+#       m = m, verbose = T,
+#       NLevel1 = 10, NLevel2 = 1e4, m_ord = m # m_ord
+#     ))[[3]]
+#   }
+#   ### Compute MVN prob with other methods -----------------------
+#   err_obj <- try(
+#     time_TLR <- system.time(
+#       est_TLR <- tlrmvnmvt::pmvn(a[z_order], b[z_order],
+#         sigma = cov_mat[z_order, z_order],
+#         algorithm = tlrmvnmvt::TLRQMC(N = 5000, m = sqrt(n), epsl = 1e-6)
+#       )
+#     )[[3]]
+#   )
+#   if (class(err_obj) == "try-error") {
+#     time_TLR <- NA
+#     est_TLR <- NA
+#   }
+#   time_SOV <- system.time(
+#     est_SOV <- tlrmvnmvt::pmvn(a, b,
+#       sigma = cov_mat,
+#       algorithm = tlrmvnmvt::GenzBretz(N = 5000)
+#     )
+#   )[[3]]
+#   ### save results ------------------------
+#   time_df[i, ] <- c(time_Vecc, time_TLR, time_SOV)
+#   prob_df[i, ] <- c(est_Vecc, est_TLR, est_SOV)
+# }
+# if (!file.exists("results")) {
+#   dir.create("results")
+# }
+# save(m_vec, time_df, prob_df, file = paste0(
+#   "results/Vecc_bias_highdim_exp",
+#   prob_ind, ".RData"
+# ))
 
 # Plotting -----------------------------------
 load(paste0(
@@ -136,7 +136,7 @@ box_plt_low_dim <- function(mydf, yName = NULL,
       name = yName, trans = yTrans, breaks = breaks,
       labels = signif(breaks, digits = 2)
     ) +
-    ggtitle(paste("Scenario", prob_ind * 2 - 1)) +
+    ggtitle(paste("Scenario", prob_ind)) +
     theme(
       text = element_text(size = 14), legend.position = "none",
       axis.title.x = element_blank(),
