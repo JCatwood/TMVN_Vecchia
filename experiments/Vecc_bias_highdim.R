@@ -49,7 +49,7 @@ n <- 6400
 d <- 2
 m_vec <- seq(from = 30, to = 50, by = 10)
 m_ord <- 30
-prob_ind <- 2
+prob_ind <- 1
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
 b <- prob_obj$b
@@ -151,7 +151,9 @@ ggsave(paste0("plots/logprob_highdim_exp", prob_ind, ".pdf"),
   width = 5,
   height = 5
 )
-box_plt_low_dim(time_df, yName = "Time (seconds)", yTrans = "log2")
+tmp_plt <- box_plt_low_dim(time_df, yName = "Time (seconds)", yTrans = "log2") +
+  ggtitle("Computation times")
+tmp_plt
 ggsave(paste0("plots/time_highdim_exp", prob_ind, ".pdf"),
   width = 5, height = 5
 )
