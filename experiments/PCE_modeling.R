@@ -25,10 +25,11 @@ colnames(locs) <- locs_names
 b_scaled <- (b_censor - mean(y, na.rm = T)) / sd(y, na.rm = T)
 y_scaled <- (y - mean(y, na.rm = T)) / sd(y, na.rm = T)
 locs_scaled <- locs
-for (i in 1:d) {
-  locs_scaled[, i] <- (locs[, i] - min(locs[, i])) /
-    (max(locs[, i]) - min(locs[, i]))
-}
+locs_scaled[, 1:(d - 1)] <-
+  (locs_scaled[, 1:(d - 1)] - min(locs_scaled[, 1:(d - 1)])) /
+    (max(locs_scaled[, 1:(d - 1)]) - min(locs_scaled[, 1:(d - 1)]))
+locs_scaled[, d] <- (locs_scaled[, d] - min(locs_scaled[, d])) /
+  (max(locs_scaled[, d]) - min(locs_scaled[, d]))
 # # variogram analysis ----------------------
 # library(sp)
 # library(gstat)
@@ -79,16 +80,16 @@ neglk_func <- function(covparms, ...) {
   cat("Neg loglk is", negloglk, "\n")
   return(negloglk)
 }
-# opt_obj <- optim(
-#   par = covparms_init, fn = neglk_func,
-#   control = list(trace = 1), m = 50, NLevel2 = 1e3
-# )
-# if (!file.exists("results")) {
-#   dir.create("results")
-# }
-# save(opt_obj, file = paste0(
-#   "results/PCE_modeling.RData"
-# ))
+opt_obj <- optim(
+  par = covparms_init, fn = neglk_func,
+  control = list(trace = 1), m = 50, NLevel2 = 1e3
+)
+if (!file.exists("results")) {
+  dir.create("results")
+}
+save(opt_obj, file = paste0(
+  "results/PCE_modeling.RData"
+))
 # Find State information for locs -----------------------------------
 lonlat_to_state <- function(locs) {
   ## State DF
@@ -121,21 +122,21 @@ y_scaled_Texas_big <- y_scaled[ind_Texas_big]
 b_scaled_Texas_big <- b_scaled[ind_Texas_big]
 N <- 1000
 covparms <- c(opt_obj$par[1:3], smoothness, opt_obj$par[4])
-# time_sim_Texas_big <- system.time(
-#   samp_Texas_big <- ptmvrandn(
-#     locs_scaled_Texas_big,
-#     ind_censor_Texas_big,
-#     y_scaled_Texas_big,
-#     b_scaled_Texas_big, cov_name, covparms,
-#     m = 50, N = N
-#   )
-# )[[3]]
-# if (!file.exists("results")) {
-#   dir.create("results")
-# }
-# save(samp_Texas_big, time_sim_Texas_big, covparms, cov_name, ind_Texas_big,
-#   file = "results/PCE_modeling_sample.RData"
-# )
+time_sim_Texas_big <- system.time(
+  samp_Texas_big <- ptmvrandn(
+    locs_scaled_Texas_big,
+    ind_censor_Texas_big,
+    y_scaled_Texas_big,
+    b_scaled_Texas_big, cov_name, covparms,
+    m = 50, N = N
+  )
+)[[3]]
+if (!file.exists("results")) {
+  dir.create("results")
+}
+save(samp_Texas_big, time_sim_Texas_big, covparms, cov_name, ind_Texas_big,
+  file = "results/PCE_modeling_sample.RData"
+)
 # plots -------------------------------------------
 library(fields)
 library(RColorBrewer)
@@ -148,10 +149,9 @@ lat_grid <- seq(from = 25.8, to = 36.6, length.out = 100)
 TX_grid <- expand.grid(lon_grid, lat_grid)
 colnames(TX_grid) <- c("lon", "lat")
 TX_grid_scaled <- TX_grid
-for (i in 1:2) {
-  TX_grid_scaled[, i] <- (TX_grid_scaled[, i] - min(locs[, i])) /
-    (max(locs[, i]) - min(locs[, i]))
-}
+TX_grid_scaled[, 1:(d - 1)] <-
+  (TX_grid_scaled[, 1:(d - 1)] - min(locs[, 1:(d - 1)])) /
+    (max(locs[, 1:(d - 1)]) - min(locs[, 1:(d - 1)]))
 TX_grid_scaled <- cbind(TX_grid_scaled, rep(1, nrow(TX_grid)))
 colnames(TX_grid_scaled) <- c("lon", "lat", "time")
 ## pred_VMET --------------------------------------
