@@ -13,19 +13,28 @@
 #' code 2: qualifying `x_new` not found, return the original input `x`
 #' code 3: `NewtonStep` is not a descending direction
 #' @examples
-#' Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
-#' J <- function(x){matrix(c(2*x[1], 2*x[2],
-#'                           exp(x[1] - 1), 3*x[2]^2), 2, 2, byrow=T)}
-#' obj_fn <- function(x){0.5 * sum(Fn(x)^2)}
+#' Fn <- function(x) {
+#'   c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)
+#' }
+#' J <- function(x) {
+#'   matrix(c(
+#'     2 * x[1], 2 * x[2],
+#'     exp(x[1] - 1), 3 * x[2]^2
+#'   ), 2, 2, byrow = T)
+#' }
+#' obj_fn <- function(x) {
+#'   0.5 * sum(Fn(x)^2)
+#' }
 #' x <- c(2, 0.5)
-#' for(i in 1 : 10){
-#'   Newton_step <- - as.vector(solve(J(x)) %*% Fn(x))
+#' for (i in 1:10) {
+#'   Newton_step <- -as.vector(solve(J(x)) %*% Fn(x))
 #'   grad <- as.vector(t(J(x)) %*% Fn(x))
 #'   ret <- line_search(x, grad, obj_fn, Newton_step)
-#'   if(ret$code == 0)
+#'   if (ret$code == 0) {
 #'     x <- ret$x_new
-#'   else
+#'   } else {
 #'     break
+#'   }
 #' }
 #' cat("Solution is", x, "where f(x) is", obj_fn(x), "\n")
 line_search <- function(x, grad, objFn, NewtonStep, alpha = 1e-4,
@@ -106,15 +115,27 @@ line_search <- function(x, grad, objFn, NewtonStep, alpha = 1e-4,
 #' code 2: qualifying `x` not found after reaching `maxit`
 #' code 3: qualifying `x` not found before reaching `maxit`
 #' @examples
-#' Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
-#' J <- function(x){matrix(c(2*x[1], 2*x[2],
-#'                           exp(x[1] - 1), 3*x[2]^2), 2, 2, byrow=T)}
-#' jac_trans_fn <- function(x){as.vector(t(J(x)) %*% Fn(x))}
-#' jac_inv_fn <- function(x){as.vector(solve(J(x)) %*% Fn(x))}
+#' Fn <- function(x) {
+#'   c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)
+#' }
+#' J <- function(x) {
+#'   matrix(c(
+#'     2 * x[1], 2 * x[2],
+#'     exp(x[1] - 1), 3 * x[2]^2
+#'   ), 2, 2, byrow = T)
+#' }
+#' jac_trans_fn <- function(x) {
+#'   as.vector(t(J(x)) %*% Fn(x))
+#' }
+#' jac_inv_fn <- function(x) {
+#'   as.vector(solve(J(x)) %*% Fn(x))
+#' }
 #' x <- c(2, 0.5)
 #' ret <- my_nleqslv(x, Fn, jac_trans_fn, jac_inv_fn)
-#' cat("Solution is", ret$x, "where f(x) is", ret$obj, "and code is", ret$code,
-#'     "\n")
+#' cat(
+#'   "Solution is", ret$x, "where f(x) is", ret$obj, "and code is", ret$code,
+#'   "\n"
+#' )
 my_nleqslv <- function(x0, fn, jacTransFn, jacInvFn, ..., control = list()) {
   x <- x0
   maxit <- control[["maxit"]]

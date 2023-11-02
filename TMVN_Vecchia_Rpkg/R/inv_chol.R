@@ -9,13 +9,13 @@
 #' library(GpGp)
 #' n1 <- 10
 #' n2 <- 10
-#' n <- n1*n2
-#' locs <- as.matrix(expand.grid((1 : n1) / n1, (1 : n2) / n2))
+#' n <- n1 * n2
+#' locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
 #' covparms <- c(2, 0.3, 0)
 #' cov_mat <- GpGp::matern15_isotropic(covparms, locs)
 #' m <- 30
 #' NNarray <- GpGp::find_ordered_nn(locs, m = m)
-#' #Vecchia approx --------------------------------
+#' # Vecchia approx --------------------------------
 #' U_Vecc <- get_sp_inv_chol(cov_mat, NNarray)
 #' U <- solve(chol(cov_mat))
 #' cat("Frobenius norm of the difference is", sqrt(sum((U - U_Vecc)^2)))

@@ -32,8 +32,8 @@ a <- rep(-Inf, n)
 b <- runif(n)
 odr_TN <- TruncatedNormal::cholperm(cov_mat, a, b)$perm
 rslt <- Vecc_reorder(a, b, m,
-                     locs = locs, covName = cov_name,
-                     covParms = covparms
+  locs = locs, covName = cov_name,
+  covParms = covparms
 )
 # compare order
 cat(rslt$order, "\n")

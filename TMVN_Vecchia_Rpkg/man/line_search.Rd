@@ -40,19 +40,28 @@ code 3: `NewtonStep` is not a descending direction
 Line search along Newton step
 }
 \examples{
-Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
-J <- function(x){matrix(c(2*x[1], 2*x[2],
-                          exp(x[1] - 1), 3*x[2]^2), 2, 2, byrow=T)}
-obj_fn <- function(x){0.5 * sum(Fn(x)^2)}
+Fn <- function(x) {
+  c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)
+}
+J <- function(x) {
+  matrix(c(
+    2 * x[1], 2 * x[2],
+    exp(x[1] - 1), 3 * x[2]^2
+  ), 2, 2, byrow = T)
+}
+obj_fn <- function(x) {
+  0.5 * sum(Fn(x)^2)
+}
 x <- c(2, 0.5)
-for(i in 1 : 10){
-  Newton_step <- - as.vector(solve(J(x)) \%*\% Fn(x))
+for (i in 1:10) {
+  Newton_step <- -as.vector(solve(J(x)) \%*\% Fn(x))
   grad <- as.vector(t(J(x)) \%*\% Fn(x))
   ret <- line_search(x, grad, obj_fn, Newton_step)
-  if(ret$code == 0)
+  if (ret$code == 0) {
     x <- ret$x_new
-  else
+  } else {
     break
+  }
 }
 cat("Solution is", x, "where f(x) is", obj_fn(x), "\n")
 }

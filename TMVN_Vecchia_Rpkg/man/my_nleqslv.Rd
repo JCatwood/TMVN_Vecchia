@@ -29,13 +29,25 @@ code 3: qualifying `x` not found before reaching `maxit`
 Locally defined function for solving non-linear systems
 }
 \examples{
-Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
-J <- function(x){matrix(c(2*x[1], 2*x[2],
-                          exp(x[1] - 1), 3*x[2]^2), 2, 2, byrow=T)}
-jac_trans_fn <- function(x){as.vector(t(J(x)) \%*\% Fn(x))}
-jac_inv_fn <- function(x){as.vector(solve(J(x)) \%*\% Fn(x))}
+Fn <- function(x) {
+  c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)
+}
+J <- function(x) {
+  matrix(c(
+    2 * x[1], 2 * x[2],
+    exp(x[1] - 1), 3 * x[2]^2
+  ), 2, 2, byrow = T)
+}
+jac_trans_fn <- function(x) {
+  as.vector(t(J(x)) \%*\% Fn(x))
+}
+jac_inv_fn <- function(x) {
+  as.vector(solve(J(x)) \%*\% Fn(x))
+}
 x <- c(2, 0.5)
 ret <- my_nleqslv(x, Fn, jac_trans_fn, jac_inv_fn)
-cat("Solution is", ret$x, "where f(x) is", ret$obj, "and code is", ret$code,
-    "\n")
+cat(
+  "Solution is", ret$x, "where f(x) is", ret$obj, "and code is", ret$code,
+  "\n"
+)
 }
