@@ -5,7 +5,7 @@
   - TMVN_Vecchia_Rpkg: The R package for the methods we developed. Specifically, estimating multivariate normal (MVN) probabailities, sampling Truncated MVN (TMVN) distributions, and computing the log-likelihood of the censored MVN model
   - experiments: The codes for reproducing the results in the paper. The codes should be run after the VeccTMVN package is installed. Certain R packages on CRAN are needed. Packages in `external_Rpkg` are also needed.
   - external_Rpkg: R packages needed for `experiments` that are not on CRAN. Specifically,
-    - CDFApprox: code from the paper ''A Vecchia approximation for high-dimensional Gaussian cumulative distribution functions arising from spatial data''
+    - CDFApprox: code from the paper ''A Vecchia approximation for high-dimensional Gaussian cumulative distribution functions arising from spatial data'' (https://doi.org/10.1080/00949655.2021.2016759)
     - TruncatedNormalBeta: Modified version of the R package `TruncatedNormal` that implements Botev (2017). The modification removes the univariate reordering 
   - funcs: some peripheral functions needed for running the experiments
 	
