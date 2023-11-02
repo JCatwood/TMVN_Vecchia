@@ -5,7 +5,7 @@
 #' among previous observations. This is typically the return of
 #' GpGp::find_ordered_nn
 #' @return upper Cholesky of the inverse of `covMat`
-#' @example
+#' @examples
 #' library(GpGp)
 #' n1 <- 10
 #' n2 <- 10

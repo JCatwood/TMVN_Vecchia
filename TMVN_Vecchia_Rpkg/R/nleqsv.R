@@ -12,7 +12,7 @@
 #' code 1: qualifying `x_new` found
 #' code 2: qualifying `x_new` not found, return the original input `x`
 #' code 3: `NewtonStep` is not a descending direction
-#' @example
+#' @examples
 #' Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
 #' J <- function(x){matrix(c(2*x[1], 2*x[2],
 #'                           exp(x[1] - 1), 3*x[2]^2), 2, 2, byrow=T)}
@@ -105,7 +105,7 @@ line_search <- function(x, grad, objFn, NewtonStep, alpha = 1e-4,
 #' code 1: qualifying `x` found
 #' code 2: qualifying `x` not found after reaching `maxit`
 #' code 3: qualifying `x` not found before reaching `maxit`
-#' @example
+#' @examples
 #' Fn <- function(x){c(x[1]^2 + x[2]^2 - 2, exp(x[1] - 1) + x[2]^3 - 2)}
 #' J <- function(x){matrix(c(2*x[1], 2*x[2],
 #'                           exp(x[1] - 1), 3*x[2]^2), 2, 2, byrow=T)}

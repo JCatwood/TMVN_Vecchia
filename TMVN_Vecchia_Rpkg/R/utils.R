@@ -5,7 +5,7 @@
 #' @param corrMat the correlation matrix
 #' @param m the number of nearest neighbors
 #' @return an n X (m + 1) matrix
-#' @example
+#' @examples
 #' library(GpGp)
 #' library(VeccTMVN)
 #' set.seed(123)

@@ -3,7 +3,7 @@ library(truncnorm)
 
 #' Univariate ordering under FIC approximation, first m chosen by maxmin ordering
 #'
-#' @example
+#' @examples
 #' n1 <- 5
 #' n2 <- 5
 #' n <- n1 * n2
@@ -80,7 +80,7 @@ FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
 #' Univariate ordering under FIC approximation, first m chosen by m iter of
 #'   dense univariate reordering
 #'
-#' @example
+#' @examples
 #' n1 <- 5
 #' n2 <- 5
 #' n <- n1 * n2
@@ -169,7 +169,7 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
 
 #' Univariate ordering under Vecchia approximation
 #'
-#' @example
+#' @examples
 #' library(lhs)
 #' library(GpGp)
 #' library(VeccTMVN)
