@@ -20,6 +20,7 @@
 #' U <- solve(chol(cov_mat))
 #' cat("Frobenius norm of the difference is", sqrt(sum((U - U_Vecc)^2)))
 #'
+#' @export
 get_sp_inv_chol <- function(covMat, NNarray) {
   n <- nrow(covMat)
   inv_chol <- matrix(0, n, n)

@@ -16,7 +16,7 @@ library(truncnorm)
 #' @param verbose verbose level
 #' @return n X N matrix of generated samples
 #'
-
+#' @export
 ptmvrandn <- function(locs, indCensor, y, bCensor,
                       covName = NULL, covParms = NULL, m = 30,
                       N = 1e3, verbose = T, reorder = T) {

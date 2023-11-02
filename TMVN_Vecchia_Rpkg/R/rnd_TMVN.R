@@ -16,7 +16,7 @@ library(truncnorm)
 #' @param verbose verbose level
 #' @return n X N matrix of generated samples
 #'
-
+#' @export
 mvrandn <- function(lower, upper, mean, locs = NULL,
                     covName = "matern15_isotropic", covParms = c(1.0, 0.1, 0.0),
                     m = 30, sigma = NULL, N = 1e3, verbose = F) {

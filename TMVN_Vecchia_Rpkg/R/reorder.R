@@ -202,6 +202,8 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
 #'   "Conditional variance difference is",
 #'   sum(rslt$cond_var - rslt_check$cond_var), "\n"
 #' )
+#' 
+#' @export
 Vecc_reorder <- function(a, b, m, locs = NULL, covName = NULL,
                          covParms = NULL, covMat = NULL) {
   n <- length(a)
