@@ -3,6 +3,7 @@ library(GpGp)
 library(mvtnorm)
 library(TruncatedNormal)
 library(VeccTMVN)
+library(CensSpatial)
 # generate TMVN realization ---------------------
 set.seed(123)
 n1 <- 30
@@ -58,6 +59,29 @@ covmat_tmp <- get(cov_name)(covparms, locs_northwest)
 y_pred_GP <- as.vector(covmat_tmp[(n_obs + 1):nrow(locs_northwest), 1:n_obs] %*%
   solve(covmat_tmp[1:n_obs, 1:n_obs], y_obs))
 RMSE_GP <- sqrt(mean((y_censor - y_pred_GP)^2))
+RMSE_GP_aug <- sqrt(mean((y_censor - b_censor)^2))
+# predict with SAEMSCL -------------------------------
+y_aug <- c(y_obs, rep(b_censor, nrow(locs_censor)))
+cc <- c(rep(F, length(y_obs)), rep(T, nrow(locs_censor)))
+time_SAEMSCL <- system.time(est_SAEMSCL <- SAEMSCL(cc, y_aug,
+  cens.type = "left", trend = "other", x = matrix(1, length(y_aug), 1),
+  coords = locs_northwest,
+  kappa = 1.5, M = 500,
+  perc = 0.25, MaxIter = 10, pc = 0.2, cov.model = "matern",
+  fix.nugget = TRUE, nugget = covparms[3],
+  inits.sigmae = covparms[1], inits.phi = covparms[2], search = TRUE,
+  lower = covparms[2], upper = covparms[2] + 1e-4
+))[3]
+time_SAEMSCL_pred <- system.time(
+  pred_SAEMSCL <- predSCL(
+    matrix(1, nrow(locs_censor), 1),
+    locs_censor, est_SAEMSCL
+  )
+)[3]
+RMSE_GP_SAEMSCL <- sqrt(mean((y_censor - pred_SAEMSCL$prediction)^2))
+save(time_SAEMSCL, time_SAEMSCL_pred, est_SAEMSCL, pred_SAEMSCL, RMSE_GP_SAEMSCL,
+  file = "results/PTMVN_sim_low.RData"
+)
 # plot north-west corner samples --------------------------
 mask_interest_northwest <- (locs_northwest[, 1]) < 0.5 &
   (locs_northwest[, 2] > 0.5)

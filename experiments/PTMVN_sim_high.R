@@ -3,6 +3,7 @@ library(GpGp)
 library(mvtnorm)
 library(TruncatedNormal)
 library(VeccTMVN)
+library(CensSpatial)
 # generate TMVN realization ---------------------
 set.seed(123)
 n1 <- 80
@@ -53,6 +54,21 @@ y_northwest <- c(y_obs, y_censor)
 #   locs_test, y_test, locs_obs, y_obs, covparms, n_test, n_obs,
 #   file = "results/PTMVN_sim_high.RData"
 # )
+# generate samples with SAEMSCL ----------------------------
+y_aug <- c(y_obs, rep(b_censor, nrow(locs_censor)))
+cc <- c(rep(F, length(y_obs)), rep(T, nrow(locs_censor)))
+time_SAEMSCL <- system.time(est_SAEMSCL <- SAEMSCL(cc, y_aug,
+  cens.type = "left", trend = "other", x = matrix(1, length(y_aug), 1),
+  coords = locs_northwest,
+  kappa = 1.5, M = 50,
+  perc = 0.25, MaxIter = 10, pc = 0.2, cov.model = "matern",
+  fix.nugget = F, nugget = covparms[3] + 0.5,
+  inits.sigmae = covparms[1], inits.phi = covparms[2], search = TRUE,
+  lower = covparms[2], upper = covparms[2] + 1e-4
+))[3]
+save(time_SAEMSCL, est_SAEMSCL,
+  file = "results/PTMVN_sim_high_SAEMSCL.RData"
+)
 # plot north-west corner samples --------------------------
 load("results/PTMVN_sim_high.RData")
 mask_interest_northwest <- (locs_northwest[, 1]) < 0.5 &
