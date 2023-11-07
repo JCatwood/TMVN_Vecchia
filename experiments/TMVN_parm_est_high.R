@@ -15,6 +15,8 @@ y <- as.vector(t(chol(cov_mat)) %*% rnorm(n))
 b_censor <- 0
 ind_censor <- which(y < b_censor)
 ind_obs <- which(!(y < b_censor))
+y_aug <- y
+y_aug[ind_censor] <- 0
 n_censor <- length(ind_censor)
 n_obs <- n - n_censor
 cov_name <- "matern15_isotropic"
@@ -42,10 +44,11 @@ cov_name <- "matern15_isotropic"
 # }
 
 # compute the likelihood surface ------------------------------------
-ranges <- seq(from = 0.05, to = 0.25, by = 0.005)
-loglk_Vecc_vec <- rep(0, length(ranges))
-loglk_GPGP_vec <- rep(0, length(ranges))
+# ranges <- seq(from = 0.05, to = 0.25, by = 0.005)
+# loglk_Vecc_vec <- rep(0, length(ranges))
+# loglk_GPGP_vec <- rep(0, length(ranges))
 # idx <- 1
+# NN <- GpGp::find_ordered_nn(locs, m = 50)
 # for (myrange in ranges) {
 #   covparms[2] <- myrange
 #   set.seed(123)
@@ -54,13 +57,10 @@ loglk_GPGP_vec <- rep(0, length(ranges))
 #     covparms,
 #     m = 50
 #   )
-#   NN_tmp <- tmp <- GpGp::find_ordered_nn(locs[-ind_censor, , drop = F],
-#     m = 50
-#   )
 #   loglk_GPGP_vec[idx] <- GpGp::vecchia_meanzero_loglik(
-#     covparms, cov_name, y[-ind_censor],
-#     locs[-ind_censor, , drop = F],
-#     NNarray = tmp
+#     covparms, cov_name, y_aug,
+#     locs,
+#     NNarray = NN
 #   )$loglik
 #   idx <- idx + 1
 # }
