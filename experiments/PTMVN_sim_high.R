@@ -37,6 +37,8 @@ locs_censor <- locs_censor[locs_censor_mask, , drop = F]
 y_censor <- y_censor[locs_censor_mask]
 locs_northwest <- rbind(locs_obs, locs_censor)
 y_northwest <- c(y_obs, y_censor)
+y_northwest_aug <- y_northwest
+y_northwest_aug[(n_obs + 1):length(y_northwest)] <- b_censor
 # time_northwest_Vecc <- system.time(
 #   samp_Vecc_northwest <- ptmvrandn(
 #     locs_northwest,
@@ -55,20 +57,20 @@ y_northwest <- c(y_obs, y_censor)
 #   file = "results/PTMVN_sim_high.RData"
 # )
 # generate samples with SAEMSCL ----------------------------
-y_aug <- c(y_obs, rep(b_censor, nrow(locs_censor)))
-cc <- c(rep(F, length(y_obs)), rep(T, nrow(locs_censor)))
-time_SAEMSCL <- system.time(est_SAEMSCL <- SAEMSCL(cc, y_aug,
-  cens.type = "left", trend = "other", x = matrix(1, length(y_aug), 1),
-  coords = locs_northwest,
-  kappa = 1.5, M = 50,
-  perc = 0.25, MaxIter = 10, pc = 0.2, cov.model = "matern",
-  fix.nugget = F, nugget = covparms[3] + 0.5,
-  inits.sigmae = covparms[1], inits.phi = covparms[2], search = TRUE,
-  lower = covparms[2], upper = covparms[2] + 1e-4
-))[3]
-save(time_SAEMSCL, est_SAEMSCL,
-  file = "results/PTMVN_sim_high_SAEMSCL.RData"
-)
+# y_aug <- c(y_obs, rep(b_censor, nrow(locs_censor)))
+# cc <- c(rep(F, length(y_obs)), rep(T, nrow(locs_censor)))
+# time_SAEMSCL <- system.time(est_SAEMSCL <- SAEMSCL(cc, y_aug,
+#   cens.type = "left", trend = "other", x = matrix(1, length(y_aug), 1),
+#   coords = locs_northwest,
+#   kappa = 1.5, M = 50,
+#   perc = 0.25, MaxIter = 10, pc = 0.2, cov.model = "matern",
+#   fix.nugget = F, nugget = covparms[3] + 0.5,
+#   inits.sigmae = covparms[1], inits.phi = covparms[2], search = TRUE,
+#   lower = covparms[2], upper = covparms[2] + 1e-4
+# ))[3]  # not scalable to this problem size
+# save(time_SAEMSCL, est_SAEMSCL,
+#   file = "results/PTMVN_sim_high_SAEMSCL.RData"
+# )
 # plot north-west corner samples --------------------------
 load("results/PTMVN_sim_high.RData")
 mask_interest_northwest <- (locs_northwest[, 1]) < 0.5 &
@@ -82,11 +84,16 @@ plot(rowMeans(samp_intest_northwest), y_interest_northwest)
 cov_mat <- matern15_isotropic(covparms, rbind(locs_obs, locs_test))
 pred_GP <- as.vector(cov_mat[(n_obs + 1):(n_obs + n_test), 1:n_obs] %*%
   solve(cov_mat[1:n_obs, 1:n_obs], y_obs))
-cov_mat <- matern15_isotropic(covparms, rbind(locs_northwest, locs_test))
 n_northwest <- nrow(locs_northwest)
+cov_mat <- matern15_isotropic(covparms, rbind(locs_northwest, locs_test))
+pred_GP_aug <- as.vector(cov_mat[(n_northwest + 1):(n_northwest + n_test), 1:n_northwest] %*%
+  solve(cov_mat[1:n_northwest, 1:n_northwest], y_northwest_aug))
+cov_mat <- matern15_isotropic(covparms, rbind(locs_northwest, locs_test))
+
 pred_PTMVN <- rowMeans(
   cov_mat[(n_northwest + 1):(n_northwest + n_test), 1:n_northwest] %*%
     solve(cov_mat[1:n_northwest, 1:n_northwest], samp_Vecc_northwest)
 )
 sqrt(mean((y_test - pred_GP)^2))
 sqrt(mean((y_test - pred_PTMVN)^2))
+sqrt(mean((y_test - pred_GP_aug)^2))
