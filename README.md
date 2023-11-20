@@ -1,5 +1,7 @@
 # This is the Git directory for the paper **Linear-Cost Vecchia Approximation of Multivariate Normal Probabilities**
 
+## The paper can be found [here](https://arxiv.org/abs/2311.09426).
+
 ## Directory Guidance
 
   - TMVN_Vecchia_Rpkg: The R package for the methods we developed. Specifically, estimating multivariate normal (MVN) probabailities, sampling Truncated MVN (TMVN) distributions, and computing the log-likelihood of the censored MVN model
