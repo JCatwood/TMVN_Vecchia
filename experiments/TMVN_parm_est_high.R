@@ -89,9 +89,9 @@ ggplot(mydf, aes(x = range, y = loglk, group = model, color = model)) +
   geom_vline(xintercept = max_range_GP, linetype = "dashed", color = mycol[2]) +
   scale_x_continuous(name = "Range Parameter") +
   scale_y_continuous(name = "Log-likelihood") +
-  scale_color_discrete(labels = c("censored MVN", "GP")) +
+  scale_color_discrete(labels = c("censored MVN", "GP-LOD")) +
   theme(
-    legend.position = c(0.8, 0.9), legend.text = element_text(size = 12),
+    legend.position = c(0.8, 0.7), legend.text = element_text(size = 12),
     legend.title = element_blank(), text = element_text(size = 14)
   )
 if (!file.exists("plots")) {

@@ -9,7 +9,7 @@ set.seed(123)
 n1 <- 30
 n2 <- 30
 n <- n1 * n2
-m <- 40
+m <- 30
 N <- 1e3
 locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
 covparms <- c(1, 0.1, 0.01)
