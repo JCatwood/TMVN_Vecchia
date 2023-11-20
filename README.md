@@ -1,6 +1,13 @@
 # This is the Git directory for the paper **Linear-Cost Vecchia Approximation of Multivariate Normal Probabilities**
 
-## The paper can be found [here](https://arxiv.org/abs/2311.09426).
+## The paper 
+The corresponding paper can be found [here](https://arxiv.org/abs/2311.09426).
+
+## Installation
+Simply run
+```
+R CMD INSTALL TMVN_Vecchia_Rpkg
+```
 
 ## Directory Guidance
 
