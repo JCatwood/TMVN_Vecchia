@@ -120,7 +120,7 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
     }
   }
   # find tilting parameter beta -----------------------------------
-  trunc_expect <- etruncnorm(lower, upper)
+  trunc_expect <- truncnorm::etruncnorm(lower, upper)
   x0 <- c(trunc_expect, rep(0, n))
   solv_idea_5_sp <- optim(
     x0,

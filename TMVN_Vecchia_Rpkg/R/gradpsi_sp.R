@@ -2,13 +2,13 @@ library(Matrix)
 
 
 H11_mul <- function(veccCondMeanVarObj, dPsi, D, x) {
-  as.vector(t(dPsi / D / D * as.vector(veccCondMeanVarObj$A %*% x)) %*%
+  as.vector(Matrix::t(dPsi / D / D * as.vector(veccCondMeanVarObj$A %*% x)) %*%
     (veccCondMeanVarObj$A))
 }
 
 
 H12_mul <- function(veccCondMeanVarObj, dPsi, D, x) {
-  as.vector(t((x + dPsi * x) / D) %*% veccCondMeanVarObj$A) - x / D
+  as.vector(Matrix::t((x + dPsi * x) / D) %*% veccCondMeanVarObj$A) - x / D
 }
 
 
@@ -23,19 +23,19 @@ H22_mul <- function(veccCondMeanVarObj, dPsi, D, x) {
 
 
 HInv11_mul <- function(veccCondMeanVarObj, dPsi, D, V, S, x) {
-  -as.vector(solve(V, solve(t(V), x))) / S
+  -as.vector(solve(V, solve(Matrix::t(V), x))) / S
 }
 
 
 HInv12_mul <- function(veccCondMeanVarObj, dPsi, D, V, S, x) {
   x <- x / (1 + dPsi)
   x <- H12_mul(veccCondMeanVarObj, dPsi, D, x)
-  as.vector(solve(V, solve(t(V), x))) / S
+  as.vector(solve(V, solve(Matrix::t(V), x))) / S
 }
 
 
 HInv21_mul <- function(veccCondMeanVarObj, dPsi, D, V, S, x) {
-  x <- solve(V, solve(t(V), x)) / S
+  x <- solve(V, solve(Matrix::t(V), x)) / S
   x <- H21_mul(veccCondMeanVarObj, dPsi, D, x)
   as.vector(x / (1 + dPsi))
 }
@@ -45,7 +45,7 @@ HInv22_mul <- function(veccCondMeanVarObj, dPsi, D, V, S, x) {
   x <- x / (1 + dPsi)
   y <- x
   x <- H12_mul(veccCondMeanVarObj, dPsi, D, x)
-  x <- -solve(V, solve(t(V), x)) / S
+  x <- -solve(V, solve(Matrix::t(V), x)) / S
   x <- H21_mul(veccCondMeanVarObj, dPsi, D, x)
   x <- x / (1 + dPsi)
   as.vector(x + y)
@@ -73,7 +73,7 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
   pu <- exp(-0.5 * b_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
   Psi <- pl - pu
   # compute grad ------------------------------------------------
-  dpsi_dx <- as.vector(t(veccCondMeanVarObj$A) %*%
+  dpsi_dx <- as.vector(Matrix::t(veccCondMeanVarObj$A) %*%
     (beta / D + Psi / D)) - beta / D
   dpsi_dbeta <- beta - (x - mu_c) / D + Psi
   # compute dPsi ------------------------------------------------
@@ -84,14 +84,14 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
   }
   # compute Hessian (usually for testing) -------------------------------
   if (retJac) {
-    dpsi_dx_dx <- t(veccCondMeanVarObj$A) %*%
+    dpsi_dx_dx <- Matrix::t(veccCondMeanVarObj$A) %*%
       (dPsi / D / D * veccCondMeanVarObj$A)
-    dpsi_dx_dbeta <- t(dPsi / D * veccCondMeanVarObj$A) -
-      t((diag(rep(1, n)) - veccCondMeanVarObj$A) / D)
+    dpsi_dx_dbeta <- Matrix::t(dPsi / D * veccCondMeanVarObj$A) -
+      Matrix::t((diag(rep(1, n)) - veccCondMeanVarObj$A) / D)
     dpsi_dbeta_dbeta <- diag(1 + dPsi)
     H <- rbind(
       cbind(dpsi_dx_dx, dpsi_dx_dbeta),
-      cbind(t(dpsi_dx_dbeta), dpsi_dbeta_dbeta)
+      cbind(Matrix::t(dpsi_dx_dbeta), dpsi_dbeta_dbeta)
     )
   }
   # compute Hessian \cdot grad -------------------------------------------
@@ -159,7 +159,7 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
     }
     # compute S matrix for adjusting V^{\top} V ----------------------------------
     if (VAdj) {
-      v1 <- as.vector(t(as.vector(V %*% dpsi_dx)) %*% V) # V^{\top} V dpsi_dx
+      v1 <- as.vector(Matrix::t(as.vector(V %*% dpsi_dx)) %*% V) # V^{\top} V dpsi_dx
       v2 <- -H11_dpsi_dx +
         H12_mul(veccCondMeanVarObj, dPsi, D, H21_dpsi_dx / (1 + dPsi))
       S <- v2 / v1
@@ -173,11 +173,11 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
       if (retJac) {
         H_hat <- rbind(
           cbind(
-            -t(V) %*% V %*% diag(S) +
-              dpsi_dx_dbeta %*% solve(dpsi_dbeta_dbeta) %*% t(dpsi_dx_dbeta),
+            -Matrix::t(V) %*% V %*% diag(S) +
+              dpsi_dx_dbeta %*% solve(dpsi_dbeta_dbeta) %*% Matrix::t(dpsi_dx_dbeta),
             dpsi_dx_dbeta
           ),
-          cbind(t(dpsi_dx_dbeta), dpsi_dbeta_dbeta)
+          cbind(Matrix::t(dpsi_dx_dbeta), dpsi_dbeta_dbeta)
         )
       }
     } else {
@@ -251,7 +251,7 @@ dpsi_dx <- function(x, beta, veccCondMeanVarObj, NN, a, b, mu) {
   pu <- exp(-0.5 * b_tilde_shift^2 - log_diff_cdf) / sqrt(2 * pi)
   Psi <- pl - pu
   # compute grad ------------------------------------------------
-  dpsi_dx <- as.vector(t(veccCondMeanVarObj$A) %*%
+  dpsi_dx <- as.vector(Matrix::t(veccCondMeanVarObj$A) %*%
     (beta / D + Psi / D)) - beta / D
   return(dpsi_dx)
 }
@@ -290,7 +290,7 @@ dpsi_dx <- function(x, beta, veccCondMeanVarObj, NN, a, b, mu) {
 #
 # ## Vecchia approx --------------------------------
 # U <- get_sp_inv_chol(cov_mat_ord, NNarray)
-# cov_mat_Vecc <- solve(U %*% t(U))
+# cov_mat_Vecc <- solve(U %*% Matrix::t(U))
 # vecc_cond_mean_var_obj <- vecc_cond_mean_var_sp(NNarray, cov_mat_ord)
 #
 # ## Compare dpsi ------------------------------
@@ -317,7 +317,7 @@ dpsi_dx <- function(x, beta, veccCondMeanVarObj, NN, a, b, mu) {
 #   )
 #   H_inv <- solve(solve_obj$jac)
 #   jac_grad_test <- as.vector(solve_obj$jac %*% solve_obj$grad)
-#   jac_grad_test_2 <- as.vector(t(solve_obj$jac_hat) %*% solve_obj$grad)
+#   jac_grad_test_2 <- as.vector(Matrix::t(solve_obj$jac_hat) %*% solve_obj$grad)
 #   jac_inv_grad_test <- as.vector(H_inv %*% solve_obj$grad)
 #   jac_inv_grad_test_2 <- as.vector(solve(solve_obj$jac_hat) %*% solve_obj$grad)
 #   cat("jac_grad error: ", sum(abs(jac_grad_test - solve_obj$jac_grad)), "\n")

@@ -2,25 +2,25 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 find_nn_corr_internal <- function(corrMat, m) {
-  .Call(`_VeccTMVN_find_nn_corr_internal`, corrMat, m)
+  .Call("_VeccTMVN_find_nn_corr_internal", PACKAGE = "VeccTMVN", corrMat, m)
 }
 
 mvndns <- function(a, b, NN, muCond, muCoeff, condSd, beta, NLevel1, NLevel2) {
-  .Call(`_VeccTMVN_mvndns`, a, b, NN, muCond, muCoeff, condSd, beta, NLevel1, NLevel2)
+  .Call("_VeccTMVN_mvndns", PACKAGE = "VeccTMVN", a, b, NN, muCond, muCoeff, condSd, beta, NLevel1, NLevel2)
 }
 
 mvnrnd <- function(a, b, NN, muCond, muCoeff, condSd, beta, N) {
-  .Call(`_VeccTMVN_mvnrnd`, a, b, NN, muCond, muCoeff, condSd, beta, N)
+  .Call("_VeccTMVN_mvnrnd", PACKAGE = "VeccTMVN", a, b, NN, muCond, muCoeff, condSd, beta, N)
 }
 
 psi <- function(a, b, NN, muCond, muCoeff, condSd, beta, x) {
-  .Call(`_VeccTMVN_psi`, a, b, NN, muCond, muCoeff, condSd, beta, x)
+  .Call("_VeccTMVN_psi", PACKAGE = "VeccTMVN", a, b, NN, muCond, muCoeff, condSd, beta, x)
 }
 
 sp_mat_mul_query <- function(queryRow, queryCol, idx, cidx, val) {
-  .Call(`_VeccTMVN_sp_mat_mul_query`, queryRow, queryCol, idx, cidx, val)
+  .Call("_VeccTMVN_sp_mat_mul_query", PACKAGE = "VeccTMVN", queryRow, queryCol, idx, cidx, val)
 }
 
 univar_order_vecc <- function(a, b, corrMat, m) {
-  .Call(`_VeccTMVN_univar_order_vecc`, a, b, corrMat, m)
+  .Call("_VeccTMVN_univar_order_vecc", PACKAGE = "VeccTMVN", a, b, corrMat, m)
 }
