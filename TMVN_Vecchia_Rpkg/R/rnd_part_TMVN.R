@@ -14,6 +14,7 @@ library(truncnorm)
 #' @param m Vecchia conditioning set size
 #' @param N number of samples required
 #' @param verbose verbose level
+#' @param reorder whether to Vecchia univariate variable reordering
 #' @return n X N matrix of generated samples
 #'
 #' @export

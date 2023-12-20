@@ -37,6 +37,8 @@ can be different for different locations, of length 1 or n}
 \item{N}{number of samples required}
 
 \item{verbose}{verbose level}
+
+\item{reorder}{whether to Vecchia univariate variable reordering}
 }
 \value{
 n X N matrix of generated samples

@@ -8,7 +8,7 @@ Maintainer: Jian Cao <jcao2416@gmail.com>
 Description: Under a different representation of the multivariate normal (MVN) probability, we can use the Vecchia approximation to sample the integrand at a linear complexity with respect to n. Additionally, both the SOV algorithm from Genz (92) and the exponential-tilting method from Botev (2017) can be adapted to linear complexity. 
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.10), Matrix (>= 1.5-3), GpGp (>= 0.4.0), truncnorm (>= 1.0-8), GPvecchia, TruncatedNormal
-Suggests: testthat (>= 3.0.0)
+Suggests: testthat (>= 3.0.0), lhs, mvtnorm
 Config/testthat/edition: 3
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.2.3

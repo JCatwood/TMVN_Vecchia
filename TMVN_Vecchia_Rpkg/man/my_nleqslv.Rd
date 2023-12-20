@@ -9,11 +9,11 @@ my_nleqslv(x0, fn, jacTransFn, jacInvFn, ..., control = list())
 \arguments{
 \item{x0}{initial guess}
 
-\item{fn}{non-linear system, fn: $R^{n} \rightarrow R^{n}$}
+\item{fn}{non-linear system, fn: $R^{n} -> R^{n}$}
 
-\item{jacTransFn}{function that computes Jacobian^{\top} \cdot fn}
+\item{jacTransFn}{function that computes Jacobian^{T} cdot fn}
 
-\item{jacInvFn}{function that computes Jacobian^{-1} \cdot fn}
+\item{jacInvFn}{function that computes Jacobian^{T} cdot fn}
 
 \item{...}{arguments to `fn`, `jacTransFn`, and `jacInvFn`}
 

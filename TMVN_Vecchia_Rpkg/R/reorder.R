@@ -1,29 +1,29 @@
 library(GpGp)
 library(truncnorm)
 
-#' Univariate ordering under FIC approximation, first m chosen by maxmin ordering
-#'
-#' @param a lower bound vector for TMVN
-#' @param b upper bound vector for TMVN
-#' @param m Vecchia conditioning set size
-#' @param locs location (feature) matrix n X d
-#' @param covName covariance function name from the `GpGp` package
-#' @param covParms parameters for `covName`
-#' @param covMat dense covariance matrix, not needed when `locs` is not null
-#' @return a vector of new order based on FIC assumption and maxmin ordering
-#'
-#' example of a legacy function
-#' n1 <- 5
-#' n2 <- 5
-#' n <- n1 * n2
-#' m <- 5
-#' locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
-#' covparms <- c(2, 0.1, 0)
-#' cov_name <- "matern15_isotropic"
-#' a <- rep(-Inf, n)
-#' b <- seq(from = -3, to = 3, length.out = n)
-#' cat("The output order should be roughly increasing after", m, "numbers \n")
-#' cat(FIC_reorder_maxmin(a, b, m, locs, cov_name, covparms))
+# Univariate ordering under FIC approximation, first m chosen by maxmin ordering
+#
+# @param a lower bound vector for TMVN
+# @param b upper bound vector for TMVN
+# @param m Vecchia conditioning set size
+# @param locs location (feature) matrix n X d
+# @param covName covariance function name from the `GpGp` package
+# @param covParms parameters for `covName`
+# @param covMat dense covariance matrix, not needed when `locs` is not null
+# @return a vector of new order based on FIC assumption and maxmin ordering
+#
+# example of a legacy function
+# n1 <- 5
+# n2 <- 5
+# n <- n1 * n2
+# m <- 5
+# locs <- as.matrix(expand.grid((1:n1) / n1, (1:n2) / n2))
+# covparms <- c(2, 0.1, 0)
+# cov_name <- "matern15_isotropic"
+# a <- rep(-Inf, n)
+# b <- seq(from = -3, to = 3, length.out = n)
+# cat("The output order should be roughly increasing after", m, "numbers")
+# cat(FIC_reorder_maxmin(a, b, m, locs, cov_name, covparms))
 FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
                                covParms = NULL, covMat = NULL) {
   if (!is.null(covMat)) {
@@ -99,6 +99,7 @@ FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
 #' @return a vector of new order based on FIC assumption and maxmin ordering
 #' 
 #' @examples
+#' library(VeccTMVN)
 #' n1 <- 5
 #' n2 <- 5
 #' n <- n1 * n2
@@ -108,7 +109,7 @@ FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
 #' cov_name <- "matern15_isotropic"
 #' a <- rep(-Inf, n)
 #' b <- seq(from = -3, to = 3, length.out = n)
-#' cat("The output order should be roughly 1 to ", n, "\n")
+#' cat("The output order should be roughly 1 to ", n)
 #' cat(FIC_reorder_univar(a, b, m, locs, cov_name, covparms))
 #' 
 #' @export
@@ -217,19 +218,19 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
 #'   covParms = covparms
 #' )
 #' # compare order
-#' cat(rslt$order, "\n")
-#' cat(odr_TN, "\n")
+#' cat(rslt$order)
+#' cat(odr_TN)
 #' # check NN array
 #' locs_odr <- locs[rslt$order, , drop = F]
 #' cov_mat_odr <- get(cov_name)(covparms, locs_odr)
 #' NN <- GpGp::find_ordered_nn(locs_odr, m)
-#' cat("nn difference is", sum(rslt$nn - NN, na.rm = T), "\n")
+#' cat("nn difference is", sum(rslt$nn - NN, na.rm = T))
 #' # check A matrix and conditional var
 #' rslt_check <- vecc_cond_mean_var_sp(rslt$nn, covMat = cov_mat_odr)
-#' cat("A difference is", sum(rslt$A - rslt_check$A), "\n")
+#' cat("A difference is", sum(rslt$A - rslt_check$A))
 #' cat(
 #'   "Conditional variance difference is",
-#'   sum(rslt$cond_var - rslt_check$cond_var), "\n"
+#'   sum(rslt$cond_var - rslt_check$cond_var)
 #' )
 #'
 #' @export

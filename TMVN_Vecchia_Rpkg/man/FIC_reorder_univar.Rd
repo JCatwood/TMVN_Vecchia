@@ -15,11 +15,30 @@ FIC_reorder_univar(
   covMat = NULL
 )
 }
+\arguments{
+\item{a}{lower bound vector for TMVN}
+
+\item{b}{upper bound vector for TMVN}
+
+\item{m}{Vecchia conditioning set size}
+
+\item{locs}{location (feature) matrix n X d}
+
+\item{covName}{covariance function name from the `GpGp` package}
+
+\item{covParms}{parameters for `covName`}
+
+\item{covMat}{dense covariance matrix, not needed when `locs` is not null}
+}
+\value{
+a vector of new order based on FIC assumption and maxmin ordering
+}
 \description{
 Univariate ordering under FIC approximation, first m chosen by m iter of
   dense univariate reordering
 }
 \examples{
+library(VeccTMVN)
 n1 <- 5
 n2 <- 5
 n <- n1 * n2
@@ -29,6 +48,7 @@ covparms <- c(2, 0.1, 0)
 cov_name <- "matern15_isotropic"
 a <- rep(-Inf, n)
 b <- seq(from = -3, to = 3, length.out = n)
-cat("The output order should be roughly 1 to ", n, "\n")
+cat("The output order should be roughly 1 to ", n)
 cat(FIC_reorder_univar(a, b, m, locs, cov_name, covparms))
+
 }

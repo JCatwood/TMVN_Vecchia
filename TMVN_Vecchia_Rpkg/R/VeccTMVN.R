@@ -3,11 +3,8 @@
 #' Exponential tilting method made scalable through the Vecchia approximation.
 #' References are Botev (2017) and the TruncatedNormal R package
 #' 
-#' @docType VeccTMVN
-#' @author jcao2416@gmail.com
-#' @import Rcpp (>= 1.0.10), Matrix (>= 1.5-3), GpGp (>= 0.4.0), truncnorm (>= 1.0-8), GPvecchia, TruncatedNormal, Matrix
 #' @importFrom Rcpp evalCpp
-#' @useDynLib VeccTMVN
+#' @useDynLib mypackage, .registration=TRUE
 #' @name VeccTMVN
 
 #' @examples

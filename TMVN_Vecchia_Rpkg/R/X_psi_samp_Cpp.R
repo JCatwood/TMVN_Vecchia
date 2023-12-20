@@ -1,22 +1,22 @@
-#' Sample from the proposal density in Idea V and compute psi for each sample.
-#'   Notice that `E[exp(psi)]` is the MVN probability. Zero mean is assumed.
-#' The `truncnorm` package uses accept-reject sampling and seems to be able to
-#'   sample from tail truncation although I haven't verified its accuracy in
-#'   tail sampling.
-#' Input:
-#'   veccCondMeanVarObj - contains information of the conditional mean
-#'     coefficient, the conditional variance, and the NN array of the Vecchia
-#'     approximation
-#'   a - lower bound vector for TMVN
-#'   b - upper bound vector for TMVN
-#'   beta - parameter of the proposal density
-#'   N_level1 - First level Monte Carlo sample size
-#'   N_level2 - Second level Monte Carlo sample size
-#'   mu - Mean of the MVN prob
-#' Return a list of two:
-#'   [[1]] a vector of length N_level1, representing the exp(psi) values
-#'   [[2]] a vector of length N_level1, representing the exponents
-#'
+# Sample from the proposal density in Idea V and compute psi for each sample.
+#   Notice that `E[exp(psi)]` is the MVN probability. Zero mean is assumed.
+# The `truncnorm` package uses accept-reject sampling and seems to be able to
+#   sample from tail truncation although I haven't verified its accuracy in
+#   tail sampling.
+# Input:
+#   veccCondMeanVarObj - contains information of the conditional mean
+#     coefficient, the conditional variance, and the NN array of the Vecchia
+#     approximation
+#   a - lower bound vector for TMVN
+#   b - upper bound vector for TMVN
+#   beta - parameter of the proposal density
+#   N_level1 - First level Monte Carlo sample size
+#   N_level2 - Second level Monte Carlo sample size
+#   mu - Mean of the MVN prob
+# Return a list of two:
+#   [[1]] a vector of length N_level1, representing the exp(psi) values
+#   [[2]] a vector of length N_level1, representing the exponents
+#
 sample_psi_idea5_cpp <- function(veccCondMeanVarObj, a, b,
                                  beta = rep(0, length(a)), N_level1 = 10,
                                  N_level2 = 1000, mu = rep(0, length(a))) {

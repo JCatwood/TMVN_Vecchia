@@ -1,9 +1,9 @@
 library(Matrix)
 library(GpGp)
 
-#' Compute the conditional mean multiplier and the conditional variance
-#'   under the Vecchia approximation.
-#'
+# Compute the conditional mean multiplier and the conditional variance
+#   under the Vecchia approximation.
+#
 vecc_cond_mean_var <- function(covMat, NNarray) {
   n <- nrow(covMat)
   m <- ncol(NNarray) - 1
@@ -28,10 +28,10 @@ vecc_cond_mean_var <- function(covMat, NNarray) {
 }
 
 
-#' Compute the conditional mean multiplier and the conditional variance
-#'   under the Vecchia approximation. Different from `vecc_cond_mean_var`, the
-#'   returned A is a sparse matrix.
-#'
+# Compute the conditional mean multiplier and the conditional variance
+#   under the Vecchia approximation. Different from `vecc_cond_mean_var`, the
+#   returned A is a sparse matrix.
+#
 vecc_cond_mean_var_sp <- function(NNarray, covMat = NULL, locs = NULL,
                                   covName = NULL, covParms = NULL) {
   n <- nrow(NNarray)

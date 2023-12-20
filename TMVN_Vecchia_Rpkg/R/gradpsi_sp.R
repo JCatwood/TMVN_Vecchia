@@ -52,12 +52,12 @@ HInv22_mul <- function(veccCondMeanVarObj, dPsi, D, V, S, x) {
 }
 
 
-#' Gradient, Newton step, and Hessian multiply gradient of the psi function in
-#' Idea V, computed using sparse A. For this function, `xAndBeta` should be a
-#' vector of length 2 * n and all the returned vectors (matrices) are of
-#' dimension 2 * n. In other words, beta_n and x_n are taken into
-#' consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
-#' and we don't need to know the value of x_n anyways
+# Gradient, Newton step, and Hessian multiply gradient of the psi function in
+# Idea V, computed using sparse A. For this function, `xAndBeta` should be a
+# vector of length 2 * n and all the returned vectors (matrices) are of
+# dimension 2 * n. In other words, beta_n and x_n are taken into
+# consideration. Meanwhile, based on Idea 5, it is obvious that beta_n = 0
+# and we don't need to know the value of x_n anyways
 grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
                                        retJac = F, retProd = T, retSolv = T,
                                        VAdj = T, verbose = T, mu = rep(0, length(a))) {
@@ -224,10 +224,10 @@ grad_jacprod_jacsolv_idea5 <- function(xAndBeta, veccCondMeanVarObj, a, b,
   return(rslt)
 }
 
-#' Wrapper around the C function psi so that the first argument is `x`
-#' The inputs `x`, `beta`, `a`, `b`, and `mu` should be of the same length
-#' This function is used for finding optimal (argmax) `x` given beta
-#' This function is intended to be used inside `mvnrnd_wrap`
+# Wrapper around the C function psi so that the first argument is `x`
+# The inputs `x`, `beta`, `a`, `b`, and `mu` should be of the same length
+# This function is used for finding optimal (argmax) `x` given beta
+# This function is intended to be used inside `mvnrnd_wrap`
 psi_wrapper <- function(x, beta, veccCondMeanVarObj, NN, a, b,
                         mu) {
   psi(
@@ -236,10 +236,10 @@ psi_wrapper <- function(x, beta, veccCondMeanVarObj, NN, a, b,
   )
 }
 
-#' Computed dpsi/dx
-#' The inputs `x`, `beta`, `a`, `b`, and `mu` should be of the same length
-#' This function is used for finding optimal (argmax) `x` given beta
-#' This function is intended to be used inside `mvnrnd_wrap`
+# Computed dpsi/dx
+# The inputs `x`, `beta`, `a`, `b`, and `mu` should be of the same length
+# This function is used for finding optimal (argmax) `x` given beta
+# This function is intended to be used inside `mvnrnd_wrap`
 dpsi_dx <- function(x, beta, veccCondMeanVarObj, NN, a, b, mu) {
   n <- length(a)
   D <- sqrt(veccCondMeanVarObj$cond_var)
