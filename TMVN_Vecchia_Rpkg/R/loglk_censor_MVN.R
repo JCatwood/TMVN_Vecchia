@@ -80,9 +80,9 @@ loglk_censor_MVN <- function(locs, indCensor, y, bCensor,
     nn = NN, A = A
   )
   # find tilting parameter beta -----------------------------------
-  trunc_expect <- etruncnorm(a, b, mean = cond_mean, sd = sqrt(covParms[1]))
+  trunc_expect <- truncnorm::etruncnorm(a, b, mean = cond_mean, sd = sqrt(covParms[1]))
   x0 <- c(trunc_expect, rep(0, n_censor))
-  solv_idea_5_sp <- optim(
+  solv_idea_5_sp <- stats::optim(
     x0,
     fn = function(x, ...) {
       ret <- grad_jacprod_jacsolv_idea5(x, ...,

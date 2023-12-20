@@ -1,3 +1,5 @@
+library(truncnorm)
+
 mvnrnd_wrap <- function(a, b, mu, NN, veccObj, N, verbose = 0) {
   n <- length(a)
   tmp <- cbind(a, b, mu)
@@ -5,9 +7,9 @@ mvnrnd_wrap <- function(a, b, mu, NN, veccObj, N, verbose = 0) {
   b <- tmp[, 2]
   mu <- tmp[, 3]
   # find tilting parameter beta -----------------------------------
-  trunc_expect <- etruncnorm(a, b, mean = mu)
+  trunc_expect <- truncnorm::etruncnorm(a, b, mean = mu)
   x0 <- c(trunc_expect, rep(0, n))
-  solv_idea_5_sp <- optim(
+  solv_idea_5_sp <- stats::optim(
     x0,
     fn = function(x, ...) {
       ret <- grad_jacprod_jacsolv_idea5(x, ...,
@@ -42,7 +44,7 @@ mvnrnd_wrap <- function(a, b, mu, NN, veccObj, N, verbose = 0) {
   x_star <- solv_idea_5_sp$par[1:n]
   beta <- solv_idea_5_sp$par[(n + 1):(2 * n)]
   # 2nd opt for finding x_star ---------------------------
-  solv_xstar <- optim(
+  solv_xstar <- stats::optim(
     x_star,
     fn = function(x, ...) {
       -psi_wrapper(x, ...)
@@ -83,7 +85,7 @@ mvnrnd_wrap <- function(a, b, mu, NN, veccObj, N, verbose = 0) {
       sqrt(veccObj$cond_var), beta, n_sim
     )
     ntotsim <- ntotsim + n_sim
-    idx <- rexp(n_sim) > (psi_star - call$logpr) # acceptance tests
+    idx <- stats::rexp(n_sim) > (psi_star - call$logpr) # acceptance tests
     m <- sum(idx)
     if (m > N - accept) {
       m <- N - accept

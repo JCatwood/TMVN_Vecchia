@@ -122,7 +122,7 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
   # find tilting parameter beta -----------------------------------
   trunc_expect <- truncnorm::etruncnorm(lower, upper)
   x0 <- c(trunc_expect, rep(0, n))
-  solv_idea_5_sp <- optim(
+  solv_idea_5_sp <- stats::optim(
     x0,
     fn = function(x, ...) {
       ret <- grad_jacprod_jacsolv_idea5(x, ...,
@@ -168,7 +168,7 @@ pmvn <- function(lower, upper, mean, locs = NULL, covName = "matern15_isotropic"
   } else {
     exp_psi <- exp_psi[[1]] * exp(exp_psi[[2]])
     est_prob <- mean(exp_psi)
-    est_prob_err <- sd(exp_psi) / sqrt(NLevel1)
+    est_prob_err <- stats::sd(exp_psi) / sqrt(NLevel1)
     attr(est_prob, "error") <- est_prob_err
     return(est_prob)
   }

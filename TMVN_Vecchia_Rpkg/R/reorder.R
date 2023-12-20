@@ -3,7 +3,16 @@ library(truncnorm)
 
 #' Univariate ordering under FIC approximation, first m chosen by maxmin ordering
 #'
-#' @examples
+#' @param a lower bound vector for TMVN
+#' @param b upper bound vector for TMVN
+#' @param m Vecchia conditioning set size
+#' @param locs location (feature) matrix n X d
+#' @param covName covariance function name from the `GpGp` package
+#' @param covParms parameters for `covName`
+#' @param covMat dense covariance matrix, not needed when `locs` is not null
+#' @return a vector of new order based on FIC assumption and maxmin ordering
+#'
+#' example of a legacy function
 #' n1 <- 5
 #' n2 <- 5
 #' n <- n1 * n2
@@ -51,7 +60,7 @@ FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
       covMat[ind, ind, drop = F]
     }
   } else {
-    cov_func_GpGp <- getFromNamespace(covName, "GpGp")
+    cov_func_GpGp <- utils::getFromNamespace(covName, "GpGp")
     cov_func <- function(ind) {
       cov_func_GpGp(covParms, locs[ind, , drop = F])
     }
@@ -70,8 +79,8 @@ FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
       t(cov_vec_sub) %*% cov_mat_sub_inv %*% cov_vec_sub
     ))
     cond_mean <- as.numeric(t(cov_vec_sub) %*% cov_mat_sub_inv %*% x_first_m)
-    tmvn_prob_1D[i] <- pnorm(b[i], mean = cond_mean, sd = cond_sd) -
-      pnorm(a[i], mean = cond_mean, sd = cond_sd)
+    tmvn_prob_1D[i] <- stats::pnorm(b[i], mean = cond_mean, sd = cond_sd) -
+      stats::pnorm(a[i], mean = cond_mean, sd = cond_sd)
   }
   odr_maxmin[order(tmvn_prob_1D, decreasing = F)]
 }
@@ -80,6 +89,15 @@ FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
 #' Univariate ordering under FIC approximation, first m chosen by m iter of
 #'   dense univariate reordering
 #'
+#' @param a lower bound vector for TMVN
+#' @param b upper bound vector for TMVN
+#' @param m Vecchia conditioning set size
+#' @param locs location (feature) matrix n X d
+#' @param covName covariance function name from the `GpGp` package
+#' @param covParms parameters for `covName`
+#' @param covMat dense covariance matrix, not needed when `locs` is not null
+#' @return a vector of new order based on FIC assumption and maxmin ordering
+#' 
 #' @examples
 #' n1 <- 5
 #' n2 <- 5
@@ -92,6 +110,8 @@ FIC_reorder_maxmin <- function(a, b, m, locs = NULL, covName = NULL,
 #' b <- seq(from = -3, to = 3, length.out = n)
 #' cat("The output order should be roughly 1 to ", n, "\n")
 #' cat(FIC_reorder_univar(a, b, m, locs, cov_name, covparms))
+#' 
+#' @export
 FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
                                covParms = NULL, covMat = NULL) {
   if (!is.null(covMat)) {
@@ -117,7 +137,7 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
   }
   ## cov func -------------------------------
   if (is.null(covMat)) {
-    cov_func_GpGp <- getFromNamespace(covName, "GpGp")
+    cov_func_GpGp <- utils::getFromNamespace(covName, "GpGp")
     covMat <- cov_func_GpGp(covParms, locs)
   }
   cov_func <- function(indRow, indCol) {
@@ -145,7 +165,7 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
     }
     a_tilde <- (a[i:n] - mu_cond) / sd_cond
     b_tilde <- (b[i:n] - mu_cond) / sd_cond
-    tmvn_prob_1D <- pnorm(b_tilde) - pnorm(a_tilde)
+    tmvn_prob_1D <- stats::pnorm(b_tilde) - stats::pnorm(a_tilde)
     j <- which.min(tmvn_prob_1D)
     j_hat <- j + i - 1
     x_first_m[i] <- truncnorm::etruncnorm(a_tilde[j], b_tilde[j]) * sd_cond[j] +
@@ -168,6 +188,15 @@ FIC_reorder_univar <- function(a, b, m, locs = NULL, covName = NULL,
 
 
 #' Univariate ordering under Vecchia approximation
+#'
+#' @param a lower bound vector for TMVN
+#' @param b upper bound vector for TMVN
+#' @param m Vecchia conditioning set size
+#' @param locs location (feature) matrix n X d
+#' @param covName covariance function name from the `GpGp` package
+#' @param covParms parameters for `covName`
+#' @param covMat dense covariance matrix, not needed when `locs` is not null
+#' @return a vector of new order based on FIC assumption and maxmin ordering
 #'
 #' @examples
 #' library(lhs)

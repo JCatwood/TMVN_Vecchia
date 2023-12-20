@@ -105,9 +105,9 @@ line_search <- function(x, grad, objFn, NewtonStep, alpha = 1e-4,
 #' Locally defined function for solving non-linear systems
 #'
 #' @param x0 initial guess
-#' @param fn non-linear system, fn: $R^{n} \rightarrow R^{n}$
-#' @param jacTransFn function that computes Jacobian^{\top} \cdot fn
-#' @param jacInvFn function that computes Jacobian^{-1} \cdot fn
+#' @param fn non-linear system, fn: $R^{n} -> R^{n}$
+#' @param jacTransFn function that computes Jacobian^{T} cdot fn
+#' @param jacInvFn function that computes Jacobian^{T} cdot fn
 #' @param ... arguments to `fn`, `jacTransFn`, and `jacInvFn`
 #' @param control a list of tuning parameters for optimization
 #' @return a list of `code` and `x`

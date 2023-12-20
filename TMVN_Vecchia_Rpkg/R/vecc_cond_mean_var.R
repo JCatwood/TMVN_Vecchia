@@ -48,7 +48,7 @@ vecc_cond_mean_var_sp <- function(NNarray, covMat = NULL, locs = NULL,
     }
   } else {
     use_locs <- T
-    cov_func_GpGp <- getFromNamespace(covName, "GpGp")
+    cov_func_GpGp <- utils:: getFromNamespace(covName, "GpGp")
     cov_func <- function(ind) {
       cov_func_GpGp(covParms, locs[ind, , drop = F])
     }
