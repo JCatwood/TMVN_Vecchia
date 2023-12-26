@@ -56,17 +56,4 @@ rslt <- Vecc_reorder(a, b, m,
 # compare order
 cat(rslt$order)
 cat(odr_TN)
-# check NN array
-locs_odr <- locs[rslt$order, , drop = F]
-cov_mat_odr <- get(cov_name)(covparms, locs_odr)
-NN <- GpGp::find_ordered_nn(locs_odr, m)
-cat("nn difference is", sum(rslt$nn - NN, na.rm = T))
-# check A matrix and conditional var
-rslt_check <- vecc_cond_mean_var_sp(rslt$nn, covMat = cov_mat_odr)
-cat("A difference is", sum(rslt$A - rslt_check$A))
-cat(
-  "Conditional variance difference is",
-  sum(rslt$cond_var - rslt_check$cond_var)
-)
-
 }

@@ -33,6 +33,6 @@ cov_mat <- GpGp::matern15_isotropic(covparms, locs)
 m <- 10
 NNarray_test <- GpGp::find_ordered_nn(locs, m = m)
 NNarray <- find_nn_corr(cov_mat, m)
-cat("Number of mismatch is", sum(NNarray != NNarray_test, na.rm = T))
+cat("Number of mismatch is", sum(NNarray != NNarray_test, na.rm = TRUE))
 
 }

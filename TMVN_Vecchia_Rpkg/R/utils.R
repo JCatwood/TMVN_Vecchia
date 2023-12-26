@@ -17,8 +17,9 @@
 #' m <- 10
 #' NNarray_test <- GpGp::find_ordered_nn(locs, m = m)
 #' NNarray <- find_nn_corr(cov_mat, m)
-#' cat("Number of mismatch is", sum(NNarray != NNarray_test, na.rm = T))
+#' cat("Number of mismatch is", sum(NNarray != NNarray_test, na.rm = TRUE))
 #'
+#' @export
 find_nn_corr <- function(corrMat, m) {
   NN <- find_nn_corr_internal(corrMat, m) + 1
   n <- nrow(NN)
@@ -29,12 +30,12 @@ find_nn_corr <- function(corrMat, m) {
 }
 
 
-#' Compute the covariance matrix under the Vecchia approximation
-#'
-#' @param covMat the original covariance matrix
-#' @param m the number of nearest neighbors
-#' @return an n X n matrix
-#'
+# Compute the covariance matrix under the Vecchia approximation
+#
+# @param covMat the original covariance matrix
+# @param m the number of nearest neighbors
+# @return an n X n matrix
+#
 get_Vecc_cov_mat <- function(covMat, m) {
   margin_sd <- sqrt(diag(covMat))
   corr_mat <- t(t(covMat / margin_sd) / margin_sd)
