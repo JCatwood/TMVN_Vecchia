@@ -2,6 +2,7 @@ library(VeccTMVN)
 library(sf)
 library(spData)
 library(GpGp)
+library(scoringRules)
 rm(list = ls())
 
 load("PCE.RData")
@@ -149,16 +150,45 @@ covparms <- c(opt_obj$par[1:3], smoothness, opt_obj$par[4])
 # if (!file.exists("results")) {
 #   dir.create("results")
 # }
-# save(samp_Texas_big_train, time_sim_Texas_big_train, covparms, 
+# save(samp_Texas_big_train, time_sim_Texas_big_train, covparms,
 #      cov_name, ind_Texas_big_train,
 #   file = "results/PCE_modeling_sample.RData"
 # )
 # MSE at testing ----------------------------------
+load("results/PCE_modeling_sample.RData")
 state_names_test <- lonlat_to_state(data.frame(locs_test))
 ind_Texas_test <- which(state_names_test == "Texas")
 locs_scaled_Texas_test <- locs_scaled_test[ind_Texas_test, ]
 y_scaled_Texas_test <- y_scaled_test[ind_Texas_test]
 b_scaled_Texas_test <- b_scaled_test[ind_Texas_test]
+mask_censored_Texas_test <- is.na(y_scaled_Texas_test)
+score_benchmark <- y_scaled_Texas_test
+score_benchmark[mask_censored_Texas_test] <- 1
+cov_mat <- get(cov_name)(covparms, rbind(
+  locs_scaled_Texas_big_train,
+  as.matrix(locs_scaled_Texas_test)
+))
+n_obs <- nrow(locs_scaled_Texas_big_train)
+n_test_Texas <- nrow(locs_scaled_Texas_test)
+## pred_VMET --------------------------------------
+pred_VMET <- cov_mat[(n_obs + 1):(n_obs + n_test_Texas), 1:n_obs] %*%
+  solve(cov_mat[1:n_obs, 1:n_obs], samp_Texas_big_train)
+pred_VMET[mask_censored_Texas_test, ] <-
+  pred_VMET[mask_censored_Texas_test, ] <=
+    b_scaled_Texas_test[mask_censored_Texas_test]
+# CRPS_VMET <- mean(crps_sample(score_benchmark, pred_VMET))
+pred_VMET <- rowMeans(pred_VMET)
+RMSE_VMET <- sqrt(mean((pred_VMET - score_benchmark)^2))
+## pred_LOD_GP --------------------------------------
+y_aug <- samp_Texas_big_train[, 1]
+y_aug[ind_censor_Texas_big_train] <-
+  b_scaled_Texas_big_train[ind_censor_Texas_big_train]
+pred_GP_aug <- as.vector(cov_mat[(n_obs + 1):(n_obs + n_test_Texas), 1:n_obs] %*%
+  solve(cov_mat[1:n_obs, 1:n_obs], y_aug))
+pred_GP_aug[mask_censored_Texas_test] <-
+  pred_GP_aug[mask_censored_Texas_test] <=
+    b_scaled_Texas_test[mask_censored_Texas_test]
+RMSE_GP_aug <- sqrt(mean((pred_GP_aug - score_benchmark)^2))
 # plots -------------------------------------------
 library(fields)
 library(RColorBrewer)
@@ -190,7 +220,7 @@ pred_VMET[!(lonlat_to_state(TX_grid) == "Texas") |
   (is.na(lonlat_to_state(TX_grid)))] <- NA
 ## pred_LOD_GP --------------------------------------
 y_aug <- samp_Texas_big_train[, 1]
-y_aug[ind_censor_Texas_big_train] <- 
+y_aug[ind_censor_Texas_big_train] <-
   b_scaled_Texas_big_train[ind_censor_Texas_big_train]
 cov_mat <- get(cov_name)(covparms, rbind(
   locs_scaled_Texas_big_train,
