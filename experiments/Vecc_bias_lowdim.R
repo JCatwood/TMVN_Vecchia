@@ -203,9 +203,11 @@ time_vs_err_plt <- function(probDf, timeDf) {
     scale_x_continuous(
       name = "time (seconds)", trans = "log2"
     ) +
+    ggtitle(paste("Scenario", prob_ind)) +
     theme(
       text = element_text(size = 14),
-      legend.title = element_blank()
+      legend.title = element_blank(),
+      plot.title = element_text(hjust = 0.5)
     )
 }
 if (!file.exists("plots")) {
