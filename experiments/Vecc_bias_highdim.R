@@ -44,12 +44,18 @@ prob3_gen <- function(n, d, ...) {
   ))
 }
 ## Prob setups -----------------------
+myargs <- commandArgs(trailingOnly = TRUE)
 set.seed(321)
 n <- 6400
 d <- 2
 m_vec <- seq(from = 30, to = 50, by = 10)
-N_SOV_TLR <- c(1e4, 2e4, 4e4)
-prob_ind <- 1
+N_SOV <- c(5e3, 1e4, 2e4)
+N_TLR <- c(2e4, 5e4, 10e4)
+if (length(myargs) > 0) {
+  prob_ind <- as.numeric(myargs[1])  
+} else {
+  prob_ind <- 1  
+}
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
 b <- prob_obj$b
@@ -60,8 +66,8 @@ cov_parms <- prob_obj$cov_parms
 z_order <- tlrmvnmvt::zorder(locs)
 ## Iteratively compute the same MVN prob -----------------------
 niter <- 30
-time_df <- data.frame(matrix(NA, niter, 2 * length(N_SOV_TLR) + length(m_vec)))
-prob_df <- data.frame(matrix(NA, niter, 2 * length(N_SOV_TLR) + length(m_vec)))
+time_df <- data.frame(matrix(NA, niter, length(N_TLR) + length(N_SOV) + length(m_vec)))
+prob_df <- data.frame(matrix(NA, niter, length(N_TLR) + length(N_SOV) + length(m_vec)))
 for (i in 1:niter) {
   est_Vecc <- rep(NA, length(m_vec))
   time_Vecc <- rep(NA, length(m_vec))
@@ -77,11 +83,11 @@ for (i in 1:niter) {
     ))[[3]]
   }
   ### Compute MVN prob with other methods -----------------------
-  est_TLR <- rep(NA, length(N_SOV_TLR))
-  time_TLR <- rep(NA, length(N_SOV_TLR))
-  for (j in 1:length(N_SOV_TLR)) {
+  est_TLR <- rep(NA, length(N_TLR))
+  time_TLR <- rep(NA, length(N_TLR))
+  for (j in 1:length(N_TLR)) {
     cat("TLR", j, "\n")
-    N <- N_SOV_TLR[j]
+    N <- N_TLR[j]
     err_obj <- try(
       time_TLR[j] <- system.time(
         est_TLR[j] <- tlrmvnmvt::pmvn(a[z_order], b[z_order],
@@ -96,11 +102,11 @@ for (i in 1:niter) {
     }
   }
 
-  est_SOV <- rep(NA, length(N_SOV_TLR))
-  time_SOV <- rep(NA, length(N_SOV_TLR))
-  for (j in 1:length(N_SOV_TLR)) {
+  est_SOV <- rep(NA, length(N_SOV))
+  time_SOV <- rep(NA, length(N_SOV))
+  for (j in 1:length(N_SOV)) {
     cat("SOV", j, "\n")
-    N <- N_SOV_TLR[j]
+    N <- N_SOV[j]
     time_SOV[j] <- system.time(
       est_SOV[j] <- tlrmvnmvt::pmvn(a, b,
         sigma = cov_mat,
@@ -115,7 +121,7 @@ for (i in 1:niter) {
 if (!file.exists("results")) {
   dir.create("results")
 }
-save(m_vec, N_SOV_TLR, time_df, prob_df, file = paste0(
+save(m_vec, N_SOV, N_TLR, time_df, prob_df, file = paste0(
   "results/Vecc_bias_highdim_exp",
   prob_ind, ".RData"
 ))
