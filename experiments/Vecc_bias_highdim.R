@@ -54,7 +54,7 @@ N_TLR <- c(2e4, 5e4, 10e4)
 if (length(myargs) > 0) {
   prob_ind <- as.numeric(myargs[1])  
 } else {
-  prob_ind <- 1  
+  prob_ind <- 1
 }
 prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, retDenseCov = T)
 a <- prob_obj$a
@@ -134,46 +134,56 @@ load(paste0(
 library(ggplot2)
 library(tidyr)
 library(scales)
-box_plt_low_dim <- function(mydf, yName = NULL,
-                            yTrans = "identity") {
-  mtd_names <- c(paste0("m", m_vec), "TLR", "SOV")
-  colnames(mydf) <- mtd_names
-  mydf_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
-  hex <- hue_pal()(3)
-  if (yTrans == "identity") {
-    breaks <- seq(from = min(mydf_pivot$value), to = max(mydf_pivot$value), length.out = 5)
+time_vs_err_plt <- function(probDf, timeDf) {
+  col_names <- c(
+    paste("VMET", m_vec, sep = "_"),
+    paste("TLR", N_TLR, sep = "_"),
+    paste("SOV", N_SOV, sep = "_")
+  )
+  colnames(probDf) <- col_names
+  colnames(timeDf) <- col_names
+  
+  if(prob_ind == 3) {
+    colname_benchmark <- paste("SOV", max(N_SOV), sep = "_")
   } else {
-    breaks <- exp(seq(
-      from = log(min(mydf_pivot$value)),
-      to = log(max(mydf_pivot$value)), length.out = 5
-    ))
+    colname_benchmark <- paste("VMET", max(m_vec), sep = "_")
   }
-
-  ggplot(mydf_pivot, aes(x = method, y = value)) +
-    geom_boxplot(fill = c(rep(hex[1], length(m_vec)), hex[2:3])) +
-    scale_x_discrete(limits = mtd_names) +
+  
+  benchmark <- mean(probDf[[colname_benchmark]])  
+  rmse <- sqrt(colMeans((probDf - benchmark)^2))
+  secs <- colMeans(timeDf)
+  mydf <- data.frame(
+    time = secs, rmse = rmse,
+    method = gsub("_.*", "", col_names)
+  )
+  # log2 trans to x and y ticks are applied by default
+  breaks <- exp(seq(
+    from = log(min(mydf$rmse) / 2),
+    to = log(max(mydf$rmse)), length.out = 5
+  ))
+  ggplot(data = mydf, mapping = aes(x = time, y = rmse)) +
+    geom_point(mapping = aes(colour = method, shape = method), size = 3) +
+    geom_line(mapping = aes(group = method, colour = method)) +
     scale_y_continuous(
-      name = yName, trans = yTrans, breaks = breaks,
+      name = "RMSE", trans = "log2", breaks = breaks,
       labels = signif(breaks, digits = 2)
+    ) +
+    scale_x_continuous(
+      name = "time (seconds)", trans = "log2"
     ) +
     ggtitle(paste("Scenario", prob_ind)) +
     theme(
-      text = element_text(size = 14), legend.position = "none",
-      axis.title.x = element_blank(),
+      text = element_text(size = 14),
+      legend.title = element_blank(),
       plot.title = element_text(hjust = 0.5)
     )
 }
 if (!file.exists("plots")) {
   dir.create("plots")
 }
-box_plt_low_dim(prob_df, yName = "Log-probability estimates", yTrans = "log2")
-ggsave(paste0("plots/logprob_highdim_exp", prob_ind, ".pdf"),
+time_vs_err_plt(prob_df, time_df)
+ggsave(
+  paste0("plots/err_vs_time_highdim_exp", prob_ind, ".pdf"),
   width = 5,
   height = 5
-)
-tmp_plt <- box_plt_low_dim(time_df, yName = "Time (seconds)", yTrans = "log2") +
-  ggtitle("Computation times")
-tmp_plt
-ggsave(paste0("plots/time_highdim_exp", prob_ind, ".pdf"),
-  width = 5, height = 5
 )
