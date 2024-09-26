@@ -48,9 +48,9 @@ myargs <- commandArgs(trailingOnly = TRUE)
 set.seed(321)
 n <- 6400
 d <- 2
-m_vec <- seq(from = 30, to = 50, by = 10)
-N_SOV <- c(5e3, 1e4, 2e4)
-N_TLR <- c(2e4, 5e4, 10e4)
+m_vec <- c(30, 50, 70)
+N_SOV <- c(1e4, 2e4, 5e4)
+N_TLR <- c(1e4, 2e4, 5e4)
 if (length(myargs) > 0) {
   prob_ind <- as.numeric(myargs[1])  
 } else {
@@ -77,9 +77,9 @@ for (i in 1:niter) {
     m <- m_vec[j]
     time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(a, b, 0,
       locs = locs, covName = cov_name,
-      reorder = 3, covParms = cov_parms,
+      reorder = 0, covParms = cov_parms,
       m = m, verbose = T,
-      NLevel1 = 10, NLevel2 = 1e4
+      NLevel1 = 10, NLevel2 = 5e3
     ))[[3]]
   }
   ### Compute MVN prob with other methods -----------------------
@@ -161,6 +161,16 @@ time_vs_err_plt <- function(probDf, timeDf) {
     from = log(min(mydf$rmse) / 2),
     to = log(max(mydf$rmse)), length.out = 5
   ))
+  
+  # test
+  # probDf_pivot <- pivot_longer(probDf, cols = 1 : ncol(probDf), 
+  #                              names_to = "method")
+  # ggplot(data = probDf_pivot, mapping = aes(x = method, y = value)) +
+  # geom_boxplot() +
+  # scale_y_continuous(
+  #   name = "Estimates", trans = "log2"
+  # )
+  
   ggplot(data = mydf, mapping = aes(x = time, y = rmse)) +
     geom_point(mapping = aes(colour = method, shape = method), size = 3) +
     geom_line(mapping = aes(group = method, colour = method)) +
@@ -187,3 +197,4 @@ ggsave(
   width = 5,
   height = 5
 )
+
