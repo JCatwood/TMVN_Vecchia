@@ -48,9 +48,9 @@ myargs <- commandArgs(trailingOnly = TRUE)
 set.seed(321)
 n <- 6400
 d <- 2
-m_vec <- c(30, 40, 50)
-N_SOV <- c(1e4, 2e4, 5e4)
-N_TLR <- c(1e4, 2e4, 5e4)
+m_vec <- c(30, 50, 70)
+N_SOV <- c(2e4, 5e4, 10e4)
+N_TLR <- c(2e4, 5e4, 10e4)
 if (length(myargs) > 0) {
   prob_ind <- as.numeric(myargs[1])  
 } else {
@@ -64,10 +64,6 @@ cov_mat <- prob_obj$cov_mat
 cov_name <- prob_obj$cov_name
 cov_parms <- prob_obj$cov_parms
 z_order <- tlrmvnmvt::zorder(locs)
-vecc_order <- VeccTMVN::Vecc_reorder(a, b, m_vec[1], covMat = cov_mat)$order
-if (any(sort(vecc_order) != 1 : n)) {
-  stop("Vecc_reorder returned wrong results\n")
-}
 ## Iteratively compute the same MVN prob -----------------------
 niter <- 30
 time_df <- data.frame(matrix(NA, niter, length(N_TLR) + length(N_SOV) + length(m_vec)))
@@ -80,11 +76,11 @@ for (i in 1:niter) {
     ### Compute MVN prob with idea V -----------------------
     m <- m_vec[j]
     time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(
-      a[vecc_order], b[vecc_order], 0,
-      locs = locs[vecc_order, , drop = FALSE], covName = cov_name,
-      reorder = 0, covParms = cov_parms,
+      a, b, 0,
+      locs = locs, covName = cov_name,
+      reorder = 3, covParms = cov_parms,
       m = m, verbose = T,
-      NLevel1 = 10, NLevel2 = 5e3
+      NLevel1 = 10, NLevel2 = 1e4
     ))[[3]]
   }
   ### Compute MVN prob with other methods -----------------------
@@ -202,5 +198,6 @@ ggsave(
   width = 5,
   height = 5
 )
+
 
 
