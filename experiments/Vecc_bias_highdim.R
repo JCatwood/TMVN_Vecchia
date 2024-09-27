@@ -48,7 +48,7 @@ myargs <- commandArgs(trailingOnly = TRUE)
 set.seed(321)
 n <- 6400
 d <- 2
-m_vec <- c(30, 50, 70)
+m_vec <- c(30, 40, 50)
 N_SOV <- c(1e4, 2e4, 5e4)
 N_TLR <- c(1e4, 2e4, 5e4)
 if (length(myargs) > 0) {
@@ -64,6 +64,10 @@ cov_mat <- prob_obj$cov_mat
 cov_name <- prob_obj$cov_name
 cov_parms <- prob_obj$cov_parms
 z_order <- tlrmvnmvt::zorder(locs)
+vecc_order <- VeccTMVN::Vecc_reorder(a, b, m_vec[1], covMat = cov_mat)$order
+if (any(sort(vecc_order) != 1 : n)) {
+  stop("Vecc_reorder returned wrong results\n")
+}
 ## Iteratively compute the same MVN prob -----------------------
 niter <- 30
 time_df <- data.frame(matrix(NA, niter, length(N_TLR) + length(N_SOV) + length(m_vec)))
@@ -75,8 +79,9 @@ for (i in 1:niter) {
     cat("VeccTMVN", j, "\n")
     ### Compute MVN prob with idea V -----------------------
     m <- m_vec[j]
-    time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(a, b, 0,
-      locs = locs, covName = cov_name,
+    time_Vecc[j] <- system.time(est_Vecc[j] <- VeccTMVN::pmvn(
+      a[vecc_order], b[vecc_order], 0,
+      locs = locs[vecc_order, , drop = FALSE], covName = cov_name,
       reorder = 0, covParms = cov_parms,
       m = m, verbose = T,
       NLevel1 = 10, NLevel2 = 5e3
@@ -163,13 +168,13 @@ time_vs_err_plt <- function(probDf, timeDf) {
   ))
   
   # test
-  # probDf_pivot <- pivot_longer(probDf, cols = 1 : ncol(probDf), 
-  #                              names_to = "method")
-  # ggplot(data = probDf_pivot, mapping = aes(x = method, y = value)) +
-  # geom_boxplot() +
-  # scale_y_continuous(
-  #   name = "Estimates", trans = "log2"
-  # )
+  probDf_pivot <- pivot_longer(probDf, cols = 1 : ncol(probDf),
+                               names_to = "method")
+  ggplot(data = probDf_pivot, mapping = aes(x = method, y = value)) +
+  geom_boxplot() +
+  scale_y_continuous(
+    name = "Estimates", trans = "log2"
+  )
   
   ggplot(data = mydf, mapping = aes(x = time, y = rmse)) +
     geom_point(mapping = aes(colour = method, shape = method), size = 3) +
@@ -197,4 +202,5 @@ ggsave(
   width = 5,
   height = 5
 )
+
 
