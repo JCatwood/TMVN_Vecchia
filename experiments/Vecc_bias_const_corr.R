@@ -154,3 +154,26 @@ ggsave(paste0("plots/Vecc_bias_const_corr_exp.pdf"),
 # ggsave(paste0("plots/prob_const_corr_exp.pdf"), width = 5, height = 5)
 box_plt_low_dim(time_df, yName = "Time (seconds)", yTrans = "log2")
 ggsave(paste0("plots/time_const_corr_exp.pdf"), width = 5, height = 5)
+
+# plot for proposal
+mydf <- prob_df[, 1:(length(m_vec) + 1)]
+mtd_names <- c(paste0("m", m_vec), "MET")
+colnames(mydf) <- mtd_names
+df_pivot <- pivot_longer(mydf, cols = 1:ncol(mydf), names_to = "method")
+hex <- hue_pal()(2)
+ggplot(df_pivot, aes(x = method, y = value)) +
+  geom_boxplot(fill = c(rep(hex[1], length(m_vec)), hex[2])) +
+  geom_hline(yintercept = 1 / (n + 1), linetype = "dashed") +
+  scale_x_discrete(limits = mtd_names) +
+  scale_y_continuous(
+    name = "probability estimates"
+  ) +
+  theme(
+    text = element_text(size = 16), legend.position = "none",
+    axis.title.x = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+ggsave(paste0("VMET_bias_demo.pdf"), width = 6, height = 4)
+
+
+
