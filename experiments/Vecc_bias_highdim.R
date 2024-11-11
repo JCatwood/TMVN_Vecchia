@@ -144,64 +144,38 @@ time_vs_err_plt <- function(probDf, timeDf) {
   )
   colnames(probDf) <- col_names
   colnames(timeDf) <- col_names
-  colname_benchmark <- paste("SOV", max(N_SOV), sep = "_")
-  benchmark <- mean(probDf[[colname_benchmark]])
-
-  probDf_pivot <- pivot_longer(probDf,
-    cols = 1:ncol(probDf),
-    names_to = "method"
-  ) %>% mutate(grp = gsub("_.*", "", method))
-  probDf_pivot$method <- factor(probDf_pivot$method, levels = col_names)
-  probDf_pivot$grp <- factor(probDf_pivot$grp, levels = c("VMET", "TLR", "SOV"))
-  timeDf_new <- data.frame(method = col_names, time = colMeans(timeDf)) %>%
-    mutate(grp = gsub("_.*", "", col_names))
-  coeff <- (log(max(probDf_pivot$value)) - log(min(probDf_pivot$value))) /
-    (max(timeDf_new$time) - min(timeDf_new$time))
-  min_log_val <- log(min(probDf_pivot$value))
-  time_trans <- exp((timeDf_new$time - min(timeDf_new$time)) * coeff +
-    log(min(probDf_pivot$value)))
-  timeDf_new <- timeDf_new %>% mutate(time_trans = time_trans)
-  timeDf_new$method <- factor(timeDf_new$method, levels = col_names)
-  timeDf_new$grp <- factor(timeDf_new$grp, levels = c("VMET", "TLR", "SOV"))
-
-  ggplot(data = probDf_pivot, mapping = aes(x = method, y = value)) +
-    geom_boxplot(mapping = aes(fill = grp), alpha = 0.5) +
-    geom_line(
-      data = timeDf_new,
-      mapping = aes(x = method, y = time_trans, group = grp, color = grp)
-    ) +
-    geom_point(
-      data = timeDf_new,
-      mapping = aes(x = method, y = time_trans, group = grp, color = grp)
-    ) +
-    geom_hline(yintercept = benchmark, linetype = "dashed", color = "red") +
+  if (prob_ind < 3) {
+    colname_benchmark <- paste("VMET", max(m_vec), sep = "_")
+  } else {
+    colname_benchmark <- paste("SOV", max(N_SOV), sep = "_")
+  }
+  benchmark <- log(mean(probDf[[colname_benchmark]]))
+  rmse <- sqrt(colMeans((log(probDf) - benchmark)^2))
+  secs <- colMeans(timeDf)
+  mydf <- data.frame(
+    time = secs, rmse = rmse,
+    method = gsub("[_0-9e+]*", "", col_names)
+  )
+  # log2 trans to x and y ticks are applied by default
+  breaks <- exp(seq(
+    from = log(min(mydf$rmse) / 2),
+    to = log(max(mydf$rmse)), length.out = 5
+  ))
+  ggplot(data = mydf, mapping = aes(x = time, y = rmse)) +
+    geom_point(mapping = aes(colour = method, shape = method), size = 3) +
+    geom_line(mapping = aes(group = method, colour = method)) +
     scale_y_continuous(
-      name = "probability estimates", trans = "log2",
-      breaks = signif(
-        2^(seq(
-          from = log2(min(probDf_pivot$value)),
-          to = log2(max(probDf_pivot$value)), length.out = 4
-        )),
-        digits = 2
-      ),
-      sec.axis = sec_axis(~ (log(.) - min_log_val) / coeff + min(timeDf_new$time),
-        name = "time (seconds)",
-        breaks = signif(
-          seq(
-            from = min(timeDf_new$time),
-            to = max(timeDf_new$time), length.out = 4
-          ),
-          digits = 1
-        )
-      )
+      name = "RMSE", trans = "log2", breaks = breaks,
+      labels = signif(breaks, digits = 2)
     ) +
-    scale_x_discrete(labels = c(paste0("m", m_vec), paste0("N", c(N_TLR, N_SOV) / 10000))) +
+    scale_x_continuous(
+      name = "time (seconds)", trans = "log2"
+    ) +
     ggtitle(paste("Scenario", prob_ind)) +
     theme(
       text = element_text(size = 14),
       legend.title = element_blank(),
-      legend.position = "bottom",
-      plot.title = element_text(hjust = 0.5), axis.title.x = element_blank()
+      plot.title = element_text(hjust = 0.5)
     )
 }
 if (!file.exists("plots")) {
