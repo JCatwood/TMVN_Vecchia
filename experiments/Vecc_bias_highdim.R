@@ -183,7 +183,7 @@ if (!file.exists("plots")) {
 }
 time_vs_err_plt(prob_df, time_df)
 ggsave(
-  paste0("plots/err_vs_time_highdim_exp", prob_ind, ".pdf"),
+  paste0("plots/err_vs_time_highdim_exp", prob_ind, "_new", ".pdf"),
   width = 5,
   height = 5
 )
