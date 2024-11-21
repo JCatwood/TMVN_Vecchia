@@ -189,7 +189,7 @@ time_vs_err_plt <- function(probDf, timeDf, colNames, colors) {
     ) +
     scale_color_manual(values = colors) +
     theme(
-      text = element_text(size = 14),
+      text = element_text(size = 16),
       legend.title = element_blank(),
       plot.title = element_text(hjust = 0.5),
       legend.position = c(0.75, 0.7)
@@ -205,11 +205,11 @@ time_vs_err_plt(
   colors[1:(length(m_vec) * 2)]
 )
 ggsave(paste0("plots/err_vs_time_const_corr_VMET_only.pdf"),
-  width = 5,
+  width = 6,
   height = 5
 )
 time_vs_err_plt(prob_df, time_df, col_names, colors)
 ggsave(paste0("plots/err_vs_time_const_corr.pdf"),
-  width = 5,
+  width = 6,
   height = 5
 )
