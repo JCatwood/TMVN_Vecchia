@@ -22,26 +22,14 @@ n_obs <- n - n_censor
 cov_name <- "matern15_isotropic"
 
 # reorder if needed ---------------------------
-# y_obs <- y[ind_obs]
-# y_censor <- y[ind_censor] # also need to adjust b_censor if needed
-# locs_obs <- locs[ind_obs, , drop = F]
-# locs_censor <- locs[ind_censor, , drop = F]
-# y <- c(y_obs, y_censor)
-# locs <- rbind(locs_obs, locs_censor)
-# ind_censor <- (1:length(ind_censor)) + length(ind_obs)
-# ind_obs <- 1:length(ind_obs)
-# odr <- Vecc_reorder(c(y_obs, rep(-Inf, n_censor)),
-#                     c(y_obs, rep(b_censor, n_censor)),
-#   30,
-#   locs = locs, covName = cov_name,
-#   covParms = covparms
-# )$order
-# if (any(odr[(n_obs + 1):n] <= n_obs)) {
-#   warning("Vecchia_univar failed\n")
-# } else {
-#   locs <- locs[odr, , drop = F]
-#   y <- y[odr]
-# }
+y_obs <- y[ind_obs]
+y_censor <- y[ind_censor] # also need to adjust b_censor if needed
+locs_obs <- locs[ind_obs, , drop = F]
+locs_censor <- locs[ind_censor, , drop = F]
+y <- c(y_obs, y_censor)
+locs <- rbind(locs_obs, locs_censor)
+ind_censor <- (1:length(ind_censor)) + length(ind_obs)
+ind_obs <- 1:length(ind_obs)
 
 # compute the likelihood surface ------------------------------------
 # ranges <- seq(from = 0.05, to = 0.25, by = 0.005)
@@ -91,10 +79,10 @@ ggplot(mydf, aes(x = range, y = loglk, group = model, color = model)) +
   scale_y_continuous(name = "Log-likelihood") +
   scale_color_discrete(labels = c("censored MVN", "GP-LOD")) +
   theme(
-    legend.position = c(0.8, 0.7), legend.text = element_text(size = 12),
-    legend.title = element_blank(), text = element_text(size = 14)
+    legend.position = c(0.8, 0.7), legend.text = element_text(size = 16),
+    legend.title = element_blank(), text = element_text(size = 16)
   )
 if (!file.exists("plots")) {
   dir.create("plots")
 }
-ggsave(paste0("plots/censored_normal_sim.pdf"), width = 5, height = 5)
+ggsave(paste0("plots/censored_normal_sim.pdf"), width = 7, height = 5)
