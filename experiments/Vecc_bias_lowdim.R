@@ -154,13 +154,29 @@ niter <- 30
 #   time_df[i, ] <- c(time_Vecc, time_TN, time_TLR, time_SOV, time_Nascimento)
 #   prob_df[i, ] <- c(est_Vecc, est_TN, est_TLR, est_SOV, est_Nascimento)
 # }
-# if (!file.exists("results")) {
-#   dir.create("results")
-# }
-# save(m_vec, N_SOV_TLR, N_TN_VCDF, time_df, prob_df, file = paste0(
-#   "results/Vecc_bias_lowdim_exp",
-#   prob_ind, "_", order_mtd, ".RData"
-# ))
+
+# TB removed
+load(paste0(
+  "results/Vecc_bias_lowdim_exp",
+  prob_ind, "_", order_mtd, ".RData"
+))
+# TB removed
+
+est_bmark <- rep(NA, 100)
+for (j in 1:100) {
+  cat("Benchmark TN iter", j, "\n")
+  est_bmark[j] <- TruncatedNormal::pmvnorm(
+    rep(0, n), cov_mat,
+    lb = a, ub = b, B = max(N_TN_VCDF) * 10
+  )
+}
+if (!file.exists("results")) {
+  dir.create("results")
+}
+save(m_vec, N_SOV_TLR, N_TN_VCDF, time_df, prob_df, est_bmark, file = paste0(
+  "results/Vecc_bias_lowdim_exp",
+  prob_ind, "_", order_mtd, ".RData"
+))
 
 # Plotting -----------------------------------
 load(paste0(
@@ -170,7 +186,7 @@ load(paste0(
 library(ggplot2)
 library(tidyr)
 library(scales)
-time_vs_err_plt <- function(probDf, timeDf) {
+time_vs_err_plt <- function(probDf, timeDf, benchmark = NULL) {
   col_names <- c(
     paste("VMET", m_vec, sep = "_"),
     paste("MET", N_TN_VCDF, sep = "_"),
@@ -181,7 +197,11 @@ time_vs_err_plt <- function(probDf, timeDf) {
   colnames(probDf) <- col_names
   colnames(timeDf) <- col_names
   colname_benchmark <- paste("MET", max(N_TN_VCDF), sep = "_")
-  benchmark <- mean(probDf[[colname_benchmark]])
+  if (is.null(benchmark)) {
+    benchmark <- mean(probDf[[colname_benchmark]])
+  } else {
+    benchmark <- mean(benchmark)
+  }
   rmse <- sqrt(colMeans((probDf - benchmark)^2))
   secs <- colMeans(timeDf)
   mydf <- data.frame(
@@ -213,7 +233,7 @@ time_vs_err_plt <- function(probDf, timeDf) {
 if (!file.exists("plots")) {
   dir.create("plots")
 }
-time_vs_err_plt(prob_df, time_df)
+time_vs_err_plt(prob_df, time_df, est_bmark)
 ggsave(
   paste0("plots/err_vs_time_lowdim_", prob_ind, "_", order_mtd, ".pdf"),
   width = 5,
