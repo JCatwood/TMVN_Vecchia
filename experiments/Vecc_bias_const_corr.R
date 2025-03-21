@@ -160,8 +160,11 @@ load(paste0(
 library(ggplot2)
 library(tidyr)
 library(scales)
-colors <- hue_pal()(6)
-time_vs_err_plt <- function(probDf, timeDf, colNames, colors) {
+six_colors <- hue_pal()(6)
+six_shapes <- c(1:6)
+names(six_colors) <- c("VMET", "VMET-ML", "MET", "TLR", "SOV", "VCDF")
+names(six_shapes) <- c("VMET", "VMET-ML", "MET", "TLR", "SOV", "VCDF")
+time_vs_err_plt <- function(probDf, timeDf, colNames) {
   # colname_benchmark <- "MET"
   # benchmark <- mean(probDf[[colname_benchmark]])
   benchmark <- 1 / (n + 1)
@@ -187,7 +190,8 @@ time_vs_err_plt <- function(probDf, timeDf, colNames, colors) {
     scale_x_continuous(
       name = "time (seconds)"
     ) +
-    scale_color_manual(values = colors) +
+    scale_color_manual(values = six_colors) +
+    scale_shape_manual(values = six_shapes) +
     theme(
       text = element_text(size = 16),
       legend.title = element_blank(),
@@ -201,14 +205,13 @@ if (!file.exists("plots")) {
 time_vs_err_plt(
   prob_df[, 1:(length(m_vec) * 2)],
   time_df[, 1:(length(m_vec) * 2)],
-  col_names[1:(length(m_vec) * 2)],
-  colors[1:(length(m_vec) * 2)]
+  col_names[1:(length(m_vec) * 2)]
 )
 ggsave(paste0("plots/err_vs_time_const_corr_VMET_only.pdf"),
   width = 6,
   height = 5
 )
-time_vs_err_plt(prob_df, time_df, col_names, colors)
+time_vs_err_plt(prob_df, time_df, col_names)
 ggsave(paste0("plots/err_vs_time_const_corr.pdf"),
   width = 6,
   height = 5

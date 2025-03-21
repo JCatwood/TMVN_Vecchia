@@ -154,29 +154,21 @@ niter <- 30
 #   time_df[i, ] <- c(time_Vecc, time_TN, time_TLR, time_SOV, time_Nascimento)
 #   prob_df[i, ] <- c(est_Vecc, est_TN, est_TLR, est_SOV, est_Nascimento)
 # }
-
-# TB removed
-load(paste0(
-  "results/Vecc_bias_lowdim_exp",
-  prob_ind, "_", order_mtd, ".RData"
-))
-# TB removed
-
-est_bmark <- rep(NA, 100)
-for (j in 1:100) {
-  cat("Benchmark TN iter", j, "\n")
-  est_bmark[j] <- TruncatedNormal::pmvnorm(
-    rep(0, n), cov_mat,
-    lb = a, ub = b, B = max(N_TN_VCDF) * 10
-  )
-}
-if (!file.exists("results")) {
-  dir.create("results")
-}
-save(m_vec, N_SOV_TLR, N_TN_VCDF, time_df, prob_df, est_bmark, file = paste0(
-  "results/Vecc_bias_lowdim_exp",
-  prob_ind, "_", order_mtd, ".RData"
-))
+# est_bmark <- rep(NA, 100)
+# for (j in 1:100) {
+#   cat("Benchmark TN iter", j, "\n")
+#   est_bmark[j] <- TruncatedNormal::pmvnorm(
+#     rep(0, n), cov_mat,
+#     lb = a, ub = b, B = max(N_TN_VCDF) * 10
+#   )
+# }
+# if (!file.exists("results")) {
+#   dir.create("results")
+# }
+# save(m_vec, N_SOV_TLR, N_TN_VCDF, time_df, prob_df, est_bmark, file = paste0(
+#   "results/Vecc_bias_lowdim_exp",
+#   prob_ind, "_", order_mtd, ".RData"
+# ))
 
 # Plotting -----------------------------------
 load(paste0(
@@ -186,6 +178,10 @@ load(paste0(
 library(ggplot2)
 library(tidyr)
 library(scales)
+six_colors <- hue_pal()(6)
+six_shapes <- c(1:6)
+names(six_colors) <- c("VMET", "VMET-ML", "MET", "TLR", "SOV", "VCDF")
+names(six_shapes) <- c("VMET", "VMET-ML", "MET", "TLR", "SOV", "VCDF")
 time_vs_err_plt <- function(probDf, timeDf, benchmark = NULL) {
   col_names <- c(
     paste("VMET", m_vec, sep = "_"),
@@ -223,6 +219,8 @@ time_vs_err_plt <- function(probDf, timeDf, benchmark = NULL) {
     scale_x_continuous(
       name = "time (seconds)", trans = "log2"
     ) +
+    scale_color_manual(values = six_colors) +
+    scale_shape_manual(values = six_shapes) +
     ggtitle(paste("Scenario", prob_ind)) +
     theme(
       text = element_text(size = 14),
