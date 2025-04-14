@@ -3,21 +3,54 @@
 ## The paper 
 The corresponding paper can be found [here](https://arxiv.org/abs/2311.09426).
 
-## Installation
-Simply run
+## VeccTMVN R package
+The methods developed in the paper are implemented in the R package `VeccTMVN`. To install the package, simply run
 ```
 install.packages("VeccTMVN")
 ```
 
-## Directory Guidance
-
-  - experiments: The codes for reproducing the results in the paper. The codes should be run after the VeccTMVN package is installed. Certain R packages on CRAN are needed. Packages in `external_Rpkg` are also needed.
+## Contents
+  - experiments: The codes for reproducing the results in the paper. 
+    - `ordering_bias.R` for Figure 1 and Figure C.2
+    - `Vecc_bias_lowdim.R` for Figure 2
+    - `Vecc_bias_highdim.R` for Figure 3
+    - `Vecc_bias_const_corr.R` for Figure 4
+    - `TMVN_sim_low.R` for Figure 5
+    - `TMVN_parm_est_high.R` for Figure 6
+    - `PTMVN_sim_low.R` for Figure 7
+    - `PTMVN_sim_high.R` for the RMSE reported in the 6400 dimensional example in Section 7.2 and D.3
+    - `PCE_modeling.R` for Figure 8
+    - `Vecc_bias_lowdim_T.R` for Figure B.1
+    - `results` this folder stores results from running some of the above R scripts
+    - `archieve` legacy files, not important
+    
+    **If you want to rerun the simulations, please uncomment the code for the simulation**
   - external_Rpkg: R packages needed for `experiments` that are not on CRAN. Specifically,
     - CDFApprox: code from the paper ''A Vecchia approximation for high-dimensional Gaussian cumulative distribution functions arising from spatial data'' (https://doi.org/10.1080/00949655.2021.2016759)
-    - TruncatedNormalBeta: Modified version of the R package `TruncatedNormal` that implements Botev (2017). The modification removes the univariate reordering 
+    - TruncatedNormalBeta: Modified version of the R package `TruncatedNormal` that implements Botev (2017). The modification removes the univariate reordering to demonstrate the impact of variable reordering as shown in Figure 1
   - funcs: some peripheral functions needed for running the experiments
+
+## Dependency installation
+Tested out on a Linux system (UH Sabine Cluster). Should work on other platforms but modification of installation command may be needed.
+
+R code
+```
+install.packages(c("VeccTMVN","sf","spData","GpGp","scoringRules","fields",
+  "RColorBrewer","mvtnorm","TruncatedNormal",
+  "CensSpatial","ggplot2","tidyr","scales","tlrmvnmvt","dplyr"))
+```
+
+Bash script
+```
+cd external_Rpkg/
+R CMD INSTALL CDFApprox/
+R CMD INSTALL TruncatedNormalBeta/
+```
+
+## Data
+The results mostly use simulated data. There is only one real dataset used, the Tetrachloroethylene concentration dataset from the United States Geological Survey (USGS), which is publically available and available in the `experiments` folder.
 	
-## A simple example
+## A simple example of VeccTMVN
 ```
 library(GpGp)
 library(VeccTMVN)
