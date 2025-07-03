@@ -7,6 +7,22 @@ library(GpGp)
 library(R.utils)
 source("../funcs/utils.R")
 ## MVN prob gen funcs ----------------------------------------
+#' Generate MVN probabilities of Scenarios 1/2/3 in Table 1 of \href{https://arxiv.org/abs/2311.09426}{the paper}
+#' @param n number of locations, also the dimension of the MVN probability
+#' @param d dimension of the spatial domain, where the Matern kernel is defined
+#' @param m the tuning parameter used in the FIC reordering and the Vecchia reordering
+#' @return a list containing:
+#' \\item{a}{lower integration limits}
+#' \\item{b}{upper integration limits}
+#' \\item{locs}{spatial locations for the spatial covariance matrix}
+#' \\item{cov_parms}{covariance parameters corresponding to `cov_name` in the `GpGp` package}
+#' \\item{cov_name}{covariance name as defined in `GpGp` package}
+#' \\item{cov_mat}{the generate covariance matrix for the MVN probability}
+#' \\item{odr_FIC}{FIC ordering with the tuning parameter m equal to the input `m`}
+#' \\item{odr_FIC100}{New order from the FIC reordering with the tuning parameter m equal to 100}
+#' \\item{odr_FIC200}{New order from the FIC reordering with the tuning parameter m equal to 200}
+#' \\item{odr_Vecc}{New order from the Vecchia reordering with the tuning parameter m equal to the input `m`}
+#' \\item{odr_univar}{New order from the univariate reordering}
 prob1_gen <- function(n, d, m) {
   locs <- grid_gen(n, d)$grid
   a <- rep(-Inf, n)
@@ -65,7 +81,14 @@ prob3_gen <- function(n, d, m) {
   ))
 }
 ## Experiment function -------------------------
-exp_func <- function(pron_obj, odr, runTN = T) {
+#' Estimate MVN probabilities with VMET and MET under specified ordering. 
+#' Here, the MET is based on a modified TruncatedNormal package, named 
+#' TruncatedNormalBeta, such that univariate variable reordering is disabled
+#' @param prob_obj the returned MVN probability object from prob_gen functions
+#' @param odr the specified ordering
+#' @param runTN where to run the MET method or not
+#' @return a list of probability estimates and the computation time of VMET and MET
+exp_func <- function(prob_obj, odr, runTN = T) {
   time_Vecc <- system.time(est_Vecc <- VeccTMVN::pmvn(
     prob_obj$a[odr], prob_obj$b[odr], 0,
     locs = prob_obj$locs[odr, , drop = F], covName = prob_obj$cov_name,
@@ -93,16 +116,19 @@ exp_func <- function(pron_obj, odr, runTN = T) {
   }
 }
 ## Prob setups -----------------------
-n <- 900
-d <- 2
-m <- 30
+n <- 900  # dimension of the MVN probability
+d <- 2  # dimension of the spatial domain where the covariance matrix is defined
+m <- 30  # tuning parameter controling the conditioning set size
 ## Iteratively compute the same MVN prob -----------------------
-nprob <- 3
-niter <- 30
-nmtd <- 2
-nodr <- 6
-rslt <- data.frame(matrix(NA, nprob * niter * nmtd * nodr, 6))
+nprob <- 3  # number of problem scenarios, which is 3 as shown in Table 1
+niter <- 30  # number of replicates for each method under each specified ordering
+nmtd <- 2 # number of methods to test, 2 because we have VMET and MET
+nodr <- 6 # number of different variable reordering to test, 6 including the initial natural ordering
+rslt <- data.frame(matrix(NA, nprob * niter * nmtd * nodr, 6))  # dataframe storing the result, will be save and used for plotting
 colnames(rslt) <- c("prob_ind", "iter_ind", "mtd", "order", "est", "time")
+# the columns are scenario index, replicated index, method name, reordering method, 
+# estimates, and computation times, respectively
+## Run experiments -----------------------
 for (prob_ind in c(1:nprob)) {
   set.seed(123)
   prob_obj <- get(paste0("prob", prob_ind, "_gen"))(n, d, m)
@@ -159,7 +185,9 @@ if (!file.exists("results")) {
 }
 save(rslt, file = paste0(
   "results/ordering_bias.RData"
-))
+))  
+# save the results. Once you have the results, you can comment out the 
+# Run experiments section to obtain the plots faster
 
 # Plotting -----------------------------------
 load(paste0(

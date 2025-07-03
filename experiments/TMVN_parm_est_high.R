@@ -5,6 +5,7 @@ library(mvtnorm)
 library(TruncatedNormal)
 library(VeccTMVN)
 set.seed(123)
+# size of a 2D grid, with n1 horizontal and n2 vertical bands
 n1 <- 80
 n2 <- 80
 n <- n1 * n2
@@ -21,7 +22,7 @@ n_censor <- length(ind_censor)
 n_obs <- n - n_censor
 cov_name <- "matern15_isotropic"
 
-# reorder if needed ---------------------------
+# separate observed and censored responses ---------------------------
 y_obs <- y[ind_obs]
 y_censor <- y[ind_censor] # also need to adjust b_censor if needed
 locs_obs <- locs[ind_obs, , drop = F]
@@ -31,30 +32,35 @@ locs <- rbind(locs_obs, locs_censor)
 ind_censor <- (1:length(ind_censor)) + length(ind_obs)
 ind_obs <- 1:length(ind_obs)
 
+# define a vector of range values at which the log-likelihood will be estimated
+ranges <- seq(from = 0.05, to = 0.25, by = 0.005)
 # compute the likelihood surface ------------------------------------
-# ranges <- seq(from = 0.05, to = 0.25, by = 0.005)
-# loglk_Vecc_vec <- rep(0, length(ranges))
-# loglk_GPGP_vec <- rep(0, length(ranges))
-# idx <- 1
-# NN <- GpGp::find_ordered_nn(locs, m = 50)
-# for (myrange in ranges) {
-#   covparms[2] <- myrange
-#   set.seed(123)
-#   loglk_Vecc_vec[idx] <- loglk_censor_MVN(
-#     locs, ind_censor, y, b_censor, cov_name,
-#     covparms,
-#     m = 50
-#   )
-#   loglk_GPGP_vec[idx] <- GpGp::vecchia_meanzero_loglik(
-#     covparms, cov_name, y_aug,
-#     locs,
-#     NNarray = NN
-#   )$loglik
-#   idx <- idx + 1
-# }
-# save(ranges, loglk_Vecc_vec, loglk_GPGP_vec,
-#   file = "results/censored_normal_sim.RData"
-# )
+loglk_Vecc_vec <- rep(0, length(ranges))
+loglk_GPGP_vec <- rep(0, length(ranges))
+idx <- 1
+# nearest neighbor matrix for the Vecchia approximation, 
+# with the number of nearest neighbors found equal to 50
+NN <- GpGp::find_ordered_nn(locs, m = 50)
+for (myrange in ranges) {
+  covparms[2] <- myrange
+  set.seed(123)
+  loglk_Vecc_vec[idx] <- loglk_censor_MVN(
+    locs, ind_censor, y, b_censor, cov_name,
+    covparms,
+    m = 50
+  ) # log-likelihood of partially censored GP
+  loglk_GPGP_vec[idx] <- GpGp::vecchia_meanzero_loglik(
+    covparms, cov_name, y_aug,
+    locs,
+    NNarray = NN
+  )$loglik # log-likelihood of GP, ignoring the censored responses
+  idx <- idx + 1
+}
+save(ranges, loglk_Vecc_vec, loglk_GPGP_vec,
+  file = "results/censored_normal_sim.RData"
+)
+# save the results. Once you have the results, you can comment out the 
+# compute the likelihood surface section to be faster
 
 # plot the likelihood surface ------------------------------------
 load(paste0("results/censored_normal_sim.RData"))
