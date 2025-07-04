@@ -10,7 +10,7 @@ install.packages("VeccTMVN")
 ```
 
 ## Contents
-  - experiments: The codes for reproducing the results in the paper. 
+  - experiments: The codes for reproducing the results in the paper. All scripts can be run independently, i.e., there is no requirement on the order for running the R scripts in this directory. However, to run the scripts, one first needs to install the dependent R packages; please refer to the "dependency installation" Section.
     - `ordering_bias.R` for Figure 1 and Figure C.2
     - `Vecc_bias_lowdim.R` for Figure 2
     - `Vecc_bias_highdim.R` for Figure 3
@@ -22,9 +22,9 @@ install.packages("VeccTMVN")
     - `PCE_modeling.R` for Figure 8
     - `Vecc_bias_lowdim_T.R` for Figure B.1
     - `results` this folder stores results from running some of the above R scripts
-    - `archieve` legacy files, not important
     
-    **If you want to rerun the simulations, please uncomment the code for the simulation**
+    **Some scripts can take long. Alternatively, one can comment out the computation-heavy section as instructed by the comments inside each script. Then the scripts will use the previously computed results to obtain the figures.**
+
   - external_Rpkg: R packages needed for `experiments` that are not on CRAN. Specifically,
     - CDFApprox: code from the paper ''A Vecchia approximation for high-dimensional Gaussian cumulative distribution functions arising from spatial data'' (https://doi.org/10.1080/00949655.2021.2016759)
     - TruncatedNormalBeta: Modified version of the R package `TruncatedNormal` that implements Botev (2017). The modification removes the univariate reordering to demonstrate the impact of variable reordering as shown in Figure 1
@@ -48,7 +48,7 @@ R CMD INSTALL TruncatedNormalBeta/
 ```
 
 ## Data
-The results mostly use simulated data. There is only one real dataset used, the Tetrachloroethylene concentration dataset from the United States Geological Survey (USGS), which is publically available and available in the `experiments` folder.
+The results mostly use simulated data. There is only exception that the script `PCE_modeling.R` uses a real dataset, the Tetrachloroethylene concentration dataset from the United States Geological Survey (USGS), which is publically available and provided in this repository at `experiments/PCE.RData` for convenience.
 	
 ## A simple example of VeccTMVN
 ```
